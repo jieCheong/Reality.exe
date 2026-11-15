@@ -34,7 +34,7 @@ export class RoutineMissionEngine extends EventEmitter {
     if (this.phase === 'SCAN') return `I am ORBIT, your routine guide. A parent should be with you. I will use the camera to check visible steps and keep a photo of each verified step for your parent. Show me ${this.missing.join(', ') || this.routine.objects.join(', ')} and hold the camera still.`;
     const step = this.routine.steps[this.stepIndex];
     const orientation = ['LEFT_OF','ORDER_LEFT_TO_RIGHT'].includes(step.check) ? ' Left and right mean the edges of the camera picture.' : '';
-    return `Step ${this.stepIndex + 1}: ${step.label}. You have ${this.budgetSeconds} seconds.${orientation}`;
+    return `Step ${this.stepIndex + 1}: ${step.label}. You have ${this.timeLeft() ?? this.budgetSeconds} seconds.${orientation}`;
   }
   activeElapsed(now = this.now()) { return this.elapsedMs + (this.clockStarted === null ? 0 : Math.max(0, now - this.clockStarted)); }
   pauseClock(now = this.now()) { this.elapsedMs = this.activeElapsed(now); this.clockStarted = null; }

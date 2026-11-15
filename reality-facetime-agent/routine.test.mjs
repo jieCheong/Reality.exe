@@ -95,7 +95,7 @@ test('penalty can expire a step; stale/replayed evidence and late positive canno
 
 test('clock pauses for speech/manual pauses and reports remaining active seconds',()=>{
   const {engine:e,advance}=ready();advance(2000);e.pauseClock();advance(100000);
-  assert.equal(e.timeLeft(),88);e.tick();assert.equal(e.results.length,0);
+  assert.equal(e.timeLeft(),88);assert.match(e.instruction(),/88 seconds/);e.tick();assert.equal(e.results.length,0);
   e.resumeClock();advance(3000);e.tick();assert.equal(e.hudState().timeLeftSeconds,85);
 });
 
