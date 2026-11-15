@@ -1,0 +1,84 @@
+"""Local support-contact-v1 regression suite; fake model only, no network."""
+import asyncio
+
+import pytest
+from PIL import Image
+
+from app.perception import (DetectedObject, FakeVision, Frame, FrameJudgment,
+                            PerceptionConfig, PerceptionService, Predicate)
+from app.perception.predicates import geometry_veto
+from app.perception.schemas import ObjectLocation
+
+PREDICATE = Predicate.parse('ON_TOP_OF(bottle, notebook)')
+UPPER = [100, 120, 300, 280]
+LOWER = [300, 100, 500, 300]
+
+
+def judgment(upper=UPPER, lower=LOWER, satisfied=True):
+    objects = [ObjectLocation(name=name, visible=True, box_2d=box)
+               for name, box in [('bottle', upper), ('notebook', lower)] if box is not None]
+    return FrameJudgment(satisfied=satisfied, confidence=.95, evidence='synthetic unit fixture', objects=objects)
+
+
+@pytest.mark.parametrize('delta', [-20, -10, 0, 10, 20])
+def test_valid_stack_tolerates_small_normalized_edge_errors(delta):
+    upper = [100, 120, 300 + delta, 280]
+    # Keep both heights >=200 for the capped 20-unit boundary tests.
+    upper[0] = min(upper[0], upper[2] - 200)
+    assert geometry_veto(PREDICATE, judgment(upper)) is None
+
+
+@pytest.mark.parametrize('upper,lower', [
+    ([100, 120, 200, 280], LOWER),  # suspended above support: gap 100
+    ([600, 120, 800, 280], LOWER),  # overlapping x, entirely below support
+    ([100, 120, 279, 280], LOWER),  # outside positive gap tolerance
+    ([100, 120, 321, 280], LOWER),  # outside penetration tolerance
+    ([100, 120, 450, 280], LOWER),  # deep overlap, not edge contact
+    (LOWER, LOWER),                # identical/side-by-side projected boxes
+    (UPPER, [300, 400, 500, 600]), # no horizontal overlap
+    (UPPER, [300, 280, 500, 600]), # only touching horizontal edges
+])
+def test_separated_or_inconsistent_geometry_vetoes_model_positive(upper, lower):
+    assert geometry_veto(PREDICATE, judgment(upper, lower)) is not None
+
+
+@pytest.mark.parametrize('delta,allowed', [(5, True), (-5, True), (6, False), (-6, False)])
+def test_small_objects_use_relative_not_full_image_tolerance(delta, allowed):
+    # Upper height 50, lower height 100 -> tolerance 5, not the 20-unit cap.
+    upper = [250 + delta, 120, 300 + delta, 280]
+    lower = [300, 100, 400, 300]
+    assert (geometry_veto(PREDICATE, judgment(upper, lower)) is None) is allowed
+
+
+@pytest.mark.parametrize('bad', [None, [], [1, 2, 3], [1, 2, 3, 4, 5],
+                               [0, 0, 0, 100], [300, 100, 100, 200],
+                               [100, 300, 200, 100], [-1, 100, 200, 300],
+                               [100, 100, 1001, 300]])
+@pytest.mark.parametrize('which', ['upper', 'lower'])
+def test_missing_invalid_or_out_of_range_geometry_is_rejected(bad, which):
+    assert geometry_veto(PREDICATE, judgment(**{which: bad})) is not None
+
+
+@pytest.mark.parametrize('value', [True, 100.5, float('nan'), float('inf')])
+def test_unvalidated_noninteger_coordinates_cannot_bypass_guard(value):
+    # Deliberately bypass schema validation to test the predicate defensively.
+    j = judgment()
+    j.objects[0].box_2d = [value, 120, 300, 280]
+    assert geometry_veto(PREDICATE, j) is not None
+
+
+@pytest.mark.parametrize('upper,positive,expected_votes', [
+    (UPPER, True, 3), ([100, 120, 200, 280], True, 0), (UPPER, False, 0),
+])
+def test_service_veto_flows_into_existing_votes_without_promoting_model_no(upper, positive, expected_votes):
+    model = FakeVision(lambda *_: judgment(upper, satisfied=positive))
+    service = PerceptionService(model, PerceptionConfig(flip_left_right=False, scene_check=False))
+    service.set_catalog([DetectedObject(name='bottle', description='bottle'),
+                         DetectedObject(name='notebook', description='notebook')])
+    frames = [Frame(Image.new('RGB', (16, 16), (100, 100, 100))) for _ in range(3)]
+    result = asyncio.run(service.verify(PREDICATE, frames))
+    assert result.votes_total == 3 and result.votes_for == expected_votes
+    assert result.satisfied is (expected_votes >= 2)
+    assert all(verdict.confidence == .95 for verdict in result.frame_verdicts)
+    if positive and not expected_votes:
+        assert all(verdict.geometry_override for verdict in result.frame_verdicts)

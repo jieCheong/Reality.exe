@@ -83,7 +83,7 @@ def test_geometry_veto():
 
     on = Predicate.parse("ON_TOP_OF(a, b)")
     assert geometry_veto(on, judgment(True, .9, {"a": BOX_L, "b": BOX_R})) is not None  # no overlap
-    assert geometry_veto(on, judgment(True, .9, {"a": [50, 120, 150, 180], "b": BOX_L})) is None
+    assert geometry_veto(on, judgment(True, .9, {"a": [20, 120, 100, 180], "b": BOX_L})) is None
 
     cov = Predicate.parse("COVERED(a)")
     assert geometry_veto(cov, judgment(True, .9, {"a": None})) is None  # covered thing may be hidden
@@ -158,7 +158,7 @@ def run(coro):
 
 
 def test_service_verify_pass_and_prompt_contents():
-    model = FakeVision(lambda im, p, s: judgment(True, .9, {"bottle": [50, 120, 150, 180], "notebook": BOX_L}))
+    model = FakeVision(lambda im, p, s: judgment(True, .9, {"bottle": [20, 120, 100, 180], "notebook": BOX_L}))
     svc = PerceptionService(model, PerceptionConfig(flip_left_right=False))
     svc.set_catalog(CATALOG)
     r = run(svc.verify(Predicate.parse("ON_TOP_OF(bottle, notebook)"), frames()))

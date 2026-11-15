@@ -15,6 +15,10 @@ SEPARATION = 30   # min x-gap between box centers (0-1000 scale) for left/right
 MIN_TOP_OVERLAP = 0.30   # share of the top object's width that must sit over the bottom one
 SIDE_BY_SIDE_MAX = 0.60  # above this horizontal overlap (of the narrower box), two things are stacked, not side by side
 CONTAINED = 0.85         # share of a box's area inside another box that counts as "sitting inside" it
+# Local patch support-contact-v1; see vision-service/LOCAL-PATCHES.md.
+# Bounding boxes are [ymin, xmin, ymax, xmax], normalized to 0-1000.
+SUPPORT_CONTACT_MAX_TOLERANCE = 20  # at most 2% of image height
+SUPPORT_CONTACT_HEIGHT_FRACTION = 0.10  # tighter for small detected objects
 
 
 # --------------------------------------------------------------------------- #
@@ -232,7 +236,26 @@ def geometry_veto(pred_img: Predicate, j: FrameJudgment) -> Optional[str]:
 
     elif t == PredicateType.ON_TOP_OF:
         a, b = _box(j, args[0]), _box(j, args[1])
-        if a and b:
-            return stacking_veto(a, b, args[0], args[1])
+        if a is None or b is None:
+            return 'support check requires both normalized bounding boxes'
+        for box in (a, b):
+            if (not all(type(value) is int for value in box)
+                    or not (0 <= box[0] < box[2] <= 1000
+                            and 0 <= box[1] < box[3] <= 1000)):
+                return 'support check requires valid normalized bounding boxes'
+        overlap = min(a[3], b[3]) - max(a[1], b[1])
+        if overlap <= 0:
+            return f'"{args[0]}" and "{args[1]}" do not overlap horizontally'
+        stacking_reason = stacking_veto(a, b, args[0], args[1])
+        if stacking_reason:
+            return stacking_reason
+        # Only permit a small gap/penetration consistent with detection error.
+        # Boxes alone cannot prove support; the model must still judge contact.
+        tolerance = min(SUPPORT_CONTACT_MAX_TOLERANCE,
+                        SUPPORT_CONTACT_HEIGHT_FRACTION * min(a[2] - a[0], b[2] - b[0]))
+        if (a[0] + a[2]) / 2 >= (b[0] + b[2]) / 2:
+            return f'"{args[0]}" is not above "{args[1]}"'
+        if abs(a[2] - b[0]) > tolerance:
+            return f'"{args[0]}" base is not near the top of "{args[1]}"'
 
     return None

@@ -1,3 +1,4 @@
+import { loadRoutine } from './routine-contract.mjs';
 // Local only: never constructs providers or contacts any service.
 import { requireFreeBuild } from './voice-stack.mjs';
 import { selectGameThemes } from './game-test-config.mjs';
@@ -10,6 +11,10 @@ try { requireFreeBuild(env); checks.livekitGuard = true; } catch { checks.liveki
 checks.gameEnabled = env.ENABLE_GAME === 'yes';
 checks.testCatalog = env.GAME_TEST_MODE === 'yes';
 try { validateThemes(selectGameThemes(THEMES, env)); checks.themeCatalogReady = true; } catch { checks.themeCatalogReady = false; }
+checks.routineSelected = Boolean(env.ROUTINE_FILE);
+checks.routineReady = false;
+if (checks.routineSelected) { try { await loadRoutine(env.ROUTINE_FILE); checks.routineReady = true; } catch { /* never print parent file contents */ } }
+checks.gameSessionReady = checks.routineSelected ? checks.routineReady : checks.themeCatalogReady;
 checks.elevenlabsSelected = env.TTS_PROVIDER === 'elevenlabs';
 checks.elevenlabsApproved = env.ELEVENLABS_REQUESTS_APPROVED === 'yes';
 checks.elevenlabsCredentials = configured('ELEVEN_API_KEY') && configured('ELEVEN_VOICE_ID');
