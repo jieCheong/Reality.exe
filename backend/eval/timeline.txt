@@ -1,0 +1,7 @@
+# Drafted from IMG_0963 and checked against extracted frames. Add more lines as you find stable setups.
+objects: phone = smartphone; wallet = black leather bifold wallet; keys = metal keyring with several keys; charger = small white square power adapter; bracelet = bracelet of dark beads; watch = silver metal watch
+
+0:07-0:12  ON charger wallet                   | cluttered far_camera
+0:22-0:32  ON phone wallet                     | cluttered far_camera
+0:24-0:32  ON bracelet phone                   | cluttered far_camera
+0:38-0:47  ROW phone wallet keys watch         | cluttered far_camera
