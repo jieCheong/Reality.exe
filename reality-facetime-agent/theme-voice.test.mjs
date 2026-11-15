@@ -142,7 +142,7 @@ test('mock confirmed theme flows through every deterministic mission with one sp
   const flow = new ThemeSelection({ themes: fixtures, speech, game });
   await flow.start(); assert.equal(await game.tick(), false); assert.equal(requests, 0);
   await flow.handleTranscript(transcript('one')); await flow.handleTranscript(transcript('yes')); await game.speech;
-  for (let round=0;round<8;round++) {
+  for (let round=0;round<12;round++) { // 2 scan + 5 missions x 2 rounds
     for (let i=0;i<3;i++) { clock += 220; camera.emit('frame', { sequence: ++sequence, generation: 1, capturedAtMs: clock }); }
     await game.tick(); await game.speech;
   }

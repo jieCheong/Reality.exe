@@ -1,6 +1,9 @@
 import { EventEmitter } from 'node:events';
 
-export const PHASES = ['SCAN', 'POWER', 'SECURITY', 'PORTAL'];
+export const PHASES = ['SCAN', 'POWER', 'SECURITY', 'HIDE', 'FIND', 'PORTAL'];
+/** FIND asks for a generic everyday object; the first kind not already scanned is used. */
+export const FIND_KINDS = ['pen', 'spoon', 'cup', 'book', 'key', 'phone'];
+const article = word => (/^[aeiou]/.test(word) ? 'an' : 'a');
 const clean = text => String(text || '').replace(/[\x00-\x1f]/g, ' ').slice(0, 180);
 
 /** Deterministic state only. Neither speech nor a raw model YES advances a mission. */
@@ -8,7 +11,7 @@ export class MissionEngine extends EventEmitter {
   constructor() {
     super();
     this.phase = 'SCAN'; this.revision = 0; this.escaped = false;
-    this.catalog = []; this.streak = 0; this.inventoryCandidate = '';
+    this.catalog = []; this.findKind = FIND_KINDS[0]; this.streak = 0; this.inventoryCandidate = '';
     this.usedFrames = new Set();
   }
   resetEvidence() { this.streak = 0; this.inventoryCandidate = ''; }
@@ -19,7 +22,9 @@ export class MissionEngine extends EventEmitter {
       SCAN: 'I am ORBIT, your AI ship guide. Show three distinct desk objects to the camera, then hold still.',
       POWER: `The ${reactor} is our reactor, the ${panel} our control panel, and the ${key} our access key. Place the ${reactor} on top of the ${panel}, then hold still.`,
       SECURITY: `Hold the ${key} up in your hand toward the camera, clearly off the desk.`,
-      PORTAL: `Arrange ${reactor}, ${panel}, and ${key} in that order from the left edge of the camera picture to the right. Then hold still.`,
+      HIDE: `Hide the ${key} completely out of sight, but keep the ${reactor} and ${panel} in view. Then hold still.`,
+      FIND: `Find ${article(this.findKind)} ${this.findKind} anywhere nearby and show it to the camera.`,
+      PORTAL: `Bring the ${key} back. Arrange ${reactor}, ${panel}, and ${key} in that order from the left edge of the camera picture to the right. Then hold still.`,
     }[this.phase];
   }
   hudState() {
@@ -27,14 +32,16 @@ export class MissionEngine extends EventEmitter {
     const [a, b, c] = this.catalog.map(o => o.name);
     const objective = this.escaped ? 'ESCAPE COMPLETE' : {
       SCAN: 'SHOW 3 OBJECTS', POWER: `PLACE ${a} ON TOP OF ${b}`,
-      SECURITY: `HOLD UP ${c}`, PORTAL: `LEFT TO RIGHT: ${a}, ${b}, ${c}`,
+      SECURITY: `HOLD UP ${c}`, HIDE: `HIDE ${c}`, FIND: `SHOW ${article(this.findKind)} ${this.findKind}`,
+      PORTAL: `LEFT TO RIGHT: ${a}, ${b}, ${c}`,
     }[this.phase];
-    return { phase: this.phase, objective, missionProgress: this.escaped ? 1 : index / 4,
+    return { phase: this.phase, objective, missionProgress: this.escaped ? 1 : index / PHASES.length,
       checkpoints: Object.fromEntries(PHASES.map((p, i) => [p, this.escaped || i < index ? 'complete' : i === index ? 'active' : 'pending'])) };
   }
   request() {
     const [a, b, c] = this.catalog.map(o => o.name);
-    const predicate = { POWER: `ON_TOP_OF(${a}, ${b})`, SECURITY: `HELD_UP(${c})`, PORTAL: `ORDER_LEFT_TO_RIGHT(${a}, ${b}, ${c})` }[this.phase];
+    const predicate = { POWER: `ON_TOP_OF(${a}, ${b})`, SECURITY: `HELD_UP(${c})`, HIDE: `HIDDEN(${c})`,
+      FIND: `SHOW(${this.findKind})`, PORTAL: `ORDER_LEFT_TO_RIGHT(${a}, ${b}, ${c})` }[this.phase];
     return { revision: this.revision, operation: this.phase === 'SCAN' ? 'inventory' : 'verify', catalog: this.catalog,
       ...(predicate ? { predicate } : {}) };
   }
@@ -69,6 +76,8 @@ export class MissionEngine extends EventEmitter {
       const key = sorted.find(o => o !== panel && /\b(pen|pencil|key|spoon)\b/.test(o.name)) || sorted.filter(o => o !== panel).at(-1);
       const reactor = sorted.find(o => o !== panel && o !== key);
       this.catalog = [reactor, panel, key];
+      const scanned = this.catalog.map(o => o.name);
+      this.findKind = FIND_KINDS.find(kind => !scanned.some(name => name.split(/[ -]/).includes(kind))) || FIND_KINDS[0];
     } else {
       const verdicts = result.frame_verdicts;
       const yes = Array.isArray(verdicts) ? verdicts.filter(v => v.satisfied === true && Number.isFinite(v.confidence) &&

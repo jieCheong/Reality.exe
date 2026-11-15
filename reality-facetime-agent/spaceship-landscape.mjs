@@ -51,14 +51,14 @@ export function drawLandscape(ctx, tick, speaking, state, colors, phases) {
   panel(LANDSCAPE_LAYOUT.checkpoints);
   ctx.strokeStyle=colors.border;ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(76,303);ctx.lineTo(564,303);ctx.stroke();
   phases.forEach((label,i)=>{
-    const x=76+i*(488/3),status=state.checkpoints[label];
+    const x=76+i*(488/(phases.length-1)),status=state.checkpoints[label];
     const color=status==='active'?colors.amber:status==='complete'?colors.cyan:colors.dim;
     ctx.fillStyle=status==='pending'?colors.panelRaised:color;ctx.strokeStyle=color;ctx.lineWidth=2;
     ctx.beginPath();ctx.arc(x,303,status==='active'?7:5,0,Math.PI*2);ctx.fill();ctx.stroke();
     if(status==='complete') {
       ctx.strokeStyle=colors.background;ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(x-3,303);ctx.lineTo(x-1,305);ctx.lineTo(x+3,301);ctx.stroke();
     }
-    ctx.fillStyle=status==='pending'?colors.muted:colors.text;ctx.font='700 12px Orbitron';ctx.textAlign='center';ctx.fillText(label,x,330);
+    ctx.fillStyle=status==='pending'?colors.muted:colors.text;ctx.font='700 11px Orbitron';ctx.textAlign='center';ctx.fillText(label,x,330);
   });
   ctx.textAlign='left';
 }

@@ -24,8 +24,8 @@ test('Juan renderer uses bundled Orbitron and retains the Part A RGBA contract',
 });
 
 test('mock phases, objective, progress and checkpoint state independently affect pixels', () => {
-  assert.deepEqual(MOCK_HUD_SEQUENCE.map(s => s.phase), ['SCAN', 'POWER', 'SECURITY', 'PORTAL']);
-  assert.equal(new Set(MOCK_HUD_SEQUENCE.map(s => hash(drawFace(0, false, s)))).size, 4);
+  assert.deepEqual(MOCK_HUD_SEQUENCE.map(s => s.phase), ['SCAN', 'POWER', 'SECURITY', 'HIDE', 'FIND', 'PORTAL']);
+  assert.equal(new Set(MOCK_HUD_SEQUENCE.map(s => hash(drawFace(0, false, s)))).size, 6);
   const base = { phase: 'POWER', missionProgress: 0.3, objective: 'RESTORE POWER' };
   const original = hash(drawFace(0, false, base));
   for (const override of [
@@ -65,7 +65,7 @@ test('isolated video publisher accepts game snapshots on the existing native cam
   try {
     for (const gameState of MOCK_HUD_SEQUENCE) { hud.setState({ gameState }); hud.render(); }
     assert.equal(published, 1, 'state changes never replace the published video track');
-    assert.equal(new Set(frames.slice(1)).size, 4);
+    assert.equal(new Set(frames.slice(1)).size, 6);
     assert.throws(() => hud.setState({ gameState: { phase: 'BAD' } }), /phase/);
     const snapshot = { phase: 'POWER', objective: 'UNCHANGED', checkpoints: { POWER: 'active' } };
     hud.setState({ gameState: snapshot }); hud.render();
@@ -82,7 +82,7 @@ test('mock playback is optional and cancellable', async () => {
   const stop = playHudMock({ setState(update) { states.push(update.gameState.phase); } }, 5);
   await new Promise(resolve => setTimeout(resolve, 80));
   stop();
-  assert.deepEqual(states, ['SCAN', 'POWER', 'SECURITY', 'PORTAL']);
+  assert.deepEqual(states, ['SCAN', 'POWER', 'SECURITY', 'HIDE', 'FIND', 'PORTAL']);
   const count = states.length;
   await new Promise(resolve => setTimeout(resolve, 10));
   assert.equal(states.length, count);

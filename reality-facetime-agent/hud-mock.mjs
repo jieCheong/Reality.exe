@@ -1,8 +1,10 @@
 // Display fixtures only. The real game engine owns progression.
 export const MOCK_HUD_SEQUENCE = Object.freeze([
   Object.freeze({ phase: 'SCAN', objective: 'SHOW 3 OBJECTS', missionProgress: 0 }),
-  Object.freeze({ phase: 'POWER', objective: 'RESTORE REACTOR POWER', missionProgress: 1 / 3 }),
-  Object.freeze({ phase: 'SECURITY', objective: 'SHOW YOUR ACCESS KEY', missionProgress: 2 / 3 }),
+  Object.freeze({ phase: 'POWER', objective: 'RESTORE REACTOR POWER', missionProgress: 1 / 5 }),
+  Object.freeze({ phase: 'SECURITY', objective: 'SHOW YOUR ACCESS KEY', missionProgress: 2 / 5 }),
+  Object.freeze({ phase: 'HIDE', objective: 'ENGAGE CLOAKING', missionProgress: 3 / 5 }),
+  Object.freeze({ phase: 'FIND', objective: 'LOCATE THE BEACON', missionProgress: 4 / 5 }),
   Object.freeze({ phase: 'PORTAL', objective: 'OPEN THE PORTAL', missionProgress: 1 }),
 ]);
 

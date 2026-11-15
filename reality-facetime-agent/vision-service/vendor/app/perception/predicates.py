@@ -68,6 +68,16 @@ _QUESTIONS = {
         'Is "{a}" covered by the player\'s hand, so that the hand is on top of it and '
         "hides most of it? A hand merely near it does not count."
     ),
+    PredicateType.HIDDEN: (
+        'The object "{a}" must be HIDDEN: is "{a}" completely out of sight in this frame '
+        "(no part of it visible), while the camera still clearly shows the desk and the "
+        "other listed objects? If the picture is dark, blocked, or blurry, answer false."
+    ),
+    PredicateType.SHOW: (
+        'Is the player clearly showing a {a} (any {a} counts) to the camera, so that it is '
+        'plainly visible? Report it in `objects` under the exact name "{a}". A picture of a '
+        "{a} on a screen, or a different kind of object, does not count."
+    ),
 }
 
 VERIFY_PROMPT = """You are a strict referee for a physical game played over a video call.
@@ -104,7 +114,11 @@ def build_verify_prompt(pred_img: Predicate, catalog: dict[str, DetectedObject])
     b = pred_img.args[1] if len(pred_img.args) > 1 else ""
     seq = " -> ".join(f'"{x}"' for x in pred_img.args)
     question = q.format(a=a, b=b, seq=seq)
-    return VERIFY_PROMPT.format(objects=describe_objects(pred_img.args, catalog), question=question)
+    names = list(pred_img.args)
+    if pred_img.type == PredicateType.HIDDEN:
+        # List the other scanned objects too: they prove the camera can still see the desk.
+        names += [n for n in catalog if n not in names]
+    return VERIFY_PROMPT.format(objects=describe_objects(names, catalog), question=question)
 
 
 # --------------------------------------------------------------------------- #
@@ -138,6 +152,15 @@ def _cx(b: list[int]) -> float:
 def geometry_veto(pred_img: Predicate, j: FrameJudgment) -> Optional[str]:
     """Return a reason string if geometry contradicts a model PASS, else None."""
     t, args = pred_img.type, pred_img.args
+
+    if t == PredicateType.HIDDEN:
+        target = args[0]
+        if _visible(j, target):
+            return f'"{target}" is still visible'
+        # Fail closed if nothing else is visible: a covered or blank camera is not "hidden".
+        if not any(o.visible and not _same(o.name, target) for o in j.objects):
+            return "no other object visible; camera may be blocked"
+        return None
 
     # Every named object must be visible (except the thing being covered).
     must_see = args if t != PredicateType.COVERED else []

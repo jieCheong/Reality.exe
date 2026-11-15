@@ -28,8 +28,8 @@ test('landscape-test natively renders dynamic HUD and publishes matching 640x360
     const frames=[];let published=0,unpublished=0;
     class Source extends VideoSource {captureFrame(frame,ts,rotation){assert.equal(frame.width,640);assert.equal(frame.height,360);assert.equal(frame.data.length,921600);assert.equal(frame.type,VideoBufferType.RGBA);assert.equal(rotation,0);frames.push(hash(frame.data));super.captureFrame(frame,ts,rotation);}}
     const hud=await publishHud({async publishTrack(track,opts){published++;assert.equal(track.name,'agent-video');assert.equal(track.source.width,640);assert.equal(track.source.height,360);assert.equal(opts.source,TrackSource.SOURCE_CAMERA);return {sid:'offline-only'};},async unpublishTrack(){unpublished++;}},{source:new Source(WIDTH,HEIGHT)});
-    for(const phase of ['SCAN','POWER','SECURITY','PORTAL']) {hud.setState({gameState:{phase}});hud.render();}
-    assert.equal(new Set(frames.slice(1)).size,4);assert.equal(published,1);
+    for(const phase of ['SCAN','POWER','SECURITY','HIDE','FIND','PORTAL']) {hud.setState({gameState:{phase}});hud.render();}
+    assert.equal(new Set(frames.slice(1)).size,6);assert.equal(published,1);
     await hud.close();assert.equal(unpublished,1);dispose();
   `;
   const result=spawnSync(process.execPath,['--input-type=module','-e',script],{

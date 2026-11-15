@@ -1,3 +1,4 @@
+import { PHASES } from './mission-engine.mjs';
 const normalize = text => String(text).toLowerCase().replace(/[^\p{L}\p{N} ]/gu, ' ').replace(/\s+/g, ' ').trim();
 const numbers = [['1','one','first'], ['2','two','second'], ['3','three','third']];
 
@@ -20,7 +21,7 @@ export function validateThemes(themes) {
     if (theme.intro !== undefined && (typeof theme.intro !== 'string' || theme.intro.length > 240)) throw new Error('Theme intro too long');
     const missionIntros = { ...(theme.missionIntros || {}) };
     for (const [phase, text] of Object.entries(missionIntros)) {
-      if (!['SCAN','POWER','SECURITY','PORTAL'].includes(phase) || typeof text !== 'string' || text.length > 160) throw new Error('Invalid mission introduction');
+      if (!PHASES.includes(phase) || typeof text !== 'string' || text.length > 160) throw new Error('Invalid mission introduction');
     }
     return Object.freeze({ id: theme.id, name: theme.name.trim(), aliases: Object.freeze([...new Set(aliases)]),
       intro: theme.intro || '', missionIntros: Object.freeze(missionIntros) });

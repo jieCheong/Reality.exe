@@ -20,6 +20,8 @@ class PredicateType(str, Enum):
     LEFT_OF = "LEFT_OF"                        # args: [A, B]  -> A left of B
     ORDER_LEFT_TO_RIGHT = "ORDER_LEFT_TO_RIGHT"  # args: [A, B, C, ...]
     COVERED = "COVERED"                        # args: [X]     -> X covered by a hand
+    HIDDEN = "HIDDEN"                          # args: [X]     -> X out of sight, rest of scene still visible
+    SHOW = "SHOW"                              # args: [kind]  -> any object of that kind shown (need not be scanned)
 
 
 ARITY = {
@@ -28,6 +30,8 @@ ARITY = {
     PredicateType.LEFT_OF: (2, 2),
     PredicateType.ORDER_LEFT_TO_RIGHT: (2, 6),
     PredicateType.COVERED: (1, 1),
+    PredicateType.HIDDEN: (1, 1),
+    PredicateType.SHOW: (1, 1),
 }
 
 

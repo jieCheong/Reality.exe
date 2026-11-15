@@ -65,6 +65,15 @@ class SafeModel:
             # Additional veto only: missing/invalid boxes or ambiguous noun matching cannot pass.
             names = re.findall(r'^- "([^"]+)"', prompt, re.M)
             by_name = {obj.name.strip().lower(): obj for obj in result.objects}
+            hidden = re.search(r'The object "([^"]+)" must be HIDDEN', prompt)
+            if hidden:
+                # HIDE task: the target must NOT be visible; every other scanned object still must be.
+                target = by_name.get(hidden.group(1).lower())
+                if target is not None and target.visible:
+                    raise ValueError('Hidden object is still visible')
+                names = [n for n in names if n != hidden.group(1)]
+                if not names:
+                    raise ValueError('Hide task needs other objects in view')
             for name in names:
                 obj = by_name.get(name.lower())
                 if obj is None or not obj.visible or len(obj.box_2d) != 4:
@@ -89,8 +98,12 @@ def fixture_model(scenario):
         boxes = [[100, 100 + 250*i, 300, 200 + 250*i] for i in range(len(names))]
         if 'ON TOP OF' in prompt: boxes = [[50, 120, 150, 180], [150, 100, 350, 300]]
         if scenario == 'geometry_veto': boxes.reverse()
+        hidden = re.search(r'The object "([^"]+)" must be HIDDEN', prompt)
+        # geometry_veto for a hide task = the "hidden" object is still in view.
+        gone = {hidden.group(1)} if hidden and scenario != 'geometry_veto' else set()
         return {'satisfied': scenario != 'fail', 'confidence': 0.4 if scenario == 'low_confidence' else 0.95,
-                'objects': [{'name': name, 'visible': True, 'box_2d': box} for name, box in zip(names, boxes)],
+                'objects': [{'name': name, 'visible': name not in gone, 'box_2d': [] if name in gone else box}
+                            for name, box in zip(names, boxes)],
                 'evidence': 'MOCK scripted result, not real vision',
                 'correction_hint': 'Move the object into the requested position.' if scenario == 'fail' else None}
     return FakeVision(respond)
@@ -136,7 +149,10 @@ class Bridge:
             from app.perception.schemas import DetectedObject
             service.set_catalog([DetectedObject.model_validate(obj) for obj in request.catalog])
             predicate = Predicate.parse(request.predicate or '')
-            if any(name not in service.catalog for name in predicate.args): raise ValueError('Object not in catalog')
+            if predicate.type.value == 'SHOW':
+                # FIND task: a generic kind of object ("pen") that need not be one of the scanned three.
+                if not re.fullmatch(r'[a-z][a-z -]{0,30}', predicate.args[0]): raise ValueError('Invalid object kind')
+            elif any(name not in service.catalog for name in predicate.args): raise ValueError('Object not in catalog')
             result = (await service.verify(predicate, frames)).model_dump()
             # Never expose raw provider exception bodies/credentials over the adapter.
             for verdict in result['frame_verdicts']:

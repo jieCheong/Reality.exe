@@ -53,14 +53,14 @@ test('MOCK end-to-end: camera → JPEG → local Python perception/voting → mi
     scenario = 'fail'; await round(); assert.equal(runtime.engine.phase, 'POWER');
     assert.ok(spoken.some(text => text.includes('requested position')));
     scenario = undefined;
-    for (const phase of ['POWER','SECURITY','PORTAL']) {
+    for (const phase of ['POWER','SECURITY','HIDE','FIND','PORTAL']) {
       assert.equal(runtime.engine.phase, phase);
       await round(); assert.equal(runtime.engine.phase, phase, 'first passing round cannot advance');
       await round();
     }
     await runtime.speech;
     assert.equal(runtime.engine.escaped, true);
-    assert.deepEqual([...new Set(states.map(s => s.phase))], ['SCAN','POWER','SECURITY','PORTAL']);
+    assert.deepEqual([...new Set(states.map(s => s.phase))], ['SCAN','POWER','SECURITY','HIDE','FIND','PORTAL']);
     assert.equal(states.at(-1).missionProgress, 1);
     assert.ok(states.every(s => s.objective.startsWith('[MOCK VISION]')));
     assert.ok(spoken.some(text => text.includes('Escape complete')));

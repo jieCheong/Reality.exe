@@ -36,7 +36,7 @@ export interface CallerVideoPort {
 }
 
 /** Teammate C: supplies display state; this adapter makes no game decisions. */
-export type HudPhase = 'SCAN' | 'POWER' | 'SECURITY' | 'PORTAL';
+export type HudPhase = 'SCAN' | 'POWER' | 'SECURITY' | 'HIDE' | 'FIND' | 'PORTAL';
 export type CheckpointStatus = 'pending' | 'active' | 'complete';
 
 /** Optional display snapshot from the game engine; never inferred by the renderer. */

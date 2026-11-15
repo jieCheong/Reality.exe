@@ -19,10 +19,11 @@ export const HUD_LAYOUT = landscape ? LANDSCAPE_LAYOUT : Object.freeze({
 
 const fontPath = fileURLToPath(new URL('./assets/Orbitron.ttf', import.meta.url));
 if (!GlobalFonts.registerFromPath(fontPath, 'Orbitron')) throw new Error('Could not load the bundled Orbitron HUD font');
-export const PHASES = Object.freeze(['SCAN', 'POWER', 'SECURITY', 'PORTAL']);
+export const PHASES = Object.freeze(['SCAN', 'POWER', 'SECURITY', 'HIDE', 'FIND', 'PORTAL']);
 const OBJECTIVES = {
   SCAN: 'SHOW 3 OBJECTS', POWER: 'RESTORE REACTOR POWER',
-  SECURITY: 'UNLOCK SHIP SECURITY', PORTAL: 'OPEN THE PORTAL',
+  SECURITY: 'UNLOCK SHIP SECURITY', HIDE: 'ENGAGE CLOAKING', FIND: 'LOCATE THE BEACON',
+  PORTAL: 'OPEN THE PORTAL',
 };
 const COLORS = Object.freeze({
   background: '#07131d', panel: '#101f2a', panelRaised: '#142733',
@@ -94,7 +95,7 @@ export function drawFace(tick, speaking = false, gameState = undefined) {
     ctx.strokeStyle = COLORS.border; ctx.lineWidth = 3;
     ctx.beginPath(); ctx.moveTo(62, 652 + checkpointOffset); ctx.lineTo(62, 874 + checkpointOffset); ctx.stroke();
     PHASES.forEach((label, i) => {
-      const x = 62, y = 652 + checkpointOffset + i * 74, status = state.checkpoints[label];
+      const x = 62, y = 652 + checkpointOffset + i * (222 / (PHASES.length - 1)), status = state.checkpoints[label];
       const color = status === 'active' ? COLORS.amber : status === 'complete' ? COLORS.cyan : COLORS.dim;
       ctx.fillStyle = status === 'pending' ? COLORS.panelRaised : color; ctx.strokeStyle = color; ctx.lineWidth = 2;
       ctx.beginPath(); ctx.arc(x, y, status === 'active' ? 9 : 7, 0, Math.PI * 2); ctx.fill(); ctx.stroke();

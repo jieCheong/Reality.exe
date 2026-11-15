@@ -230,3 +230,40 @@ def test_lenient_name_matching():
         ObjectLocation(name="Silver Pen", visible=True, box_2d=BOX_L),
         ObjectLocation(name="notebook", visible=True, box_2d=BOX_R)])
     assert geometry_veto(left, j) is None
+
+
+# ----------------------------------------------------------------- hide / show tasks
+def test_hidden_veto():
+    hid = Predicate.parse("HIDDEN(keys)")
+    ok = judgment(True, .9, {"keys": None, "wallet": BOX_L})
+    assert geometry_veto(hid, ok) is None                                   # gone, desk still in view
+    assert geometry_veto(hid, judgment(True, .9, {"keys": BOX_R, "wallet": BOX_L}))  # still visible
+    assert geometry_veto(hid, judgment(True, .9, {"keys": None, "wallet": None}))    # blank/blocked camera
+    assert geometry_veto(hid, judgment(True, .9, {}))                                 # nothing reported
+
+
+def test_show_veto():
+    show = Predicate.parse("SHOW(pen)")
+    assert geometry_veto(show, judgment(True, .9, {"pen": BOX_M})) is None
+    assert geometry_veto(show, judgment(True, .9, {"pen": None})) is not None
+    assert geometry_veto(show, judgment(True, .9, {"marker": BOX_M})) is not None
+
+
+def test_hidden_prompt_lists_other_objects():
+    model = FakeVision(lambda im, p, s: judgment(True, .9, {"keys": None, "wallet": BOX_L, "phone": BOX_R}))
+    svc = PerceptionService(model, PerceptionConfig(flip_left_right=False))
+    svc.set_catalog([DetectedObject(name="keys", description="silver keys"),
+                     DetectedObject(name="wallet", description="brown wallet"),
+                     DetectedObject(name="phone", description="black phone")])
+    r = run(svc.verify(Predicate.parse("HIDDEN(keys)"), frames()))
+    assert r.satisfied
+    prompt = model.calls[0]
+    assert 'must be HIDDEN' in prompt and '"wallet": brown wallet' in prompt and '"phone": black phone' in prompt
+
+
+def test_show_generic_object_not_in_catalog():
+    model = FakeVision(lambda im, p, s: judgment(True, .9, {"pen": BOX_M}))
+    svc = PerceptionService(model, PerceptionConfig(flip_left_right=False))
+    svc.set_catalog(CATALOG[:2])  # pen is NOT one of the scanned objects
+    r = run(svc.verify(Predicate.parse("SHOW(pen)"), frames()))
+    assert r.satisfied and 'any pen counts' in model.calls[0]

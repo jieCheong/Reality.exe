@@ -19,7 +19,7 @@ function scanned() { const e = new MissionEngine(); apply(e, { status: 'checked'
 test('all missions require two fresh consensus rounds; raw done never progresses state', () => {
   const engine = scanned(); assert.equal(engine.phase, 'POWER');
   assert.equal(engine.apply(engine.request(), { satisfied: true, status: 'checked' }), false);
-  for (const phase of ['POWER', 'SECURITY', 'PORTAL']) {
+  for (const phase of ['POWER', 'SECURITY', 'HIDE', 'FIND', 'PORTAL']) {
     assert.equal(engine.phase, phase);
     assert.equal(apply(engine, passing(engine)), false);
     assert.equal(apply(engine, passing(engine)), true);
