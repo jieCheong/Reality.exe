@@ -1,0 +1,1078 @@
+{
+  "model": "gemini-3.5-flash",
+  "cases": [
+    {
+      "id": "img_0963_1_1_s01_on_f0_covered_charger",
+      "predicate": "COVERED(charger)",
+      "type": "COVERED",
+      "expected": false,
+      "tags": [
+        "cluttered",
+        "far_camera",
+        "negative"
+      ],
+      "n_images": 1,
+      "status": "model_error",
+      "latency_ms": 145.7,
+      "frame_verdicts": [
+        {
+          "frame_index": 0,
+          "satisfied": false,
+          "confidence": 0.0,
+          "evidence": "model error",
+          "correction_hint": null,
+          "objects_seen": [],
+          "geometry_override": null,
+          "error": "RuntimeError('Gemini call failed: ClientError(\"429 RESOURCE_EXHAUSTED. {\\'error\\': {\\'code\\': 429, \\'message\\': \\'You exceeded your current quota, please check your plan and billing details. For more ",
+          "latency_ms": 145.5
+        }
+      ],
+      "evidence": "model error",
+      "correction_hint": null
+    },
+    {
+      "id": "img_0963_1_1_s01_on_f0_held_up_charger",
+      "predicate": "HELD_UP(charger)",
+      "type": "HELD_UP",
+      "expected": false,
+      "tags": [
+        "cluttered",
+        "far_camera",
+        "negative"
+      ],
+      "n_images": 1,
+      "status": "model_error",
+      "latency_ms": 135.8,
+      "frame_verdicts": [
+        {
+          "frame_index": 0,
+          "satisfied": false,
+          "confidence": 0.0,
+          "evidence": "model error",
+          "correction_hint": null,
+          "objects_seen": [],
+          "geometry_override": null,
+          "error": "RuntimeError('Gemini call failed: ClientError(\"429 RESOURCE_EXHAUSTED. {\\'error\\': {\\'code\\': 429, \\'message\\': \\'You exceeded your current quota, please check your plan and billing details. For more ",
+          "latency_ms": 135.6
+        }
+      ],
+      "evidence": "model error",
+      "correction_hint": null
+    },
+    {
+      "id": "img_0963_1_1_s01_on_f0_on_top_of_charger_wallet",
+      "predicate": "ON_TOP_OF(charger, wallet)",
+      "type": "ON_TOP_OF",
+      "expected": true,
+      "tags": [
+        "cluttered",
+        "far_camera"
+      ],
+      "n_images": 1,
+      "status": "model_error",
+      "latency_ms": 276.2,
+      "frame_verdicts": [
+        {
+          "frame_index": 0,
+          "satisfied": false,
+          "confidence": 0.0,
+          "evidence": "model error",
+          "correction_hint": null,
+          "objects_seen": [],
+          "geometry_override": null,
+          "error": "RuntimeError('Gemini call failed: ClientError(\"429 RESOURCE_EXHAUSTED. {\\'error\\': {\\'code\\': 429, \\'message\\': \\'You exceeded your current quota, please check your plan and billing details. For more ",
+          "latency_ms": 237.0
+        }
+      ],
+      "evidence": "model error",
+      "correction_hint": null
+    },
+    {
+      "id": "img_0963_1_1_s01_on_f0_on_top_of_wallet_charger",
+      "predicate": "ON_TOP_OF(wallet, charger)",
+      "type": "ON_TOP_OF",
+      "expected": false,
+      "tags": [
+        "cluttered",
+        "far_camera",
+        "negative"
+      ],
+      "n_images": 1,
+      "status": "checked",
+      "latency_ms": 3568.1,
+      "frame_verdicts": [
+        {
+          "frame_index": 0,
+          "satisfied": false,
+          "confidence": 0.95,
+          "evidence": "The charger is resting on top of the wallet instead of the wallet on top of the charger.",
+          "correction_hint": "Place the wallet on top of the charger.",
+          "objects_seen": [
+            "wallet",
+            "charger"
+          ],
+          "geometry_override": null,
+          "error": null,
+          "latency_ms": 3567.8
+        }
+      ],
+      "evidence": "The charger is resting on top of the wallet instead of the wallet on top of the charger.",
+      "correction_hint": "Place the wallet on top of the charger."
+    },
+    {
+      "id": "img_0963_1_1_s01_on_f1_covered_charger",
+      "predicate": "COVERED(charger)",
+      "type": "COVERED",
+      "expected": false,
+      "tags": [
+        "cluttered",
+        "far_camera",
+        "negative"
+      ],
+      "n_images": 1,
+      "status": "model_error",
+      "latency_ms": 162.1,
+      "frame_verdicts": [
+        {
+          "frame_index": 0,
+          "satisfied": false,
+          "confidence": 0.0,
+          "evidence": "model error",
+          "correction_hint": null,
+          "objects_seen": [],
+          "geometry_override": null,
+          "error": "RuntimeError('Gemini call failed: ClientError(\"429 RESOURCE_EXHAUSTED. {\\'error\\': {\\'code\\': 429, \\'message\\': \\'You exceeded your current quota, please check your plan and billing details. For more ",
+          "latency_ms": 161.9
+        }
+      ],
+      "evidence": "model error",
+      "correction_hint": null
+    },
+    {
+      "id": "img_0963_1_1_s01_on_f1_held_up_charger",
+      "predicate": "HELD_UP(charger)",
+      "type": "HELD_UP",
+      "expected": false,
+      "tags": [
+        "cluttered",
+        "far_camera",
+        "negative"
+      ],
+      "n_images": 1,
+      "status": "model_error",
+      "latency_ms": 163.7,
+      "frame_verdicts": [
+        {
+          "frame_index": 0,
+          "satisfied": false,
+          "confidence": 0.0,
+          "evidence": "model error",
+          "correction_hint": null,
+          "objects_seen": [],
+          "geometry_override": null,
+          "error": "RuntimeError('Gemini call failed: ClientError(\"429 RESOURCE_EXHAUSTED. {\\'error\\': {\\'code\\': 429, \\'message\\': \\'You exceeded your current quota, please check your plan and billing details. For more ",
+          "latency_ms": 163.5
+        }
+      ],
+      "evidence": "model error",
+      "correction_hint": null
+    },
+    {
+      "id": "img_0963_1_1_s01_on_f1_on_top_of_charger_wallet",
+      "predicate": "ON_TOP_OF(charger, wallet)",
+      "type": "ON_TOP_OF",
+      "expected": true,
+      "tags": [
+        "cluttered",
+        "far_camera"
+      ],
+      "n_images": 1,
+      "status": "checked",
+      "latency_ms": 3258.7,
+      "frame_verdicts": [
+        {
+          "frame_index": 0,
+          "satisfied": true,
+          "confidence": 0.98,
+          "evidence": "The small white charger is sitting directly on top of the black wallet.",
+          "correction_hint": null,
+          "objects_seen": [
+            "charger",
+            "wallet"
+          ],
+          "geometry_override": null,
+          "error": null,
+          "latency_ms": 3258.5
+        }
+      ],
+      "evidence": "The small white charger is sitting directly on top of the black wallet.",
+      "correction_hint": null
+    },
+    {
+      "id": "img_0963_1_1_s01_on_f1_on_top_of_wallet_charger",
+      "predicate": "ON_TOP_OF(wallet, charger)",
+      "type": "ON_TOP_OF",
+      "expected": false,
+      "tags": [
+        "cluttered",
+        "far_camera",
+        "negative"
+      ],
+      "n_images": 1,
+      "status": "model_error",
+      "latency_ms": 129.0,
+      "frame_verdicts": [
+        {
+          "frame_index": 0,
+          "satisfied": false,
+          "confidence": 0.0,
+          "evidence": "model error",
+          "correction_hint": null,
+          "objects_seen": [],
+          "geometry_override": null,
+          "error": "RuntimeError('Gemini call failed: ClientError(\"429 RESOURCE_EXHAUSTED. {\\'error\\': {\\'code\\': 429, \\'message\\': \\'You exceeded your current quota, please check your plan and billing details. For more ",
+          "latency_ms": 128.8
+        }
+      ],
+      "evidence": "model error",
+      "correction_hint": null
+    },
+    {
+      "id": "img_0963_1_1_s02_on_f0_covered_phone",
+      "predicate": "COVERED(phone)",
+      "type": "COVERED",
+      "expected": false,
+      "tags": [
+        "cluttered",
+        "far_camera",
+        "negative"
+      ],
+      "n_images": 1,
+      "status": "model_error",
+      "latency_ms": 141.2,
+      "frame_verdicts": [
+        {
+          "frame_index": 0,
+          "satisfied": false,
+          "confidence": 0.0,
+          "evidence": "model error",
+          "correction_hint": null,
+          "objects_seen": [],
+          "geometry_override": null,
+          "error": "RuntimeError('Gemini call failed: ClientError(\"429 RESOURCE_EXHAUSTED. {\\'error\\': {\\'code\\': 429, \\'message\\': \\'You exceeded your current quota, please check your plan and billing details. For more ",
+          "latency_ms": 141.0
+        }
+      ],
+      "evidence": "model error",
+      "correction_hint": null
+    },
+    {
+      "id": "img_0963_1_1_s02_on_f0_held_up_phone",
+      "predicate": "HELD_UP(phone)",
+      "type": "HELD_UP",
+      "expected": false,
+      "tags": [
+        "cluttered",
+        "far_camera",
+        "negative"
+      ],
+      "n_images": 1,
+      "status": "model_error",
+      "latency_ms": 135.2,
+      "frame_verdicts": [
+        {
+          "frame_index": 0,
+          "satisfied": false,
+          "confidence": 0.0,
+          "evidence": "model error",
+          "correction_hint": null,
+          "objects_seen": [],
+          "geometry_override": null,
+          "error": "RuntimeError('Gemini call failed: ClientError(\"429 RESOURCE_EXHAUSTED. {\\'error\\': {\\'code\\': 429, \\'message\\': \\'You exceeded your current quota, please check your plan and billing details. For more ",
+          "latency_ms": 135.0
+        }
+      ],
+      "evidence": "model error",
+      "correction_hint": null
+    },
+    {
+      "id": "img_0963_1_1_s02_on_f0_on_top_of_phone_wallet",
+      "predicate": "ON_TOP_OF(phone, wallet)",
+      "type": "ON_TOP_OF",
+      "expected": true,
+      "tags": [
+        "cluttered",
+        "far_camera"
+      ],
+      "n_images": 1,
+      "status": "model_error",
+      "latency_ms": 145.3,
+      "frame_verdicts": [
+        {
+          "frame_index": 0,
+          "satisfied": false,
+          "confidence": 0.0,
+          "evidence": "model error",
+          "correction_hint": null,
+          "objects_seen": [],
+          "geometry_override": null,
+          "error": "RuntimeError('Gemini call failed: ClientError(\"429 RESOURCE_EXHAUSTED. {\\'error\\': {\\'code\\': 429, \\'message\\': \\'You exceeded your current quota, please check your plan and billing details. For more ",
+          "latency_ms": 145.1
+        }
+      ],
+      "evidence": "model error",
+      "correction_hint": null
+    },
+    {
+      "id": "img_0963_1_1_s02_on_f0_on_top_of_wallet_phone",
+      "predicate": "ON_TOP_OF(wallet, phone)",
+      "type": "ON_TOP_OF",
+      "expected": false,
+      "tags": [
+        "cluttered",
+        "far_camera",
+        "negative"
+      ],
+      "n_images": 1,
+      "status": "model_error",
+      "latency_ms": 147.4,
+      "frame_verdicts": [
+        {
+          "frame_index": 0,
+          "satisfied": false,
+          "confidence": 0.0,
+          "evidence": "model error",
+          "correction_hint": null,
+          "objects_seen": [],
+          "geometry_override": null,
+          "error": "RuntimeError('Gemini call failed: ClientError(\"429 RESOURCE_EXHAUSTED. {\\'error\\': {\\'code\\': 429, \\'message\\': \\'You exceeded your current quota, please check your plan and billing details. For more ",
+          "latency_ms": 147.2
+        }
+      ],
+      "evidence": "model error",
+      "correction_hint": null
+    },
+    {
+      "id": "img_0963_1_1_s02_on_f1_covered_phone",
+      "predicate": "COVERED(phone)",
+      "type": "COVERED",
+      "expected": false,
+      "tags": [
+        "cluttered",
+        "far_camera",
+        "negative"
+      ],
+      "n_images": 1,
+      "status": "model_error",
+      "latency_ms": 153.9,
+      "frame_verdicts": [
+        {
+          "frame_index": 0,
+          "satisfied": false,
+          "confidence": 0.0,
+          "evidence": "model error",
+          "correction_hint": null,
+          "objects_seen": [],
+          "geometry_override": null,
+          "error": "RuntimeError('Gemini call failed: ClientError(\"429 RESOURCE_EXHAUSTED. {\\'error\\': {\\'code\\': 429, \\'message\\': \\'You exceeded your current quota, please check your plan and billing details. For more ",
+          "latency_ms": 153.7
+        }
+      ],
+      "evidence": "model error",
+      "correction_hint": null
+    },
+    {
+      "id": "img_0963_1_1_s02_on_f1_held_up_phone",
+      "predicate": "HELD_UP(phone)",
+      "type": "HELD_UP",
+      "expected": false,
+      "tags": [
+        "cluttered",
+        "far_camera",
+        "negative"
+      ],
+      "n_images": 1,
+      "status": "model_error",
+      "latency_ms": 183.3,
+      "frame_verdicts": [
+        {
+          "frame_index": 0,
+          "satisfied": false,
+          "confidence": 0.0,
+          "evidence": "model error",
+          "correction_hint": null,
+          "objects_seen": [],
+          "geometry_override": null,
+          "error": "RuntimeError('Gemini call failed: ClientError(\"429 RESOURCE_EXHAUSTED. {\\'error\\': {\\'code\\': 429, \\'message\\': \\'You exceeded your current quota, please check your plan and billing details. For more ",
+          "latency_ms": 183.1
+        }
+      ],
+      "evidence": "model error",
+      "correction_hint": null
+    },
+    {
+      "id": "img_0963_1_1_s02_on_f1_on_top_of_phone_wallet",
+      "predicate": "ON_TOP_OF(phone, wallet)",
+      "type": "ON_TOP_OF",
+      "expected": true,
+      "tags": [
+        "cluttered",
+        "far_camera"
+      ],
+      "n_images": 1,
+      "status": "model_error",
+      "latency_ms": 142.5,
+      "frame_verdicts": [
+        {
+          "frame_index": 0,
+          "satisfied": false,
+          "confidence": 0.0,
+          "evidence": "model error",
+          "correction_hint": null,
+          "objects_seen": [],
+          "geometry_override": null,
+          "error": "RuntimeError('Gemini call failed: ClientError(\"429 RESOURCE_EXHAUSTED. {\\'error\\': {\\'code\\': 429, \\'message\\': \\'You exceeded your current quota, please check your plan and billing details. For more ",
+          "latency_ms": 142.2
+        }
+      ],
+      "evidence": "model error",
+      "correction_hint": null
+    },
+    {
+      "id": "img_0963_1_1_s02_on_f1_on_top_of_wallet_phone",
+      "predicate": "ON_TOP_OF(wallet, phone)",
+      "type": "ON_TOP_OF",
+      "expected": false,
+      "tags": [
+        "cluttered",
+        "far_camera",
+        "negative"
+      ],
+      "n_images": 1,
+      "status": "model_error",
+      "latency_ms": 101.7,
+      "frame_verdicts": [
+        {
+          "frame_index": 0,
+          "satisfied": false,
+          "confidence": 0.0,
+          "evidence": "model error",
+          "correction_hint": null,
+          "objects_seen": [],
+          "geometry_override": null,
+          "error": "RuntimeError('Gemini call failed: ClientError(\"429 RESOURCE_EXHAUSTED. {\\'error\\': {\\'code\\': 429, \\'message\\': \\'You exceeded your current quota, please check your plan and billing details. For more ",
+          "latency_ms": 101.5
+        }
+      ],
+      "evidence": "model error",
+      "correction_hint": null
+    },
+    {
+      "id": "img_0963_1_1_s03_on_f0_covered_bracelet",
+      "predicate": "COVERED(bracelet)",
+      "type": "COVERED",
+      "expected": false,
+      "tags": [
+        "cluttered",
+        "far_camera",
+        "negative"
+      ],
+      "n_images": 1,
+      "status": "model_error",
+      "latency_ms": 133.0,
+      "frame_verdicts": [
+        {
+          "frame_index": 0,
+          "satisfied": false,
+          "confidence": 0.0,
+          "evidence": "model error",
+          "correction_hint": null,
+          "objects_seen": [],
+          "geometry_override": null,
+          "error": "RuntimeError('Gemini call failed: ClientError(\"429 RESOURCE_EXHAUSTED. {\\'error\\': {\\'code\\': 429, \\'message\\': \\'You exceeded your current quota, please check your plan and billing details. For more ",
+          "latency_ms": 132.8
+        }
+      ],
+      "evidence": "model error",
+      "correction_hint": null
+    },
+    {
+      "id": "img_0963_1_1_s03_on_f0_held_up_bracelet",
+      "predicate": "HELD_UP(bracelet)",
+      "type": "HELD_UP",
+      "expected": false,
+      "tags": [
+        "cluttered",
+        "far_camera",
+        "negative"
+      ],
+      "n_images": 1,
+      "status": "model_error",
+      "latency_ms": 115.5,
+      "frame_verdicts": [
+        {
+          "frame_index": 0,
+          "satisfied": false,
+          "confidence": 0.0,
+          "evidence": "model error",
+          "correction_hint": null,
+          "objects_seen": [],
+          "geometry_override": null,
+          "error": "RuntimeError('Gemini call failed: ClientError(\"429 RESOURCE_EXHAUSTED. {\\'error\\': {\\'code\\': 429, \\'message\\': \\'You exceeded your current quota, please check your plan and billing details. For more ",
+          "latency_ms": 115.3
+        }
+      ],
+      "evidence": "model error",
+      "correction_hint": null
+    },
+    {
+      "id": "img_0963_1_1_s03_on_f0_on_top_of_bracelet_phone",
+      "predicate": "ON_TOP_OF(bracelet, phone)",
+      "type": "ON_TOP_OF",
+      "expected": true,
+      "tags": [
+        "cluttered",
+        "far_camera"
+      ],
+      "n_images": 1,
+      "status": "model_error",
+      "latency_ms": 100.0,
+      "frame_verdicts": [
+        {
+          "frame_index": 0,
+          "satisfied": false,
+          "confidence": 0.0,
+          "evidence": "model error",
+          "correction_hint": null,
+          "objects_seen": [],
+          "geometry_override": null,
+          "error": "RuntimeError('Gemini call failed: ClientError(\"429 RESOURCE_EXHAUSTED. {\\'error\\': {\\'code\\': 429, \\'message\\': \\'You exceeded your current quota, please check your plan and billing details. For more ",
+          "latency_ms": 99.8
+        }
+      ],
+      "evidence": "model error",
+      "correction_hint": null
+    },
+    {
+      "id": "img_0963_1_1_s03_on_f0_on_top_of_phone_bracelet",
+      "predicate": "ON_TOP_OF(phone, bracelet)",
+      "type": "ON_TOP_OF",
+      "expected": false,
+      "tags": [
+        "cluttered",
+        "far_camera",
+        "negative"
+      ],
+      "n_images": 1,
+      "status": "checked",
+      "latency_ms": 5201.0,
+      "frame_verdicts": [
+        {
+          "frame_index": 0,
+          "satisfied": false,
+          "confidence": 0.95,
+          "evidence": "The bracelet is resting on top of the phone instead of the phone resting on top of the bracelet.",
+          "correction_hint": "Place the phone on top of the bracelet.",
+          "objects_seen": [
+            "phone",
+            "bracelet"
+          ],
+          "geometry_override": null,
+          "error": null,
+          "latency_ms": 5200.7
+        }
+      ],
+      "evidence": "The bracelet is resting on top of the phone instead of the phone resting on top of the bracelet.",
+      "correction_hint": "Place the phone on top of the bracelet."
+    },
+    {
+      "id": "img_0963_1_1_s03_on_f1_covered_bracelet",
+      "predicate": "COVERED(bracelet)",
+      "type": "COVERED",
+      "expected": false,
+      "tags": [
+        "cluttered",
+        "far_camera",
+        "negative"
+      ],
+      "n_images": 1,
+      "status": "model_error",
+      "latency_ms": 137.1,
+      "frame_verdicts": [
+        {
+          "frame_index": 0,
+          "satisfied": false,
+          "confidence": 0.0,
+          "evidence": "model error",
+          "correction_hint": null,
+          "objects_seen": [],
+          "geometry_override": null,
+          "error": "RuntimeError('Gemini call failed: ClientError(\"429 RESOURCE_EXHAUSTED. {\\'error\\': {\\'code\\': 429, \\'message\\': \\'You exceeded your current quota, please check your plan and billing details. For more ",
+          "latency_ms": 136.8
+        }
+      ],
+      "evidence": "model error",
+      "correction_hint": null
+    },
+    {
+      "id": "img_0963_1_1_s03_on_f1_held_up_bracelet",
+      "predicate": "HELD_UP(bracelet)",
+      "type": "HELD_UP",
+      "expected": false,
+      "tags": [
+        "cluttered",
+        "far_camera",
+        "negative"
+      ],
+      "n_images": 1,
+      "status": "model_error",
+      "latency_ms": 104.6,
+      "frame_verdicts": [
+        {
+          "frame_index": 0,
+          "satisfied": false,
+          "confidence": 0.0,
+          "evidence": "model error",
+          "correction_hint": null,
+          "objects_seen": [],
+          "geometry_override": null,
+          "error": "RuntimeError('Gemini call failed: ClientError(\"429 RESOURCE_EXHAUSTED. {\\'error\\': {\\'code\\': 429, \\'message\\': \\'You exceeded your current quota, please check your plan and billing details. For more ",
+          "latency_ms": 104.4
+        }
+      ],
+      "evidence": "model error",
+      "correction_hint": null
+    },
+    {
+      "id": "img_0963_1_1_s03_on_f1_on_top_of_bracelet_phone",
+      "predicate": "ON_TOP_OF(bracelet, phone)",
+      "type": "ON_TOP_OF",
+      "expected": true,
+      "tags": [
+        "cluttered",
+        "far_camera"
+      ],
+      "n_images": 1,
+      "status": "model_error",
+      "latency_ms": 144.1,
+      "frame_verdicts": [
+        {
+          "frame_index": 0,
+          "satisfied": false,
+          "confidence": 0.0,
+          "evidence": "model error",
+          "correction_hint": null,
+          "objects_seen": [],
+          "geometry_override": null,
+          "error": "RuntimeError('Gemini call failed: ClientError(\"429 RESOURCE_EXHAUSTED. {\\'error\\': {\\'code\\': 429, \\'message\\': \\'You exceeded your current quota, please check your plan and billing details. For more ",
+          "latency_ms": 140.9
+        }
+      ],
+      "evidence": "model error",
+      "correction_hint": null
+    },
+    {
+      "id": "img_0963_1_1_s03_on_f1_on_top_of_phone_bracelet",
+      "predicate": "ON_TOP_OF(phone, bracelet)",
+      "type": "ON_TOP_OF",
+      "expected": false,
+      "tags": [
+        "cluttered",
+        "far_camera",
+        "negative"
+      ],
+      "n_images": 1,
+      "status": "model_error",
+      "latency_ms": 152.4,
+      "frame_verdicts": [
+        {
+          "frame_index": 0,
+          "satisfied": false,
+          "confidence": 0.0,
+          "evidence": "model error",
+          "correction_hint": null,
+          "objects_seen": [],
+          "geometry_override": null,
+          "error": "RuntimeError('Gemini call failed: ClientError(\"429 RESOURCE_EXHAUSTED. {\\'error\\': {\\'code\\': 429, \\'message\\': \\'You exceeded your current quota, please check your plan and billing details. For more ",
+          "latency_ms": 152.3
+        }
+      ],
+      "evidence": "model error",
+      "correction_hint": null
+    },
+    {
+      "id": "img_0963_1_1_s04_row_f0_left_of_phone_watch",
+      "predicate": "LEFT_OF(phone, watch)",
+      "type": "LEFT_OF",
+      "expected": true,
+      "tags": [
+        "cluttered",
+        "far_camera"
+      ],
+      "n_images": 1,
+      "status": "model_error",
+      "latency_ms": 148.7,
+      "frame_verdicts": [
+        {
+          "frame_index": 0,
+          "satisfied": false,
+          "confidence": 0.0,
+          "evidence": "model error",
+          "correction_hint": null,
+          "objects_seen": [],
+          "geometry_override": null,
+          "error": "RuntimeError('Gemini call failed: ClientError(\"429 RESOURCE_EXHAUSTED. {\\'error\\': {\\'code\\': 429, \\'message\\': \\'You exceeded your current quota, please check your plan and billing details. For more ",
+          "latency_ms": 148.6
+        }
+      ],
+      "evidence": "model error",
+      "correction_hint": null
+    },
+    {
+      "id": "img_0963_1_1_s04_row_f0_left_of_watch_phone",
+      "predicate": "LEFT_OF(watch, phone)",
+      "type": "LEFT_OF",
+      "expected": false,
+      "tags": [
+        "cluttered",
+        "far_camera",
+        "negative"
+      ],
+      "n_images": 1,
+      "status": "model_error",
+      "latency_ms": 149.4,
+      "frame_verdicts": [
+        {
+          "frame_index": 0,
+          "satisfied": false,
+          "confidence": 0.0,
+          "evidence": "model error",
+          "correction_hint": null,
+          "objects_seen": [],
+          "geometry_override": null,
+          "error": "RuntimeError('Gemini call failed: ClientError(\"429 RESOURCE_EXHAUSTED. {\\'error\\': {\\'code\\': 429, \\'message\\': \\'You exceeded your current quota, please check your plan and billing details. For more ",
+          "latency_ms": 145.8
+        }
+      ],
+      "evidence": "model error",
+      "correction_hint": null
+    },
+    {
+      "id": "img_0963_1_1_s04_row_f0_order_left_to_right_phone_wallet_keys_watch",
+      "predicate": "ORDER_LEFT_TO_RIGHT([phone, wallet, keys, watch])",
+      "type": "ORDER_LEFT_TO_RIGHT",
+      "expected": true,
+      "tags": [
+        "cluttered",
+        "far_camera"
+      ],
+      "n_images": 1,
+      "status": "model_error",
+      "latency_ms": 83.7,
+      "frame_verdicts": [
+        {
+          "frame_index": 0,
+          "satisfied": false,
+          "confidence": 0.0,
+          "evidence": "model error",
+          "correction_hint": null,
+          "objects_seen": [],
+          "geometry_override": null,
+          "error": "RuntimeError('Gemini call failed: ClientError(\"429 RESOURCE_EXHAUSTED. {\\'error\\': {\\'code\\': 429, \\'message\\': \\'You exceeded your current quota, please check your plan and billing details. For more ",
+          "latency_ms": 83.4
+        }
+      ],
+      "evidence": "model error",
+      "correction_hint": null
+    },
+    {
+      "id": "img_0963_1_1_s04_row_f0_order_left_to_right_wallet_phone_keys_watch",
+      "predicate": "ORDER_LEFT_TO_RIGHT([wallet, phone, keys, watch])",
+      "type": "ORDER_LEFT_TO_RIGHT",
+      "expected": false,
+      "tags": [
+        "cluttered",
+        "far_camera",
+        "negative"
+      ],
+      "n_images": 1,
+      "status": "model_error",
+      "latency_ms": 143.1,
+      "frame_verdicts": [
+        {
+          "frame_index": 0,
+          "satisfied": false,
+          "confidence": 0.0,
+          "evidence": "model error",
+          "correction_hint": null,
+          "objects_seen": [],
+          "geometry_override": null,
+          "error": "RuntimeError('Gemini call failed: ClientError(\"429 RESOURCE_EXHAUSTED. {\\'error\\': {\\'code\\': 429, \\'message\\': \\'You exceeded your current quota, please check your plan and billing details. For more ",
+          "latency_ms": 143.0
+        }
+      ],
+      "evidence": "model error",
+      "correction_hint": null
+    },
+    {
+      "id": "img_0963_1_1_s04_row_f0_order_left_to_right_watch_keys_wallet_phone",
+      "predicate": "ORDER_LEFT_TO_RIGHT([watch, keys, wallet, phone])",
+      "type": "ORDER_LEFT_TO_RIGHT",
+      "expected": false,
+      "tags": [
+        "cluttered",
+        "far_camera",
+        "negative"
+      ],
+      "n_images": 1,
+      "status": "model_error",
+      "latency_ms": 165.3,
+      "frame_verdicts": [
+        {
+          "frame_index": 0,
+          "satisfied": false,
+          "confidence": 0.0,
+          "evidence": "model error",
+          "correction_hint": null,
+          "objects_seen": [],
+          "geometry_override": null,
+          "error": "RuntimeError('Gemini call failed: ClientError(\"429 RESOURCE_EXHAUSTED. {\\'error\\': {\\'code\\': 429, \\'message\\': \\'You exceeded your current quota, please check your plan and billing details. For more ",
+          "latency_ms": 165.1
+        }
+      ],
+      "evidence": "model error",
+      "correction_hint": null
+    },
+    {
+      "id": "img_0963_1_1_s04_row_f1_left_of_phone_watch",
+      "predicate": "LEFT_OF(phone, watch)",
+      "type": "LEFT_OF",
+      "expected": true,
+      "tags": [
+        "cluttered",
+        "far_camera"
+      ],
+      "n_images": 1,
+      "status": "model_error",
+      "latency_ms": 132.8,
+      "frame_verdicts": [
+        {
+          "frame_index": 0,
+          "satisfied": false,
+          "confidence": 0.0,
+          "evidence": "model error",
+          "correction_hint": null,
+          "objects_seen": [],
+          "geometry_override": null,
+          "error": "RuntimeError('Gemini call failed: ClientError(\"429 RESOURCE_EXHAUSTED. {\\'error\\': {\\'code\\': 429, \\'message\\': \\'You exceeded your current quota, please check your plan and billing details. For more ",
+          "latency_ms": 132.6
+        }
+      ],
+      "evidence": "model error",
+      "correction_hint": null
+    },
+    {
+      "id": "img_0963_1_1_s04_row_f1_left_of_watch_phone",
+      "predicate": "LEFT_OF(watch, phone)",
+      "type": "LEFT_OF",
+      "expected": false,
+      "tags": [
+        "cluttered",
+        "far_camera",
+        "negative"
+      ],
+      "n_images": 1,
+      "status": "model_error",
+      "latency_ms": 97.8,
+      "frame_verdicts": [
+        {
+          "frame_index": 0,
+          "satisfied": false,
+          "confidence": 0.0,
+          "evidence": "model error",
+          "correction_hint": null,
+          "objects_seen": [],
+          "geometry_override": null,
+          "error": "RuntimeError('Gemini call failed: ClientError(\"429 RESOURCE_EXHAUSTED. {\\'error\\': {\\'code\\': 429, \\'message\\': \\'You exceeded your current quota, please check your plan and billing details. For more ",
+          "latency_ms": 97.6
+        }
+      ],
+      "evidence": "model error",
+      "correction_hint": null
+    },
+    {
+      "id": "img_0963_1_1_s04_row_f1_order_left_to_right_phone_wallet_keys_watch",
+      "predicate": "ORDER_LEFT_TO_RIGHT([phone, wallet, keys, watch])",
+      "type": "ORDER_LEFT_TO_RIGHT",
+      "expected": true,
+      "tags": [
+        "cluttered",
+        "far_camera"
+      ],
+      "n_images": 1,
+      "status": "model_error",
+      "latency_ms": 159.6,
+      "frame_verdicts": [
+        {
+          "frame_index": 0,
+          "satisfied": false,
+          "confidence": 0.0,
+          "evidence": "model error",
+          "correction_hint": null,
+          "objects_seen": [],
+          "geometry_override": null,
+          "error": "RuntimeError('Gemini call failed: ClientError(\"429 RESOURCE_EXHAUSTED. {\\'error\\': {\\'code\\': 429, \\'message\\': \\'You exceeded your current quota, please check your plan and billing details. For more ",
+          "latency_ms": 157.5
+        }
+      ],
+      "evidence": "model error",
+      "correction_hint": null
+    },
+    {
+      "id": "img_0963_1_1_s04_row_f1_order_left_to_right_wallet_phone_keys_watch",
+      "predicate": "ORDER_LEFT_TO_RIGHT([wallet, phone, keys, watch])",
+      "type": "ORDER_LEFT_TO_RIGHT",
+      "expected": false,
+      "tags": [
+        "cluttered",
+        "far_camera",
+        "negative"
+      ],
+      "n_images": 1,
+      "status": "model_error",
+      "latency_ms": 107.6,
+      "frame_verdicts": [
+        {
+          "frame_index": 0,
+          "satisfied": false,
+          "confidence": 0.0,
+          "evidence": "model error",
+          "correction_hint": null,
+          "objects_seen": [],
+          "geometry_override": null,
+          "error": "RuntimeError('Gemini call failed: ClientError(\"429 RESOURCE_EXHAUSTED. {\\'error\\': {\\'code\\': 429, \\'message\\': \\'You exceeded your current quota, please check your plan and billing details. For more ",
+          "latency_ms": 107.4
+        }
+      ],
+      "evidence": "model error",
+      "correction_hint": null
+    },
+    {
+      "id": "img_0963_1_1_s04_row_f1_order_left_to_right_watch_keys_wallet_phone",
+      "predicate": "ORDER_LEFT_TO_RIGHT([watch, keys, wallet, phone])",
+      "type": "ORDER_LEFT_TO_RIGHT",
+      "expected": false,
+      "tags": [
+        "cluttered",
+        "far_camera",
+        "negative"
+      ],
+      "n_images": 1,
+      "status": "model_error",
+      "latency_ms": 139.3,
+      "frame_verdicts": [
+        {
+          "frame_index": 0,
+          "satisfied": false,
+          "confidence": 0.0,
+          "evidence": "model error",
+          "correction_hint": null,
+          "objects_seen": [],
+          "geometry_override": null,
+          "error": "RuntimeError('Gemini call failed: ClientError(\"429 RESOURCE_EXHAUSTED. {\\'error\\': {\\'code\\': 429, \\'message\\': \\'You exceeded your current quota, please check your plan and billing details. For more ",
+          "latency_ms": 139.0
+        }
+      ],
+      "evidence": "model error",
+      "correction_hint": null
+    },
+    {
+      "id": "test1_none",
+      "predicate": "ON_TOP_OF(keys, wallet)",
+      "type": "ON_TOP_OF",
+      "expected": false,
+      "tags": [
+        "good_light"
+      ],
+      "n_images": 1,
+      "status": "model_error",
+      "latency_ms": 247.1,
+      "frame_verdicts": [
+        {
+          "frame_index": 0,
+          "satisfied": false,
+          "confidence": 0.0,
+          "evidence": "model error",
+          "correction_hint": null,
+          "objects_seen": [],
+          "geometry_override": null,
+          "error": "RuntimeError('Gemini call failed: ClientError(\"429 RESOURCE_EXHAUSTED. {\\'error\\': {\\'code\\': 429, \\'message\\': \\'You exceeded your current quota, please check your plan and billing details. For more ",
+          "latency_ms": 236.6
+        }
+      ],
+      "evidence": "model error",
+      "correction_hint": null
+    },
+    {
+      "id": "test2_ontop_pos",
+      "predicate": "ON_TOP_OF(keys, wallet)",
+      "type": "ON_TOP_OF",
+      "expected": true,
+      "tags": [
+        "good_light"
+      ],
+      "n_images": 1,
+      "status": "checked",
+      "latency_ms": 2868.6,
+      "frame_verdicts": [
+        {
+          "frame_index": 0,
+          "satisfied": true,
+          "confidence": 0.95,
+          "evidence": "The keys and attached grey tag are lying directly on top of the brown leather wallet.",
+          "correction_hint": null,
+          "objects_seen": [
+            "keys",
+            "wallet"
+          ],
+          "geometry_override": null,
+          "error": null,
+          "latency_ms": 2833.7
+        }
+      ],
+      "evidence": "The keys and attached grey tag are lying directly on top of the brown leather wallet.",
+      "correction_hint": null
+    },
+    {
+      "id": "test3_ontop_neg",
+      "predicate": "ON_TOP_OF(keys, wallet)",
+      "type": "ON_TOP_OF",
+      "expected": false,
+      "tags": [
+        "good_light",
+        "hard_negative"
+      ],
+      "n_images": 1,
+      "status": "checked",
+      "latency_ms": 3021.8,
+      "frame_verdicts": [
+        {
+          "frame_index": 0,
+          "satisfied": false,
+          "confidence": 0.98,
+          "evidence": "The keys are lying on the table surface next to the wallet rather than on top of it.",
+          "correction_hint": "Place the keys directly on top of the wallet.",
+          "objects_seen": [
+            "keys",
+            "wallet"
+          ],
+          "geometry_override": null,
+          "error": null,
+          "latency_ms": 2985.5
+        }
+      ],
+      "evidence": "The keys are lying on the table surface next to the wallet rather than on top of it.",
+      "correction_hint": "Place the keys directly on top of the wallet."
+    }
+  ]
+}

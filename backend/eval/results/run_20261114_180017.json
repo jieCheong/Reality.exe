@@ -1,0 +1,96 @@
+{
+  "model": "gemini-3.5-flash",
+  "cases": [
+    {
+      "id": "test1_none",
+      "predicate": "ON_TOP_OF(keys, wallet)",
+      "type": "ON_TOP_OF",
+      "expected": false,
+      "tags": [
+        "good_light"
+      ],
+      "n_images": 1,
+      "status": "checked",
+      "latency_ms": 3422.0,
+      "frame_verdicts": [
+        {
+          "frame_index": 0,
+          "satisfied": false,
+          "confidence": 1.0,
+          "evidence": "The keys are sitting on the table next to the wallet instead of on top of it.",
+          "correction_hint": "Place the keys directly on top of the wallet.",
+          "objects_seen": [
+            "keys",
+            "wallet"
+          ],
+          "geometry_override": null,
+          "error": null,
+          "latency_ms": 3414.5
+        }
+      ],
+      "evidence": "The keys are sitting on the table next to the wallet instead of on top of it.",
+      "correction_hint": "Place the keys directly on top of the wallet."
+    },
+    {
+      "id": "test2_ontop_pos",
+      "predicate": "ON_TOP_OF(keys, wallet)",
+      "type": "ON_TOP_OF",
+      "expected": true,
+      "tags": [
+        "good_light"
+      ],
+      "n_images": 1,
+      "status": "checked",
+      "latency_ms": 2247.7,
+      "frame_verdicts": [
+        {
+          "frame_index": 0,
+          "satisfied": true,
+          "confidence": 0.95,
+          "evidence": "The keys are resting directly on top of the wallet's upper surface.",
+          "correction_hint": null,
+          "objects_seen": [
+            "keys",
+            "wallet"
+          ],
+          "geometry_override": null,
+          "error": null,
+          "latency_ms": 2217.2
+        }
+      ],
+      "evidence": "The keys are resting directly on top of the wallet's upper surface.",
+      "correction_hint": null
+    },
+    {
+      "id": "test3_ontop_neg",
+      "predicate": "ON_TOP_OF(keys, wallet)",
+      "type": "ON_TOP_OF",
+      "expected": false,
+      "tags": [
+        "good_light",
+        "hard_negative"
+      ],
+      "n_images": 1,
+      "status": "checked",
+      "latency_ms": 2749.2,
+      "frame_verdicts": [
+        {
+          "frame_index": 0,
+          "satisfied": false,
+          "confidence": 0.95,
+          "evidence": "The keys are sitting next to the wallet on the surface, not on top of it.",
+          "correction_hint": "Place keys directly on top of wallet.",
+          "objects_seen": [
+            "wallet",
+            "keys"
+          ],
+          "geometry_override": null,
+          "error": null,
+          "latency_ms": 2716.1
+        }
+      ],
+      "evidence": "The keys are sitting next to the wallet on the surface, not on top of it.",
+      "correction_hint": "Place keys directly on top of wallet."
+    }
+  ]
+}
