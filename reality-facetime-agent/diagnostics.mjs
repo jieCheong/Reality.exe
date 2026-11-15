@@ -1,6 +1,5 @@
 // Application diagnostics accept fixed labels and numeric counts only, never payloads.
-import { PHASES } from './routine.mjs';
-const labels = new Set([...PHASES,'inventory','verify','mock','groq',
+const labels = new Set(['SCAN','POWER','SECURITY','HIDE','FIND','PORTAL','inventory','verify','mock','groq',
   'started','livekit','elevenlabs','none','subscribed','unavailable','error','complete','failed','discarded']);
 const fields = new Set(['phase','operation','provider','fallback','state','frames','generation',
   'latencyMs','revision','progress','escaped','accepted','errors']);

@@ -29,14 +29,14 @@ export function drawLandscape(ctx, tick, speaking, state, colors, phases) {
   };
   ctx.fillStyle=colors.cyan;ctx.font='700 24px Orbitron';ctx.fillText('REALITY.EXE',24,35);
   panel(LANDSCAPE_LAYOUT.status,true);
-  ctx.fillStyle=state.phase===phases[0]?colors.amber:colors.cyan;
+  ctx.fillStyle=state.phase==='SCAN'?colors.amber:colors.cyan;
   ctx.beginPath();ctx.arc(431,27,3,0,Math.PI*2);ctx.fill();
   ctx.fillStyle=colors.text;ctx.font='700 12px Orbitron';ctx.fillText(state.phase,443,31);
   for(let i=0;i<5;i++) {
     const height=speaking?5+((tick+i*3)%12):3;
     ctx.fillStyle=speaking?colors.cyan:colors.muted;ctx.fillRect(566+i*7,27-height/2,3,height);
   }
-  ctx.fillStyle=state.phase===phases[0]?colors.amber:colors.cyan;ctx.fillRect(0,51,640,4);
+  ctx.fillStyle=state.phase==='SCAN'?colors.amber:colors.cyan;ctx.fillRect(0,51,640,4);
   panel(LANDSCAPE_LAYOUT.objective);
   ctx.fillStyle=colors.cyan;ctx.fillRect(43,91,3,17);
   ctx.fillStyle=colors.muted;ctx.font='700 13px Orbitron';ctx.fillText('OBJECTIVE',57,105);

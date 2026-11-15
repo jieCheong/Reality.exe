@@ -36,8 +36,7 @@ export interface CallerVideoPort {
 }
 
 /** Teammate C: supplies display state; this adapter makes no game decisions. */
-/** A routine step's short label (A-Z, up to 6 letters), e.g. 'TEETH'. Steps come from routine.mjs. */
-export type HudPhase = string;
+export type HudPhase = 'SCAN' | 'POWER' | 'SECURITY' | 'HIDE' | 'FIND' | 'PORTAL';
 export type CheckpointStatus = 'pending' | 'active' | 'complete';
 
 /** Optional display snapshot from the game engine; never inferred by the renderer. */

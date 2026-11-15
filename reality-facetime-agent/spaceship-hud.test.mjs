@@ -1,4 +1,3 @@
-import { PHASES } from './routine.mjs';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { test, after } from 'node:test';
@@ -19,26 +18,26 @@ test('Juan renderer uses bundled Orbitron and retains the Part A RGBA contract',
   assert.equal(frame.length, WIDTH * HEIGHT * 4);
   for (let i = 3; i < frame.length; i += 4) assert.equal(frame[i], 255);
   const before = hash(frame);
-  drawFace(9, true, { phase: 'HAIR' });
+  drawFace(9, true, { phase: 'POWER' });
   assert.equal(hash(frame), before, 'subsequent renders cannot mutate earlier buffers');
   assert.notEqual(hash(drawFace(0, false)), hash(drawFace(0, true)), 'speaking indicator still animates');
 });
 
 test('mock phases, objective, progress and checkpoint state independently affect pixels', () => {
-  assert.deepEqual(MOCK_HUD_SEQUENCE.map(s => s.phase), [...PHASES]);
-  assert.equal(new Set(MOCK_HUD_SEQUENCE.map(s => hash(drawFace(0, false, s)))).size, PHASES.length);
-  const base = { phase: 'HAIR', missionProgress: 0.3, objective: 'RESTORE POWER' };
+  assert.deepEqual(MOCK_HUD_SEQUENCE.map(s => s.phase), ['SCAN', 'POWER', 'SECURITY', 'HIDE', 'FIND', 'PORTAL']);
+  assert.equal(new Set(MOCK_HUD_SEQUENCE.map(s => hash(drawFace(0, false, s)))).size, 6);
+  const base = { phase: 'POWER', missionProgress: 0.3, objective: 'RESTORE POWER' };
   const original = hash(drawFace(0, false, base));
   for (const override of [
     { objective: 'CHECK THE REACTOR' }, { missionProgress: 0.8 },
-    { checkpoints: { TEETH: 'pending', HAIR: 'complete' } },
+    { checkpoints: { SCAN: 'pending', POWER: 'complete' } },
   ]) assert.notEqual(hash(drawFace(0, false, { ...base, ...override })), original);
   assert.equal(normalizeGameState({ missionProgress: 4 }).missionProgress, 1);
   assert.equal(normalizeGameState({ missionProgress: -2 }).missionProgress, 0);
   assert.equal(drawFace(0, false, { objective: 'Long objective '.repeat(100) }).length, WIDTH * HEIGHT * 4);
   assert.throws(() => normalizeGameState({ phase: 'UNKNOWN' }), /phase/);
   assert.throws(() => normalizeGameState({ missionProgress: NaN }), /finite/);
-  assert.throws(() => normalizeGameState({ checkpoints: { TEETH: 'invalid' } }), /checkpoint/);
+  assert.throws(() => normalizeGameState({ checkpoints: { SCAN: 'invalid' } }), /checkpoint/);
 });
 
 test('isolated video publisher accepts game snapshots on the existing native camera source', async () => {
@@ -66,11 +65,11 @@ test('isolated video publisher accepts game snapshots on the existing native cam
   try {
     for (const gameState of MOCK_HUD_SEQUENCE) { hud.setState({ gameState }); hud.render(); }
     assert.equal(published, 1, 'state changes never replace the published video track');
-    assert.equal(new Set(frames.slice(1)).size, PHASES.length);
+    assert.equal(new Set(frames.slice(1)).size, 6);
     assert.throws(() => hud.setState({ gameState: { phase: 'BAD' } }), /phase/);
-    const snapshot = { phase: 'HAIR', objective: 'UNCHANGED', checkpoints: { HAIR: 'active' } };
+    const snapshot = { phase: 'POWER', objective: 'UNCHANGED', checkpoints: { POWER: 'active' } };
     hud.setState({ gameState: snapshot }); hud.render();
-    snapshot.objective = 'EXTERNAL MUTATION'; snapshot.checkpoints.HAIR = 'pending';
+    snapshot.objective = 'EXTERNAL MUTATION'; snapshot.checkpoints.POWER = 'pending';
     hud.render(); assert.equal(frames.at(-1), frames.at(-2));
     hud.setState({ speaking: true }); hud.render();
     assert.notEqual(frames.at(-1), frames.at(-2));
@@ -83,7 +82,7 @@ test('mock playback is optional and cancellable', async () => {
   const stop = playHudMock({ setState(update) { states.push(update.gameState.phase); } }, 5);
   await new Promise(resolve => setTimeout(resolve, 80));
   stop();
-  assert.deepEqual(states, [...PHASES]);
+  assert.deepEqual(states, ['SCAN', 'POWER', 'SECURITY', 'HIDE', 'FIND', 'PORTAL']);
   const count = states.length;
   await new Promise(resolve => setTimeout(resolve, 10));
   assert.equal(states.length, count);
