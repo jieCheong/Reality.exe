@@ -80,3 +80,29 @@ test('camera invalidation rejects an in-flight result and detaches on close', as
   assert.equal(runtime.engine.phase, 'SCAN'); assert.equal(runtime.engine.streak, 0);
   await runtime.close(); assert.equal(camera.listenerCount('frame'), 0);
 });
+
+test('mission variants: every variant is reachable, valid, stable across retries, and finishable', () => {
+  const VALID = /^(ON_TOP_OF|HELD_UP|COVERED|HIDDEN|SHOW|ORDER_LEFT_TO_RIGHT)\([a-z0-9 ,-]+\)$/;
+  const seen = new Set();
+  for (let seed = 0; seed < 40; seed++) {
+    let x = (seed + 1) * 2654435761 % 2147483647 || 1;  // deterministic PRNG per game
+    const random = () => ((x = (x * 48271) % 2147483647) / 2147483647);
+    for (let i = 0; i < 5; i++) random();  // warm up so small seeds don't all start near 0
+    const e = new MissionEngine({ random });
+    apply(e, { status: 'checked', objects }); apply(e, { status: 'checked', objects });
+    assert.ok(!['bottle', 'notebook', 'pen'].includes(e.findKind), 'FIND never asks for a scanned object');
+    while (!e.escaped) {
+      const { predicate } = e.request();
+      assert.match(predicate, VALID); seen.add(`${e.phase}:${predicate.split('(')[0]}:${predicate}`);
+      assert.ok(e.instruction().length > 10 && e.hudState().objective.length > 3);
+      assert.equal(apply(e, passing(e)), false);
+      assert.equal(e.request().predicate, predicate, 'retries keep the same task');
+      assert.equal(apply(e, passing(e)), true);
+    }
+  }
+  const kinds = new Set([...seen].map(s => s.split(':').slice(0, 2).join(':')));
+  for (const k of ['POWER:ON_TOP_OF', 'SECURITY:HELD_UP', 'SECURITY:COVERED', 'HIDE:HIDDEN', 'FIND:SHOW', 'PORTAL:ORDER_LEFT_TO_RIGHT'])
+    assert.ok(kinds.has(k), `variant ${k} never chosen`);
+  assert.ok(new Set([...seen].filter(s => s.startsWith('PORTAL')).map(s => s.split(':')[2])).size >= 4, 'portal order varies');
+  assert.ok(new Set([...seen].filter(s => s.startsWith('FIND')).map(s => s.split(':')[2])).size >= 4, 'find object varies');
+});
