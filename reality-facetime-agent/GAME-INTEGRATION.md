@@ -3,8 +3,10 @@
 ## Actual sources and contracts
 
 Shivam's source was found in `Downloads/Reality.exe-Shivam.zip/backend/`.
-`vision-service/vendor/` contains the original app/perception modules and tests,
-byte-for-byte unchanged. UPSTREAM.json records SHA-256 hashes for all nine files.
+`vision-service/vendor/` contains the original app/perception modules and tests
+plus the explicit local support-contact-v1 patch. UPSTREAM.json preserves the
+original hashes for all nine baseline files and separately records patched hashes.
+See vision-service/LOCAL-PATCHES.md for the exact differences and review patch.
 The perception folder has frames.py, model.py (GroqVision and an older unused
 Gemini adapter), predicates.py, schemas.py, service.py, voting.py and __init__.py.
 It had no HTTP server or deterministic mission engine. The original factory
@@ -17,7 +19,7 @@ confidence, votes_for, votes_total, predicate, correction_hint, frame_verdicts.
 Frame verdicts retain per-image confidence, geometry overrides and API errors.
 The original StabilityGate semantics (consecutive passing rounds, reset on
 failure) are implemented in the Node mission engine and paired with disjoint
-frame receipts; the Python original remains unchanged.
+frame receipts; the original Python stability/voting implementation remains unchanged.
 
 Part A's CallerFrame has owned RGBA bytes, sequence, generation, identity,
 receipt time and rotation. CallerVideoAdapter provides frame/status events,

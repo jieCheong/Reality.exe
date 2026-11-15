@@ -1,3 +1,5 @@
+import type { RoutineHudState } from './routine-contracts.js';
+
 /** Copied, sampled RGBA snapshot. No inference or verdict is implied. */
 export interface CallerFrame {
   sequence: number;
@@ -40,7 +42,7 @@ export type HudPhase = 'SCAN' | 'POWER' | 'SECURITY' | 'HIDE' | 'FIND' | 'PORTAL
 export type CheckpointStatus = 'pending' | 'active' | 'complete';
 
 /** Optional display snapshot from the game engine; never inferred by the renderer. */
-export interface GameHudState {
+export interface GameHudState extends Partial<RoutineHudState> {
   phase?: HudPhase;
   objective?: string;
   checkpoints?: Partial<Record<HudPhase, CheckpointStatus>>;

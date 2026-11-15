@@ -167,12 +167,22 @@ def _inside_share(inner: list[int], outer: list[int]) -> float:
     return h * _x_overlap(inner, outer) / _area(inner) if _area(inner) else 0.0
 
 
+def _valid_box(box) -> bool:
+    """Four in-range integer coordinates with positive size (booleans and floats rejected)."""
+    return (isinstance(box, list) and len(box) == 4 and all(type(v) is int for v in box)
+            and 0 <= box[0] < box[2] <= 1000 and 0 <= box[1] < box[3] <= 1000)
+
+
 def stacking_veto(a: list[int], b: list[int], top: str, bottom: str) -> Optional[str]:
     """Geometry for ON_TOP_OF(top=a, bottom=b), boxes [ymin, xmin, ymax, xmax] on 0-1000.
 
     Only ever vetoes a model YES. Works for flat-on-flat (keys on a wallet, seen from above)
     and tall-on-flat (a bottle standing on a notebook, seen from the side).
     """
+    if not (_valid_box(a) and _valid_box(b)):
+        return 'support check requires valid normalized bounding boxes'
+    if _inside_share(a, b) >= 0.8 and _inside_share(b, a) >= 0.8:
+        return f'"{top}" and "{bottom}" occupy the same region; cannot tell one is on the other'
     width_a = max(1, a[3] - a[1])
     if _x_overlap(a, b) < MIN_TOP_OVERLAP * width_a:
         return f'"{top}" is not over "{bottom}"'
@@ -232,7 +242,8 @@ def geometry_veto(pred_img: Predicate, j: FrameJudgment) -> Optional[str]:
 
     elif t == PredicateType.ON_TOP_OF:
         a, b = _box(j, args[0]), _box(j, args[1])
-        if a and b:
-            return stacking_veto(a, b, args[0], args[1])
+        if a is None or b is None:   # fail closed: a stack is only judged with both boxes
+            return 'support check requires both normalized bounding boxes'
+        return stacking_veto(a, b, args[0], args[1])
 
     return None

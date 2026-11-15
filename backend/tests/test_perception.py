@@ -318,3 +318,28 @@ def test_on_top_of_veto_runs_through_service():
     assert all(v.model_satisfied is True and v.boxes["keys"] == KEYS_ON_WALLET for v in r.frame_verdicts)
     prompt = model.calls[0]
     assert 'must be ON TOP is "wallet"' in prompt and 'UNDERNEATH is "keys"' in prompt
+
+
+# Folded in from Jie's support-contact-v1 suite: fail closed on missing or malformed geometry.
+@pytest.mark.parametrize("bad", [None, [], [1, 2, 3], [1, 2, 3, 4, 5], [0, 0, 0, 100], [300, 100, 100, 200],
+                                 [100, 300, 200, 100], [-1, 100, 200, 300], [100, 100, 1001, 300]])
+@pytest.mark.parametrize("which", ["top", "bottom"])
+def test_on_top_of_missing_or_invalid_boxes_fail_closed(bad, which):
+    boxes = {"keys": KEYS_ON_WALLET, "wallet": WALLET}
+    boxes["keys" if which == "top" else "wallet"] = bad
+    j = FrameJudgment(satisfied=True, confidence=.95, evidence="e", objects=[
+        ObjectLocation(name=n, visible=True, box_2d=b) for n, b in boxes.items() if b is not None])
+    assert geometry_veto(Predicate.parse("ON_TOP_OF(keys, wallet)"), j) is not None
+
+
+@pytest.mark.parametrize("value", [True, 100.5, float("nan"), float("inf")])
+def test_non_integer_coordinates_cannot_bypass_stacking(value):
+    j = FrameJudgment(satisfied=True, confidence=.95, evidence="e", objects=[
+        ObjectLocation(name="keys", visible=True, box_2d=KEYS_ON_WALLET),
+        ObjectLocation(name="wallet", visible=True, box_2d=WALLET)])
+    j.objects[0].box_2d = [value, 420, 600, 560]   # bypass schema validation on purpose
+    assert geometry_veto(Predicate.parse("ON_TOP_OF(keys, wallet)"), j) is not None
+
+
+def test_identical_boxes_are_not_a_stack():
+    assert "same region" in stacking_veto(BOOK, BOOK, "bottle", "book")

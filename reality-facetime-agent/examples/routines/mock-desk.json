@@ -1,0 +1,18 @@
+{
+  "id": "mock-desk",
+  "name": "MOCK ONLY desk routine",
+  "theme": "space",
+  "timer": {
+    "startSeconds": 90,
+    "stepDecreaseSeconds": 10,
+    "minSeconds": 30,
+    "fakeDonePenaltySeconds": 5,
+    "missPenaltySeconds": 15
+  },
+  "objects": ["bottle", "notebook", "pen"],
+  "steps": [
+    { "label": "Show the pen", "check": "HELD_UP", "objects": ["pen"] },
+    { "label": "Bottle on notebook", "check": "ON_TOP_OF", "objects": ["bottle", "notebook"] },
+    { "label": "Notebook left of pen", "check": "LEFT_OF", "objects": ["notebook", "pen"] }
+  ]
+}
