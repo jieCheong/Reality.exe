@@ -90,3 +90,19 @@ def test_groq_transport_uses_bounded_json_mode_and_rejects_coerced_booleans(monk
     assert calls[0]['response_format'] == {'type': 'json_object'}
     assert calls[0]['model'] == 'qwen/qwen3.8-27b'
     assert calls[0]['max_completion_tokens'] == 700
+
+
+@pytest.mark.parametrize('upper_bottom,expected', [(150, True), (100, False)])
+def test_support_contact_patch_is_enforced_through_integrated_bridge(upper_bottom, expected):
+    body = request()
+    body['predicate'] = 'ON_TOP_OF(bottle, notebook)'
+    model = FakeVision(lambda *_: {'satisfied': True, 'confidence': .95, 'evidence': 'synthetic bridge test',
+        'objects': [{'name': 'bottle', 'visible': True, 'box_2d': [50,120,upper_bottom,180]},
+                    {'name': 'notebook', 'visible': True, 'box_2d': [150,100,350,300]}]})
+    reply = run(body, Bridge(model=model))
+    result = reply['result']
+    assert reply['frameIds'] == [frame['id'] for frame in body['frames']]
+    assert result['satisfied'] is expected
+    assert result['votes_total'] == 3 and result['votes_for'] == (3 if expected else 0)
+    if not expected:
+        assert all(verdict['geometry_override'] for verdict in result['frame_verdicts'])

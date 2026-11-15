@@ -13,9 +13,14 @@ import { SpeechCoordinator, sessionSpeechOutput } from './speech-coordinator.mjs
 import { ThemeSelection } from './theme-selection.mjs';
 import { THEMES } from './themes.mjs';
 import { selectGameThemes } from './game-test-config.mjs';
+import { loadRoutine } from './routine-contract.mjs';
+import { RoutineSession } from './routine-session.mjs';
+import { routineReportWriter } from './routine-report.mjs';
 import { diagnostic } from './diagnostics.mjs';
 
 const gameEnabled = process.env.ENABLE_GAME === 'yes';
+// Validate parent input and installed verifier capabilities before worker registration.
+const routine = gameEnabled && process.env.ROUTINE_FILE ? await loadRoutine(process.env.ROUTINE_FILE) : null;
 class OrbitAgent extends voice.Agent {
   // Game mode uses scripted TTS. Free-form LLM replies cannot announce an unverified win.
   async onUserTurnCompleted() { throw new voice.StopResponse(); }
@@ -90,11 +95,12 @@ export default defineAgent({
     });
     const speech = gameEnabled ? new SpeechCoordinator(sessionSpeechOutput(session)) : null;
     const game = gameEnabled ? new GameRuntime({
-      callerVideo, hud,
+      callerVideo, hud, routine,
+      onReport: routineReportWriter(join('.local', 'routine-reports', ctx.job.id.replace(/[^a-zA-Z0-9_-]/g, '_'))),
       say: (text, options) => speech.say(text, options),
       vision: new VisionClient({ url: process.env.VISION_SERVICE_URL || 'http://127.0.0.1:8765', allowMock: process.env.VISION_MODE === 'mock' }),
     }) : null;
-    const selection = game ? new ThemeSelection({ themes: selectGameThemes(THEMES), speech, game }) : null;
+    const selection = game ? (routine ? new RoutineSession({ game, speech }) : new ThemeSelection({ themes: selectGameThemes(THEMES), speech, game })) : null;
     if (game) {
       const onTranscript = event => {
         void selection.handleTranscript(event).catch(() => { game.pause(); });

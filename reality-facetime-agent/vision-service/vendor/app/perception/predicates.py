@@ -12,6 +12,10 @@ from typing import Optional
 from .schemas import DetectedObject, FrameJudgment, Predicate, PredicateType
 
 SEPARATION = 30   # min x-gap between box centers (0-1000 scale) for left/right
+# Local patch support-contact-v1; see vision-service/LOCAL-PATCHES.md.
+# Bounding boxes are [ymin, xmin, ymax, xmax], normalized to 0-1000.
+SUPPORT_CONTACT_MAX_TOLERANCE = 20  # at most 2% of image height
+SUPPORT_CONTACT_HEIGHT_FRACTION = 0.10  # tighter for small detected objects
 
 
 # --------------------------------------------------------------------------- #
@@ -160,9 +164,23 @@ def geometry_veto(pred_img: Predicate, j: FrameJudgment) -> Optional[str]:
 
     elif t == PredicateType.ON_TOP_OF:
         a, b = _box(j, args[0]), _box(j, args[1])
-        if a and b:
-            overlap = min(a[3], b[3]) - max(a[1], b[1])
-            if overlap <= 0:
-                return f'"{args[0]}" and "{args[1]}" do not overlap horizontally'
+        if a is None or b is None:
+            return 'support check requires both normalized bounding boxes'
+        for box in (a, b):
+            if (not all(type(value) is int for value in box)
+                    or not (0 <= box[0] < box[2] <= 1000
+                            and 0 <= box[1] < box[3] <= 1000)):
+                return 'support check requires valid normalized bounding boxes'
+        overlap = min(a[3], b[3]) - max(a[1], b[1])
+        if overlap <= 0:
+            return f'"{args[0]}" and "{args[1]}" do not overlap horizontally'
+        # Only permit a small gap/penetration consistent with detection error.
+        # Boxes alone cannot prove support; the model must still judge contact.
+        tolerance = min(SUPPORT_CONTACT_MAX_TOLERANCE,
+                        SUPPORT_CONTACT_HEIGHT_FRACTION * min(a[2] - a[0], b[2] - b[0]))
+        if (a[0] + a[2]) / 2 >= (b[0] + b[2]) / 2:
+            return f'"{args[0]}" is not above "{args[1]}"'
+        if abs(a[2] - b[0]) > tolerance:
+            return f'"{args[0]}" base is not near the top of "{args[1]}"'
 
     return None

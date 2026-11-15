@@ -1,0 +1,18 @@
+{
+  "id": "morning",
+  "name": "Morning Launch",
+  "theme": "space",
+  "timer": {
+    "startSeconds": 90,
+    "stepDecreaseSeconds": 10,
+    "minSeconds": 30,
+    "fakeDonePenaltySeconds": 5,
+    "missPenaltySeconds": 15
+  },
+  "objects": ["toothbrush", "backpack", "shoes"],
+  "steps": [
+    { "label": "Show me your toothbrush", "check": "HELD_UP", "objects": ["toothbrush"] },
+    { "label": "Shoes on the backpack", "check": "ON_TOP_OF", "objects": ["shoes", "backpack"] },
+    { "label": "Backpack left of shoes", "check": "LEFT_OF", "objects": ["backpack", "shoes"] }
+  ]
+}

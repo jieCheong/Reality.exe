@@ -89,3 +89,6 @@ export class MissionEngine extends EventEmitter {
     return true;
   }
 }
+
+// Opt-in parent-authored routine mode; fixed spaceship missions remain the default.
+export { RoutineMissionEngine } from './routine-engine.mjs';

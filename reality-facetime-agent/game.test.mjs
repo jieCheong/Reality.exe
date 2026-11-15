@@ -80,3 +80,51 @@ test('camera invalidation rejects an in-flight result and detaches on close', as
   assert.equal(runtime.engine.phase, 'SCAN'); assert.equal(runtime.engine.streak, 0);
   await runtime.close(); assert.equal(camera.listenerCount('frame'), 0);
 });
+
+for (const phase of ['SCAN', 'POWER', 'SECURITY', 'PORTAL']) {
+  test(`${phase}: stale response breaks the streak and requires two new successful rounds`, async () => {
+    const camera = new EventEmitter(); camera.isCurrent = () => true;
+    let now = 1000, slow = false, frameSequence = 0;
+    let runtime;
+    const vision = { allowMock: true, newRequestId: () => `offline-${frameSequence}`,
+      analyze: async request => {
+        if (slow) {
+          now += 7000;
+          camera.emit('frame', { sequence: ++frameSequence, generation: 1, capturedAtMs: now - 100 });
+        }
+        return request.operation === 'inventory' ? { status: 'checked', objects } : passing(runtime.engine);
+      } };
+    runtime = new GameRuntime({ callerVideo: camera, hud: { setState() {} }, say: async () => {},
+      vision, now: () => now, encode: async () => Buffer.from('offline-image'), intervalMs: 0 });
+    try {
+      runtime.start({ auto: false }); await runtime.speech;
+      if (phase !== 'SCAN') {
+        apply(runtime.engine, { status: 'checked', objects });
+        apply(runtime.engine, { status: 'checked', objects }); await runtime.speech;
+        while (runtime.engine.phase !== phase) {
+          apply(runtime.engine, passing(runtime.engine)); apply(runtime.engine, passing(runtime.engine));
+          await runtime.speech;
+        }
+      }
+      const revision = runtime.engine.revision;
+      async function round() {
+        const count = phase === 'SCAN' ? 2 : 3;
+        for (let i = 0; i < count; i++) camera.emit('frame', {
+          sequence: ++frameSequence, generation: 1, capturedAtMs: now - (count-i)*200,
+        });
+        await runtime.tick();
+      }
+      now = 2000; await round(); assert.equal(runtime.engine.streak, 1);
+      now = 5000; slow = true; await round();
+      assert.equal(runtime.engine.revision, revision, 'stale success never advances');
+      assert.equal(runtime.engine.streak, 0, 'stale result must discard previous positive evidence');
+      assert.equal(runtime.frames.length, 0, 'discarded request leaves no queued evidence');
+      now = 14000; slow = false; await round();
+      assert.equal(runtime.engine.revision, revision, 'first new success cannot complete the checkpoint');
+      assert.equal(runtime.engine.streak, 1);
+      now = 16000; await round();
+      assert.equal(runtime.engine.revision, revision + 1, 'second new success advances normally');
+      await runtime.speech;
+    } finally { await runtime.close(); }
+  });
+}

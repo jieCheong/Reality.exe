@@ -1,14 +1,15 @@
 import { diagnostic } from './diagnostics.mjs';
-import { MissionEngine } from './mission-engine.mjs';
+import { MissionEngine, RoutineMissionEngine } from './mission-engine.mjs';
 import { VisionClient } from './vision-client.mjs';
 import { encodeJpeg } from './frame-sampler.mjs';
 
 /** Per-call orchestration. Renderer and mission engine never own media connections. */
 export class GameRuntime {
-  constructor({ callerVideo, hud, say, vision = new VisionClient(), now = Date.now, encode = encodeJpeg, intervalMs = 2500 }) {
+  constructor({ callerVideo, hud, say, vision = new VisionClient(), now = Date.now, encode = encodeJpeg, intervalMs = 2500, routine = null, onReport = async () => {} }) {
     this.callerVideo = callerVideo; this.hud = hud; this.say = say; this.vision = vision;
     this.now = now; this.encode = encode; this.intervalMs = intervalMs;
-    this.engine = new MissionEngine(); this.frames = []; this.epoch = 0; this.closed = false;
+    this.routine = routine; this.onReport = onReport;
+    this.engine = routine ? new RoutineMissionEngine(routine, { now }) : new MissionEngine(); this.frames = []; this.epoch = 0; this.closed = false;
     this.narratedPhases = new Set();
     this.lastAttempt = -Infinity; this.notBefore = Infinity; this.lastHint = ''; this.lastHintAt = -Infinity;
     this.onFrame = frame => {
@@ -17,11 +18,18 @@ export class GameRuntime {
       if (!this.frames.some(f => f.generation === frame.generation && f.sequence === frame.sequence)) this.frames.push(frame);
       this.frames = this.frames.slice(-16);
     };
-    this.onStatus = status => { if (status.state !== 'subscribed') this.invalidate(); };
+    this.onStatus = status => {
+      if (status.state !== 'subscribed') { this.engine.pauseClock?.(this.now()); this.invalidate(); }
+      else if (this.started && !this.voiceFailed && this.now() >= this.notBefore) this.engine.resumeClock?.(this.now());
+    };
     callerVideo.on('frame', this.onFrame); callerVideo.on('status', this.onStatus);
     this.engine.on('state', state => {
-      diagnostic('mission_transition', { phase: state.phase, revision: this.engine.revision, escaped: this.engine.escaped });
+      if (this.lastLoggedRevision !== this.engine.revision) {
+        this.lastLoggedRevision = this.engine.revision;
+        diagnostic('mission_transition', { phase: state.phase, revision: this.engine.revision, escaped: this.engine.escaped });
+      }
       this.updateHud(state);
+      if (this.routine && this.engine.escaped) void this.flushReport();
     });
     this.engine.on('message', text => this.announce(text));
   }
@@ -34,12 +42,12 @@ export class GameRuntime {
     if (this.started) throw new Error('Cannot change theme after game start');
     this.theme = { id: theme.id, name: theme.name, missionIntros: { ...theme.missionIntros } };
   }
-  pause() { this.speechVersion = (this.speechVersion || 0) + 1; this.voiceFailed = true; this.notBefore = Infinity; this.invalidate(); }
+  pause() { this.engine.pauseClock?.(this.now()); this.speechVersion = (this.speechVersion || 0) + 1; this.voiceFailed = true; this.notBefore = Infinity; this.invalidate(); }
   announce(text, { force = false } = {}) {
     if (this.closed) return Promise.resolve();
     if (!force && !this.voiceFailed && text === this.lastHint && this.now() - this.lastHintAt < 10000) return this.speech || Promise.resolve();
     this.lastHint = text; this.lastHintAt = this.now();
-    this.invalidate(); this.notBefore = Infinity;
+    this.engine.pauseClock?.(this.now()); this.invalidate(); this.notBefore = Infinity;
     const version = this.speechVersion = (this.speechVersion || 0) + 1;
     this.voiceFailed = false;
     const phase = this.engine.phase;
@@ -49,7 +57,7 @@ export class GameRuntime {
     const spoken = `${this.vision.allowMock ? 'Mock vision mode. ' : ''}${intro ? intro + ' ' : ''}${narration}`;
     this.speech = Promise.resolve().then(() => this.say(spoken, { force })).then(() => {
       if (!this.closed && this.speechVersion === version) {
-        this.notBefore = this.now(); if (missionLine) this.narratedPhases.add(phase);
+        this.notBefore = this.now(); this.engine.resumeClock?.(this.now()); if (missionLine) this.narratedPhases.add(phase);
       }
     }).catch(() => { if (this.speechVersion === version) this.voiceFailed = true; });
     return this.speech;
@@ -62,9 +70,11 @@ export class GameRuntime {
     if (auto) this.timer = setInterval(() => { void this.tick(); }, 500);
   }
   tick() {
+    if (this.started && !this.closed) this.engine.tick?.(this.now());
     if (!this.started || this.closed || this.pending || this.voiceFailed || this.engine.escaped || this.now() < this.notBefore ||
       this.now() - this.lastAttempt < this.intervalMs) return Promise.resolve(false);
-    this.pending = this.check().catch(() => { if (!this.closed) this.engine.feedback('My visual link is unavailable. Keep the camera on; I will retry.'); return false; })
+    const requestEpoch = this.epoch;
+    this.pending = this.check().catch(() => { if (!this.closed && requestEpoch === this.epoch) this.engine.feedback('My visual link is unavailable. Keep the camera on; I will retry.'); return false; })
       .finally(() => { this.pending = null; });
     return this.pending;
   }
@@ -88,15 +98,33 @@ export class GameRuntime {
     diagnostic('verification_finished', { state: 'complete', provider: this.vision.allowMock ? 'mock' : 'groq', latencyMs: Math.round(performance.now() - startedAt), errors: result.frame_verdicts?.filter(v => v.error).length || 0 });
     if (this.closed || this.epoch !== epoch || this.engine.revision !== request.revision ||
       !batch.every(f => this.callerVideo.isCurrent(f) && this.now() - f.capturedAtMs < 6000)) {
+      // A stale result breaks consecutive evidence, including frames queued while
+      // waiting. Never reset evidence belonging to a newer epoch or mission.
+      if (!this.closed && this.epoch === epoch && this.engine.revision === request.revision) this.invalidate();
       diagnostic('verification_discarded', { state: 'discarded' }); return false;
     }
-    const accepted = this.engine.apply({ ...request, frameIds: frames.map(f => f.id) }, result);
+    const evidenceIndex = result.frame_verdicts?.find(v => v.satisfied && v.confidence >= .7 && !v.error && !v.geometry_override)?.frame_index ?? -1;
+    const evidenceFrame = this.routine && evidenceIndex >= 0 && frames[evidenceIndex] ? {
+      id: frames[evidenceIndex].id, capturedAtMs: frames[evidenceIndex].capturedAtMs,
+      dataUrl: `data:image/jpeg;base64,${frames[evidenceIndex].jpeg}`,
+    } : null;
+    const accepted = this.engine.apply({ ...request, frameIds: frames.map(f => f.id) }, result, evidenceFrame);
     diagnostic('verification_applied', { accepted, phase: this.engine.phase });
     return accepted;
   }
+  flushReport() {
+    if (!this.routine) return Promise.resolve();
+    this.reportTask ??= Promise.resolve().then(() => this.onReport({ ...this.engine.report(),
+      verification: this.vision.allowMock ? 'mock' : 'groq' })).catch(() => {
+        this.reportFailed = true; console.error('[routine-report] local save failed');
+      });
+    return this.reportTask;
+  }
   async close() {
+    this.engine.pauseClock?.(this.now());
     this.closed = true; clearInterval(this.timer); this.invalidate();
     this.callerVideo.off('frame', this.onFrame); this.callerVideo.off('status', this.onStatus);
     await this.pending;
+    if (this.routine && this.started) await this.flushReport();
   }
 }

@@ -10,5 +10,30 @@
     "app/perception/service.py": "45b935e94fdeb79a205dcccfbab6b944b7328344e477735d784b24f2480c7679",
     "app/perception/voting.py": "73dc1889c269896a5d7a87e7cb4b79fe02eb56a529fefedb8eb7486ec80bc391",
     "tests/test_perception.py": "981d66807d6462a8e118ac8ed5af607590c068152063a053699f2db433caa010"
-  }
+  },
+  "schema_version": 2,
+  "upstream_repository": "https://github.com/jieCheong/Reality.exe",
+  "upstream_ref": "Shivam",
+  "files_meaning": "SHA-256 of unmodified upstream baseline; local_patches records intentional installed differences.",
+  "local_patches": [
+    {
+      "id": "support-contact-v1",
+      "patch_file": "patches/support-contact-v1.patch",
+      "patch_sha256": "dc1d8372854ef09c201f272f1a3c2262f16c66c0f984a2fb04b1b11cb0584855",
+      "files": {
+        "app/perception/predicates.py": {
+          "upstream_sha256": "f8b369e9ac53450978896963ce6107244198d2b049ad394c7300e1b9677b28b9",
+          "integrated_sha256": "baf4f08e77bd8d19ac2285e6051397ce3ef22f0f5d89e01d170e71a8c6fd072c"
+        },
+        "tests/test_perception.py": {
+          "upstream_sha256": "981d66807d6462a8e118ac8ed5af607590c068152063a053699f2db433caa010",
+          "integrated_sha256": "7897aa70a78b5f633208d93135167a2c46562371333b09584598b641150f9648"
+        },
+        "tests/test_support_geometry.py": {
+          "upstream_sha256": null,
+          "integrated_sha256": "eb0f39d480e4ef4c48653f1a385d488e326fc294835cb20c4ec3e3e0bca2a77a"
+        }
+      }
+    }
+  ]
 }
