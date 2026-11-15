@@ -45,12 +45,18 @@ const page = `<!doctype html>
   </main>
   <script>
     const frame = document.querySelector('#frame');
-    const themeId = new URLSearchParams(location.search).get('theme');
+    const previewParams = new URLSearchParams(location.search);
+    const themeId = previewParams.get('theme');
     let tick = 0;
     function updateFrame() {
       const speaking = Math.floor(tick / 16) % 2;
-      const theme = themeId ? '&theme=' + encodeURIComponent(themeId) : '';
-      frame.src = '/frame?tick=' + tick++ + '&speaking=' + speaking + theme;
+      const requestParams = new URLSearchParams({ tick: String(tick++), speaking: String(speaking) });
+      if (themeId) requestParams.set('theme', themeId);
+      for (const key of ['complete', 'tasks', 'seconds', 'timeouts']) {
+        const value = previewParams.get(key);
+        if (value !== null) requestParams.set(key, value);
+      }
+      frame.src = '/frame?' + requestParams.toString();
     }
     updateFrame();
     window.setInterval(updateFrame, 250);
@@ -88,8 +94,35 @@ const server = createServer((request, response) => {
       return;
     }
 
+    const complete = params.get('complete');
+    if (complete !== null && complete !== '0' && complete !== '1') {
+      response.writeHead(400);
+      response.end('Invalid completion state');
+      return;
+    }
+
+    let missionResult = null;
+    if (complete === '1') {
+      if (themeId === null) {
+        response.writeHead(400);
+        response.end('A HUD theme is required for mission completion');
+        return;
+      }
+      const tasksCompleted = Number(params.get('tasks') || 3);
+      const elapsedSeconds = Number(params.get('seconds') || 245);
+      const timedOutTasks = Number(params.get('timeouts') || 0);
+      if (!Number.isSafeInteger(tasksCompleted) || tasksCompleted < 0 ||
+          !Number.isSafeInteger(elapsedSeconds) || elapsedSeconds < 0 ||
+          !Number.isSafeInteger(timedOutTasks) || timedOutTasks < 0) {
+        response.writeHead(400);
+        response.end('Invalid completion statistics');
+        return;
+      }
+      missionResult = { tasksCompleted, elapsedSeconds, timedOutTasks };
+    }
+
     const image = context.createImageData(WIDTH, HEIGHT);
-    image.data.set(drawFace(tick, speaking, themeId));
+    image.data.set(drawFace(tick, speaking, themeId, missionResult));
     context.putImageData(image, 0, 0);
     response.writeHead(200, { 'Content-Type': 'image/png', 'Cache-Control': 'no-store' });
     response.end(canvas.toBuffer('image/png'));

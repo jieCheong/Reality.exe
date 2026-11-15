@@ -99,20 +99,36 @@ const COLORS = {
   dim: '#687e87',
 };
 
-export function drawFace(tick, speaking, themeId = null) {
+export function drawFace(tick, speaking, themeId = null, result = null) {
   const theme = themeId === null ? null : THEMES[themeId];
   if (themeId !== null && !theme) throw new RangeError(`Unknown HUD theme: ${themeId}`);
+  if (result !== null) {
+    if (!theme) throw new RangeError('Game result requires a selected theme.');
+    if (typeof result !== 'object' || Array.isArray(result)) {
+      throw new TypeError('Game result must include task and time statistics.');
+    }
+    if (!Number.isSafeInteger(result.tasksCompleted) || result.tasksCompleted < 0) {
+      throw new RangeError('Completed task count must be a non-negative safe integer.');
+    }
+    if (!Number.isSafeInteger(result.elapsedSeconds) || result.elapsedSeconds < 0) {
+      throw new RangeError('Elapsed seconds must be a non-negative safe integer.');
+    }
+    if (result.timedOutTasks !== undefined &&
+        (!Number.isSafeInteger(result.timedOutTasks) || result.timedOutTasks < 0)) {
+      throw new RangeError('Timed-out task count must be a non-negative safe integer.');
+    }
+  }
 
   if (themeId === 'odyssey') {
-    drawOdyssey(tick, speaking, theme);
+    drawOdyssey(tick, speaking, theme, result);
     return new Uint8Array(ctx.getImageData(0, 0, WIDTH, HEIGHT).data);
   }
   if (themeId === 'space') {
-    drawSpace(tick, speaking, theme);
+    drawSpace(tick, speaking, theme, result);
     return new Uint8Array(ctx.getImageData(0, 0, WIDTH, HEIGHT).data);
   }
   if (themeId === 'backrooms') {
-    drawBackrooms(tick, speaking, theme);
+    drawBackrooms(tick, speaking, theme, result);
     return new Uint8Array(ctx.getImageData(0, 0, WIDTH, HEIGHT).data);
   }
 
@@ -172,7 +188,7 @@ export function drawFace(tick, speaking, themeId = null) {
   return new Uint8Array(ctx.getImageData(0, 0, WIDTH, HEIGHT).data);
 }
 
-function drawSpace(tick, speaking, theme) {
+function drawSpace(tick, speaking, theme, result) {
   const blur = 2;
   const bleed = blur * 3;
   const scale = Math.max(
@@ -214,8 +230,14 @@ function drawSpace(tick, speaking, theme) {
   ctx.fillText(theme.shortName, 341, 70);
   drawSpaceVoiceIndicator(tick, speaking);
 
-  drawSpaceObjective();
-  drawSpaceCheckpoints(theme.checkpoints);
+  if (result && result.timedOutTasks > 3) {
+    drawSpaceFailure(result);
+  } else if (result) {
+    drawSpaceCompletion(result);
+  } else {
+    drawSpaceObjective();
+  }
+  drawSpaceCheckpoints(theme.checkpoints, Boolean(result) && !(result.timedOutTasks > 3));
 }
 
 function drawSpaceObjective() {
@@ -230,7 +252,62 @@ function drawSpaceObjective() {
   ctx.fillText('SHOW 3 OBJECTS', 50, 486);
 }
 
-function drawSpaceCheckpoints(labels) {
+function drawSpaceCompletion(completion) {
+  drawSpacePanel(24, 300, 492, 476);
+  ctx.fillStyle = SPACE_COLORS.accent;
+  ctx.fillRect(50, 355, 4, 28);
+  ctx.fillStyle = SPACE_COLORS.muted;
+  ctx.font = '12px Michroma';
+  ctx.fillText('MISSION COMPLETE', 68, 376);
+  ctx.fillStyle = SPACE_COLORS.text;
+  ctx.font = '24px Michroma';
+  ctx.textAlign = 'center';
+  drawCelebrationSparkle(70, 446, 8, SPACE_COLORS.accent);
+  drawCelebrationSparkle(470, 446, 8, SPACE_COLORS.accent);
+  ctx.fillText('CONGRATS, PILOT!', 270, 448);
+  ctx.fillStyle = SPACE_COLORS.muted;
+  ctx.font = '16px Michroma';
+  ctx.fillText("YOU'VE RETURNED HOME", 270, 498);
+  ctx.font = '11px Michroma';
+  ctx.fillText('ALL OBJECTIVES SECURED', 270, 529);
+  ctx.textAlign = 'left';
+
+  drawCompletionStats(completion, drawSpacePanel, {
+    labelFont: '10px Michroma',
+    valueFont: '22px Michroma',
+    labelColor: SPACE_COLORS.muted,
+    valueColor: SPACE_COLORS.text,
+  });
+}
+
+function drawSpaceFailure(result) {
+  drawSpacePanel(24, 300, 492, 476);
+  ctx.fillStyle = SPACE_COLORS.accent;
+  ctx.fillRect(50, 355, 4, 28);
+  ctx.fillStyle = SPACE_COLORS.muted;
+  ctx.font = '12px Michroma';
+  ctx.fillText('MISSION OVER', 68, 376);
+  ctx.fillStyle = SPACE_COLORS.text;
+  ctx.font = '24px Michroma';
+  ctx.textAlign = 'center';
+  ctx.fillText("TIME'S UP, PILOT!", 270, 448);
+  ctx.fillStyle = SPACE_COLORS.muted;
+  ctx.font = '13px Michroma';
+  ctx.fillText('MISSION ENDED - TRY AGAIN!', 270, 498);
+  ctx.font = '10px Michroma';
+  ctx.fillText(timeoutSummary(result.timedOutTasks), 270, 529, 420);
+  drawLostLives(270, 551, SPACE_COLORS.accent);
+  ctx.textAlign = 'left';
+
+  drawCompletionStats(result, drawSpacePanel, {
+    labelFont: '10px Michroma',
+    valueFont: '22px Michroma',
+    labelColor: SPACE_COLORS.muted,
+    valueColor: SPACE_COLORS.text,
+  });
+}
+
+function drawSpaceCheckpoints(labels, completed) {
   drawSpacePanel(32, 884, 476, 196);
   ctx.fillStyle = SPACE_COLORS.muted;
   ctx.font = '13px Michroma';
@@ -239,7 +316,7 @@ function drawSpaceCheckpoints(labels) {
   const checkpoints = labels.map((label, index) => ({
     label,
     x: 78 + index * 128,
-    active: index === 0,
+    active: completed || index === 0,
   }));
   ctx.strokeStyle = SPACE_COLORS.line;
   ctx.lineWidth = 2;
@@ -262,6 +339,66 @@ function drawSpaceCheckpoints(labels) {
     ctx.fillText(label, x, 1047);
   });
   ctx.textAlign = 'left';
+}
+
+function drawCompletionStats(completion, drawPanel, styles) {
+  drawPanel(58, 578, 204, 142);
+  drawPanel(278, 578, 204, 142);
+
+  ctx.textAlign = 'center';
+  ctx.fillStyle = styles.labelColor;
+  ctx.font = styles.labelFont;
+  ctx.fillText('TASKS COMPLETED', 160, 620, 184);
+  ctx.fillText('TOTAL TIME', 380, 620, 184);
+  ctx.fillStyle = styles.valueColor;
+  ctx.font = styles.valueFont;
+  ctx.fillText(String(completion.tasksCompleted), 160, 682, 184);
+  ctx.fillText(formatElapsedTime(completion.elapsedSeconds), 380, 682, 184);
+  ctx.textAlign = 'left';
+}
+
+function drawCelebrationSparkle(x, y, radius, color) {
+  const innerRadius = radius * 0.18;
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.moveTo(x, y - radius);
+  ctx.lineTo(x + innerRadius, y - innerRadius);
+  ctx.lineTo(x + radius, y);
+  ctx.lineTo(x + innerRadius, y + innerRadius);
+  ctx.lineTo(x, y + radius);
+  ctx.lineTo(x - innerRadius, y + innerRadius);
+  ctx.lineTo(x - radius, y);
+  ctx.lineTo(x - innerRadius, y - innerRadius);
+  ctx.closePath();
+  ctx.fill();
+}
+
+function timeoutSummary(timeoutCount) {
+  return `${timeoutCount} TIMEOUTS - 3 LIVES LOST`;
+}
+
+function drawLostLives(centerX, centerY, color) {
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 2.5;
+  for (const offset of [-28, 0, 28]) {
+    ctx.beginPath();
+    ctx.moveTo(centerX + offset - 5, centerY - 5);
+    ctx.lineTo(centerX + offset + 5, centerY + 5);
+    ctx.moveTo(centerX + offset + 5, centerY - 5);
+    ctx.lineTo(centerX + offset - 5, centerY + 5);
+    ctx.stroke();
+  }
+}
+
+function formatElapsedTime(totalSeconds) {
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+  const paddedMinutes = String(minutes).padStart(2, '0');
+  const paddedSeconds = String(seconds).padStart(2, '0');
+  return hours > 0
+    ? `${hours}:${paddedMinutes}:${paddedSeconds}`
+    : `${paddedMinutes}:${paddedSeconds}`;
 }
 
 function drawSpacePanel(x, y, width, height) {
@@ -288,7 +425,7 @@ function drawSpaceVoiceIndicator(tick, speaking) {
   }
 }
 
-function drawBackrooms(tick, speaking, theme) {
+function drawBackrooms(tick, speaking, theme, result) {
   const blur = 5;
   const bleed = blur * 3;
   const scale = Math.max(
@@ -324,8 +461,14 @@ function drawBackrooms(tick, speaking, theme) {
   ctx.fillText(theme.shortName, 341, 70);
   drawBackroomsVoiceIndicator(tick, speaking);
 
-  drawBackroomsObjective();
-  drawBackroomsCheckpoints(theme.checkpoints);
+  if (result && result.timedOutTasks > 3) {
+    drawBackroomsFailure(result);
+  } else if (result) {
+    drawBackroomsCompletion(result);
+  } else {
+    drawBackroomsObjective();
+  }
+  drawBackroomsCheckpoints(theme.checkpoints, Boolean(result) && !(result.timedOutTasks > 3));
 }
 
 function drawBackroomsObjective() {
@@ -340,7 +483,62 @@ function drawBackroomsObjective() {
   ctx.fillText('SHOW 3 OBJECTS', 50, 486);
 }
 
-function drawBackroomsCheckpoints(labels) {
+function drawBackroomsCompletion(completion) {
+  drawBackroomsPanel(24, 300, 492, 476);
+  ctx.fillStyle = BACKROOMS_COLORS.accent;
+  ctx.fillRect(50, 355, 4, 28);
+  ctx.fillStyle = BACKROOMS_COLORS.muted;
+  ctx.font = '17px BackroomsSansBold';
+  ctx.fillText('ESCAPE COMPLETE', 68, 378);
+  ctx.fillStyle = BACKROOMS_COLORS.text;
+  ctx.font = '43px BackroomsSansBold';
+  ctx.textAlign = 'center';
+  drawCelebrationSparkle(70, 446, 8, BACKROOMS_COLORS.accent);
+  drawCelebrationSparkle(470, 446, 8, BACKROOMS_COLORS.accent);
+  ctx.fillText("YOU'VE ESCAPED!", 270, 448);
+  ctx.fillStyle = BACKROOMS_COLORS.muted;
+  ctx.font = '25px BackroomsSansBold';
+  ctx.fillText('CONGRATS, EXPLORER!', 270, 498);
+  ctx.font = '17px BackroomsSans';
+  ctx.fillText('YOU FOUND YOUR WAY OUT', 270, 529);
+  ctx.textAlign = 'left';
+
+  drawCompletionStats(completion, drawBackroomsPanel, {
+    labelFont: '16px BackroomsSansBold',
+    valueFont: '31px BackroomsSansBold',
+    labelColor: BACKROOMS_COLORS.muted,
+    valueColor: BACKROOMS_COLORS.text,
+  });
+}
+
+function drawBackroomsFailure(result) {
+  drawBackroomsPanel(24, 300, 492, 476);
+  ctx.fillStyle = BACKROOMS_COLORS.accent;
+  ctx.fillRect(50, 355, 4, 28);
+  ctx.fillStyle = BACKROOMS_COLORS.muted;
+  ctx.font = '17px BackroomsSansBold';
+  ctx.fillText('GAME OVER', 68, 378);
+  ctx.fillStyle = BACKROOMS_COLORS.text;
+  ctx.font = '43px BackroomsSansBold';
+  ctx.textAlign = 'center';
+  ctx.fillText("TIME'S UP!", 270, 448);
+  ctx.fillStyle = BACKROOMS_COLORS.muted;
+  ctx.font = '22px BackroomsSansBold';
+  ctx.fillText('THE EXIT SLIPPED AWAY!', 270, 498);
+  ctx.font = '15px BackroomsSans';
+  ctx.fillText(timeoutSummary(result.timedOutTasks), 270, 529, 420);
+  drawLostLives(270, 551, BACKROOMS_COLORS.accent);
+  ctx.textAlign = 'left';
+
+  drawCompletionStats(result, drawBackroomsPanel, {
+    labelFont: '16px BackroomsSansBold',
+    valueFont: '31px BackroomsSansBold',
+    labelColor: BACKROOMS_COLORS.muted,
+    valueColor: BACKROOMS_COLORS.text,
+  });
+}
+
+function drawBackroomsCheckpoints(labels, completed) {
   drawBackroomsPanel(32, 884, 476, 196);
   ctx.fillStyle = BACKROOMS_COLORS.muted;
   ctx.font = '16px BackroomsSansBold';
@@ -349,7 +547,7 @@ function drawBackroomsCheckpoints(labels) {
   const checkpoints = labels.map((label, index) => ({
     label,
     x: 78 + index * 128,
-    active: index === 0,
+    active: completed || index === 0,
   }));
   ctx.strokeStyle = BACKROOMS_COLORS.line;
   ctx.lineWidth = 2;
@@ -395,7 +593,7 @@ function drawBackroomsVoiceIndicator(tick, speaking) {
   }
 }
 
-function drawOdyssey(tick, speaking, theme) {
+function drawOdyssey(tick, speaking, theme, result) {
   const scale = Math.max(WIDTH / odysseyBackground.width, HEIGHT / odysseyBackground.height);
   const imageWidth = odysseyBackground.width * scale;
   const imageHeight = odysseyBackground.height * scale;
@@ -418,6 +616,17 @@ function drawOdyssey(tick, speaking, theme) {
   ctx.textAlign = 'left';
   drawOdysseyVoiceIndicator(tick, speaking);
 
+  if (result && result.timedOutTasks > 3) {
+    drawOdysseyFailure(result);
+  } else if (result) {
+    drawOdysseyCompletion(result);
+  } else {
+    drawOdysseyObjective(theme);
+  }
+  drawOdysseyCheckpoints(theme.checkpoints, Boolean(result) && !(result.timedOutTasks > 3));
+}
+
+function drawOdysseyObjective(theme) {
   drawOdysseyPanel(32, 300, 476, 476);
   drawGreekMeander(54, 314, 432, 15, ODYSSEY_COLORS.border);
   ctx.fillStyle = ODYSSEY_COLORS.muted;
@@ -434,17 +643,84 @@ function drawOdyssey(tick, speaking, theme) {
   ctx.stroke();
   drawOdysseyMissions(theme.missions);
   drawGreekMeander(54, 747, 432, 15, ODYSSEY_COLORS.border);
+}
 
+function drawOdysseyCompletion(completion) {
+  drawOdysseyPanel(32, 300, 476, 476);
+  drawGreekMeander(54, 314, 432, 15, ODYSSEY_COLORS.border);
+  ctx.fillStyle = ODYSSEY_COLORS.muted;
+  ctx.font = '22px GFSDidot';
+  ctx.fillText('VOYAGE COMPLETE!', 58, 379);
+  ctx.fillStyle = ODYSSEY_COLORS.text;
+  ctx.font = '39px GFSDidot';
+  ctx.textAlign = 'center';
+  drawCelebrationSparkle(70, 446, 8, ODYSSEY_COLORS.active);
+  drawCelebrationSparkle(470, 446, 8, ODYSSEY_COLORS.active);
+  ctx.fillText('CONGRATS, HERO!', 270, 448);
+  ctx.fillStyle = ODYSSEY_COLORS.muted;
+  ctx.font = '25px GFSDidot';
+  ctx.fillText("YOU'VE RETURNED HOME", 270, 496);
+  ctx.font = '18px GFSDidot';
+  ctx.fillText('YOUR JOURNEY IS COMPLETE', 270, 530);
+  ctx.textAlign = 'left';
+  ctx.strokeStyle = ODYSSEY_COLORS.borderLight;
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(58, 546);
+  ctx.lineTo(482, 546);
+  ctx.stroke();
+  drawCompletionStats(completion, drawOdysseyPanel, {
+    labelFont: '18px GFSDidot',
+    valueFont: '28px GFSDidot',
+    labelColor: ODYSSEY_COLORS.muted,
+    valueColor: ODYSSEY_COLORS.text,
+  });
+  drawGreekMeander(54, 747, 432, 15, ODYSSEY_COLORS.border);
+}
+
+function drawOdysseyFailure(result) {
+  drawOdysseyPanel(32, 300, 476, 476);
+  drawGreekMeander(54, 314, 432, 15, ODYSSEY_COLORS.border);
+  ctx.fillStyle = ODYSSEY_COLORS.muted;
+  ctx.font = '22px GFSDidot';
+  ctx.fillText('OUT OF TIME', 58, 379);
+  ctx.fillStyle = ODYSSEY_COLORS.text;
+  ctx.font = '39px GFSDidot';
+  ctx.textAlign = 'center';
+  ctx.fillText('VOYAGE OVER, HERO!', 270, 448);
+  ctx.fillStyle = ODYSSEY_COLORS.muted;
+  ctx.font = '23px GFSDidot';
+  ctx.fillText("TIME'S UP - TRY AGAIN!", 270, 496);
+  ctx.font = '16px GFSDidot';
+  ctx.fillText(timeoutSummary(result.timedOutTasks), 270, 529, 420);
+  drawLostLives(270, 551, ODYSSEY_COLORS.border);
+  ctx.textAlign = 'left';
+  ctx.strokeStyle = ODYSSEY_COLORS.borderLight;
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(58, 540);
+  ctx.lineTo(482, 540);
+  ctx.stroke();
+  drawCompletionStats(result, drawOdysseyPanel, {
+    labelFont: '18px GFSDidot',
+    valueFont: '28px GFSDidot',
+    labelColor: ODYSSEY_COLORS.muted,
+    valueColor: ODYSSEY_COLORS.text,
+  });
+  drawGreekMeander(54, 747, 432, 15, ODYSSEY_COLORS.border);
+}
+
+function drawOdysseyCheckpoints(labels, completed) {
   drawOdysseyPanel(32, 884, 476, 196);
   ctx.fillStyle = ODYSSEY_COLORS.muted;
   ctx.font = '20px GFSDidot';
   ctx.fillText('CHECKPOINTS', 58, 906);
   drawGreekMeander(54, 934, 432, 12, ODYSSEY_COLORS.border);
 
-  const checkpoints = theme.checkpoints.map((label, index) => ({
+  const checkpoints = labels.map((label, index) => ({
     label,
     x: 78 + index * 128,
-    active: index === 0,
+    active: completed || index === 0,
   }));
   ctx.strokeStyle = ODYSSEY_COLORS.borderLight;
   ctx.lineWidth = 2;
