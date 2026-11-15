@@ -1,300 +1,284 @@
-# Reality.exe 🛸
+Reality.exe 🛸
 
-**FaceTime an AI game master. Your room is the game. Your camera is the controller.**
+FaceTime a coach that turns your kid's morning and bedtime routine into a game. Their room is the level. The camera is the controller.
 
-Reality.exe is a real-time, vision-verified escape game that runs over FaceTime. Call a number, show the AI a few objects from your desk, and it turns them into parts of a spaceship. Then it gives you physical missions, watches through your camera, and tells you whether you actually pulled them off.
+Reality.exe is a FaceTime routine coach for kids who struggle to get through their routines, including many kids with ADHD. Your child FaceTimes ORBIT, says "good morning" or "good night", and picks a world to play in. ORBIT then walks them through each step: brush your teeth, pack your lunch, put on your pajamas. It watches through the camera and only counts a step once it actually sees it done. If the clock runs low, a monster shows up and gets closer.
 
 No app. No signup. Just a FaceTime call.
 
-> Built for **HackUTA 2026** (UT Arlington, Nov 14-15) for the Chert sponsor challenge: **Best Use of FaceTime**.
+Built for HackUTA 2026 (UT Arlington, Nov 14-15) for the Chert sponsor challenge: Best Use of FaceTime.
 
----
+✨ Why Reality.exe?
 
-## ✨ Why Reality.exe?
+Morning and bedtime routines are a daily fight in a lot of homes. Kids lose track of what comes next, drift off mid-task, or say "done" when they aren't. Parents end up repeating the same reminders every day. Checklists and sticker charts help, but nothing checks whether a step really happened.
 
-Most "AI that can see" demos stop at describing an image. You show something, the AI talks about it. Reality.exe closes the loop:
+Reality.exe closes that loop:
 
-- The AI **issues physical commands**
-- You **carry them out** in the real world
-- The AI **verifies the result** through live video
-- The game **reacts**, coaching near-misses and refusing fake "done" claims
+The AI gives one clear step at a time
+Your child does it in the real world
+The AI verifies it through live video
+The game reacts: a step clock, a monster that closes in, three lives, and a celebration at the end
 
-A voice call or a text chat cannot do this. The camera is the input device, and FaceTime is what carries it.
+A voice assistant or a checklist app can't do this. The camera is the input device, and FaceTime is what carries it.
 
 Reality.exe is:
 
-- **Zero-install:** any iPhone with FaceTime can play
-- **Improvised:** it works with *your* objects, not a scripted set
-- **Verified:** every success is backed by an evidence frame and a reason
-- **Honest:** a deterministic game engine decides state, not a language model guessing
+Zero-install: any iPhone with FaceTime can play
+Parent-built: parents choose the steps, time limits, lives and the monster timer
+Verified: every checked step is backed by an evidence frame and a reason
+Honest: a deterministic engine decides progress, not a language model guessing, and saying "done" never counts by itself
+🎮 How a Run Works
+Call: your child FaceTimes the ORBIT line.
+Greet: "Good morning" starts the morning routine; "good night" starts the bedtime routine.
+Pick a world: "One" for Space, "two" for Odyssey, "three" for Backrooms. Saying "Good morning, space!" answers both at once.
+Missions: ORBIT gives one step at a time, each with its own time limit (45-90 s).
+Verify: the camera checks the step. It counts only after two passing rounds in a row, with 2 of 3 frames agreeing in each.
+The monster: with 25 seconds left, the monster appears on screen and ORBIT warns "Hurry!" It grows as time runs out. Running out of time costs one of three lives.
+Finish: complete the routine for a celebration, or lose all three lives and get a gentle "try again next time". Parents get a report with the evidence frame for each checked step.
 
-The game is the stress test for something bigger: an AI that can check whether a physical task was actually done.
+Say "done" without doing it, and ORBIT will say it doesn't see it yet, and take 5 seconds off the clock.
 
----
+🧩 Features
+1️⃣ FaceTime Coach (ORBIT)
+An AI coach on a FaceTime line with a friendly, consistent persona
+Short spoken instructions with the current step always stated
+Voice controls: "repeat", "help", "pause", "resume", "done"
+2️⃣ Morning and Night Routines
+Morning (8 steps): fold your bedsheets, brush your teeth, wash your face, brush your hair, drink water, eat breakfast, pack your lunch, put on your shoes
+Night (7 steps): put your toys away, put on pajamas, wash your face and skin care, brush your teeth, pack your bag, lay out tomorrow's clothes, read a book
+The greeting picks the routine; no menus to navigate
+3️⃣ Vision Verification Loop
+Samples frames from the call and asks a multimodal model one narrow question per check
+Returns structured results: satisfied, confidence, evidence, correction_hint
+Requires agreement across frames and across two rounds before a step counts
+Geometry checks can veto a model "yes"; they never turn a "no" into a pass
 
-## 🎮 How a Run Works
+Supported checks:
 
-1. **Call:** FaceTime the Reality.exe agent.
-2. **Scan:** Show 3 objects. The AI names what it sees and assigns roles (bottle → reactor, notebook → control panel, pen → access key).
-3. **Mission 1, Restore Power:** Put the reactor on top of the control panel. The AI checks, then lights up the ship.
-4. **Mission 2, Unlock Security:** Hold the access key up to the camera.
-5. **Mission 3, Open the Portal:** Arrange all three objects left to right in the order the AI names.
-6. **Escape:** The portal opens, and you get a mission report with evidence frames.
-
-Say "done" without doing it, and the AI will tell you it doesn't see it.
-
----
-
-## 🧩 MVP Features
-
-### 1️⃣ FaceTime Game Master
-- An AI agent on a FaceTime line with a consistent game-master persona
-- Short, spoken instructions with the current mission always stated
-- Natural coaching: encouragement, hints, and playful rejection
-
-### 2️⃣ Live Object Scan and Role Assignment
-- Identifies the objects the player shows
-- Assigns fictional ship roles based on what is actually present
-- Never requires a fixed set of objects
-
-### 3️⃣ Vision Verification Loop
-- Samples frames from the call and asks a multimodal model to check a mission predicate
-- Returns structured results: `satisfied`, `confidence`, `evidence`, `correction_hint`
-- Requires agreement across multiple frames before declaring success
-
-Supported predicates (v1):
-
-| Predicate | Example |
-|---|---|
-| `ON_TOP_OF(A, B)` | Reactor on the control panel |
-| `HELD_UP(X)` | Show the access key to the camera |
-| `LEFT_OF(A, B)` | Place the key left of the panel |
-| `ORDER_LEFT_TO_RIGHT([A, B, C])` | Line up all three in a named order |
-| `COVERED(X)` | Cover the sensor with your hand |
-
-### 4️⃣ Deterministic Game Engine
-- State machine: `SCAN → ASSIGN_ROLES → MISSION[PENDING → COACHING → VERIFIED] → ESCAPE`
-- The engine decides when a mission is complete
-- Timers and hint escalation: nudge, specific correction, easier variant
-- Unit-tested independently of any AI call
-
-### 5️⃣ Live Dashboard
-- The latest evidence frame with labeled objects
-- Confidence meter and the model's one-line reason
-- Animated ship systems (reactor, security, portal)
-- Mission log with attempts, verdicts, and hints
-
-### 6️⃣ Mission Report
-- End-of-run summary with verified evidence frames and timings
-
----
-
-## 🌱 Stretch Goals
-
-- **iMessage Mission Report:** send the evidence report to the player after the call
-- **Agent-Initiated Calls:** the agent calls the player back to start the next mission
-- **Body Mission:** a "human key" finale (hold a pose for three seconds)
-- **Difficulty Modes:** harder predicates and tighter timers
-- **Replay View:** step through a finished run frame by frame
-
----
-
-## 🏗️ Architecture
-
-```
-Player iPhone ⇄ FaceTime ⇄ Chert line (game-master agent)
-                              │ frames            ▲ speech / instructions
-                              ▼                   │
-                      FastAPI backend ──→ Multimodal model (inventory, verify)
-                              │
-                      Game engine (state machine, timers, hints)
-                              │ WebSocket
-                              ▼
-                      Next.js dashboard (evidence, ship systems, log)
-```
-
-### Backend Modules
-
-| Module | Responsibility |
-|---|---|
-| **Chert adapter** | Receives call frames and events, sends instructions to the agent. Isolated behind an interface so the integration strategy can change. |
-| **Perception service** | Frame sampling, model calls, multi-frame voting, stability checks |
-| **Game engine** | Session state, missions, timers, hint escalation |
-| **Realtime gateway** | Pushes events to the dashboard over WebSocket |
-
-### Event Stream (backend → dashboard)
-
-`scan_result` · `roles_assigned` · `mission_started` · `verification_attempt` · `mission_verified` · `hint_issued` · `game_won`
-
-### Verification Contract
-
-```json
+Check	Example
+DOING(action)	Brushing their teeth, reading a book (the child must be visible)
+SHOW(item)	Show the packed lunchbox or the folded blanket
+HELD_UP(X)	Hold your shoes up to the camera
+ON_TOP_OF(A, B)	Put the lunchbox on top of the backpack
+LEFT_OF(A, B)	Place one item left of another
+ORDER_LEFT_TO_RIGHT([A, B, C])	Line up three items in order
+COVERED(X)	Cover an item with your hand
+4️⃣ Deterministic Game Engine
+Per-step time limits, a 5-second penalty for a "done" claim that doesn't check out, and three lives
+The time monster appears in the last 25 seconds of a step and grows as time runs out
+The engine alone decides when a step is complete, missed or the mission is over
+Unit-tested independently of any AI call
+5️⃣ Three Themed Worlds
+Space, Odyssey and Backrooms, drawn by Juan with original art
+Each world shows the current mission, time left, hearts, the monster and a mission tracker
+On-screen status while checking: "Checking your mission…", "One check done. Hold still.", "Let me take another look."
+Sent as a full-screen video track, pre-rotated so it shows upright on a portrait iPhone
+6️⃣ Parent Routine Editor
+A local page (npm run editor) to edit the morning and night routines
+Add, remove and reorder steps; set times, lives and the monster timer; quick-add common tasks
+Every save is checked by the same validator the agent uses, so a broken routine never reaches a call
+7️⃣ Parent Report
+End-of-routine summary: which steps were checked or missed, time per step, lives left and the outcome
+An evidence frame for each verified step
+🌱 Stretch Goals
+Minimum time per task: require brushing to be seen across a full two minutes, not just two checks
+iMessage Report: send the parent report after the call
+Weekly Progress: streaks and a weekly summary for parents
+Agent-Initiated Calls: ORBIT calls at the scheduled routine time
+More Worlds and Monsters: new themes kids can unlock by finishing routines
+🏗️ Architecture
+Child's iPhone ⇄ FaceTime ⇄ Chert line ⇄ LiveKit room
+                                            │
+                     ┌──────────────────────┴───────────────────────┐
+                     │ ORBIT agent (Node)                           │
+                     │  • voice: speech-to-text + scripted speech   │
+                     │  • routine engine (steps, clock, lives)      │
+                     │  • HUD renderer → outgoing video track       │
+                     └──────────────────────┬───────────────────────┘
+                                frames      │ verdicts
+                                            ▼
+                     Vision bridge (Python, local only, port 8765)
+                       perception: voting, geometry vetoes
+                                            │
+                                            ▼
+                          Groq multimodal model (qwen/qwen3.8-27b)
+Modules
+Module	Responsibility
+Agent (reality-facetime-agent/agent.mjs)	Joins the call, handles speech, wires everything together
+Routine session	Greeting and world selection, voice commands; spoken claims never advance a step
+Routine engine	Steps, per-step clock, penalties, lives, monster, outcome and report
+Game runtime	Samples fresh camera frames, calls the vision bridge, applies verdicts to the engine
+HUD	Draws the themed worlds or the step-rail HUD and publishes it as video
+Vision bridge (vision-service/)	Validates requests, runs perception on frames, fails closed
+Perception (backend/app/perception/)	Prompts, multi-frame voting, geometry vetoes; vendored into the bridge with hash-checked provenance
+Eval (backend/eval/)	Labeled cases from video, accuracy and false-positive measurement
+Parent editor	Local page and server for editing routine files
+Verification Contract
+json
 {
   "satisfied": true,
-  "confidence": 0.86,
-  "objects_seen": ["bottle", "notebook", "pen"],
-  "evidence": "bottle base resting on notebook cover, no table contact",
-  "correction_hint": null
+  "confidence": 0.91,
+  "objects_seen": ["child"],
+  "evidence": "child is holding a toothbrush in their mouth and brushing",
+  "correction_hint": null,
+  "predicate": "DOING(brushing their teeth)",
+  "votes_for": 3,
+  "votes_total": 3
 }
-```
+🛠️ Tech Stack
 
----
+Agent and HUD
 
-## 🛠️ Tech Stack
+Node.js
+LiveKit Agents (voice, video tracks)
+@napi-rs/canvas (HUD rendering)
+TypeScript type contracts
 
-**Frontend**
-- Next.js
-- React
-- TypeScript
-- Tailwind CSS
-- WebSocket client
+Vision
 
-**Backend**
-- Python
-- FastAPI
-- WebSockets
-- In-memory session state with JSON export
+Python
+Pydantic
+Groq (qwen/qwen3.8-27b); a Gemini adapter is also available
 
-**AI and Integrations**
-- Chert (FaceTime agent line)
-- Gemini multimodal API (object inventory and predicate verification)
+Integrations
 
-**Tools**
-- GitHub
-- VS Code
-- pytest
+Chert (FaceTime line)
+LiveKit (room, speech-to-text, text-to-speech)
 
----
+Tools
 
-## 🚀 Getting Started
+GitHub
+VS Code
+node:test and pytest
+🚀 Getting Started
+Prerequisites
+Node.js 22+
+Python 3.10+
+Chert CLI with a FaceTime line
+A LiveKit project (free Build plan)
+A Groq API key
+Environment
 
-### Prerequisites
-- Python 3.10+
-- Node.js 18+
-- Chert access for the FaceTime agent (hackathon credentials)
-- A Gemini API key
+Create reality-facetime-agent/.env.local (never commit it):
 
-### Environment
+LIVEKIT_URL=wss://your-project.livekit.cloud
+LIVEKIT_API_KEY=your_key
+LIVEKIT_API_SECRET=your_secret
+LIVEKIT_FREE_BUILD_CONFIRMED=yes
+AGENT_NAME=reality-facetime-agent
+ENABLE_GAME=yes
+VISION_MODE=groq
+VISION_SERVICE_URL=http://127.0.0.1:8765
+ROUTINE_MORNING_FILE=examples/routines/kids-morning.json
+ROUTINE_NIGHT_FILE=examples/routines/kids-night.json
+HUD_VIDEO_PROFILE=juan-themes-rotated-ccw
 
-Create `backend/.env`:
+If the HUD shows upside down on the phone, switch to juan-themes-rotated-cw. Other layouts are listed in reality-facetime-agent/ROUTINES.md.
 
-```
-GEMINI_API_KEY=your_key
-CHERT_API_KEY=your_key
-```
-
-Create `frontend/.env.local`:
-
-```
-NEXT_PUBLIC_WS_URL=ws://localhost:8000/ws
-```
-
-### Run the backend
-
-```bash
-cd backend
-python -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
-uvicorn app.main:app --reload
-```
-
-### Run the dashboard
-
-```bash
-cd frontend
+Run the vision bridge (terminal A)
+bash
+cd reality-facetime-agent
+python3 -m venv .venv && source .venv/bin/activate
+pip install -r vision-service/requirements.txt
+export GROQ_API_KEY=your_key
+python vision-service/bridge.py --provider groq --allow-provider-calls
+Run the agent (terminal B)
+bash
+cd reality-facetime-agent
 npm install
-npm run dev
-```
+npm start
+Connect the FaceTime line (terminal C)
+bash
+cd reality-facetime-agent
+chert dev --agent reality-facetime-agent
 
-### Run the tests
+Wait for the waiting room, then FaceTime the Chert line and say "good morning".
 
-```bash
-cd backend
+Edit routines
+bash
+cd reality-facetime-agent
+npm run editor        # http://127.0.0.1:8787
+
+Restart the agent after saving to pick up the changes.
+
+Run the tests
+bash
+cd reality-facetime-agent
+npm run check && npm run check:types && npm test
+npm run test:routine:e2e
+python3 vision-service/verify_provenance.py
+python3 -m pytest -q vision-service
+
+cd ../backend
 pytest
-```
-
----
-
-## 📁 Project Structure
-
-```
-reality-exe/
+📁 Project Structure
+Reality.exe/
 ├── backend/
-│   ├── app/
-│   │   ├── main.py          # FastAPI app, routes, WebSocket
-│   │   ├── chert_adapter/   # Chert integration behind an interface
-│   │   ├── perception/      # Sampling, model calls, voting
-│   │   ├── engine/          # State machine, missions, hints
-│   │   └── models.py        # Session, Mission, Attempt
-│   ├── eval/                # Labeled test images and accuracy script
+│   ├── app/perception/        # Prompts, voting, geometry vetoes, model adapters
+│   ├── eval/                  # Dataset builder, labeled cases, accuracy script
 │   └── tests/
-└── frontend/
-    └── src/                 # Dashboard, evidence panel, ship systems
-```
+└── reality-facetime-agent/
+    ├── agent.mjs              # Call entry point
+    ├── routine-*.mjs          # Contract, engine, session, report, presentation
+    ├── game-runtime.mjs       # Frames → vision bridge → engine
+    ├── spaceship-face.mjs     # HUD router and step-rail HUD
+    ├── juan-hud/              # Juan's themed worlds (art pinned by hash)
+    ├── juan-theme-hud.mjs     # Routine overlay on the themed worlds
+    ├── monster.mjs            # Time monster and hearts
+    ├── parent-editor/         # Parent routine editor page
+    ├── examples/routines/     # kids-morning.json, kids-night.json
+    └── vision-service/        # Python bridge + vendored perception
+🗺️ Development Timeline (24 Hours)
+Phase	Hours	Goal
+Spike	0-2	Chert line, LiveKit room, voice and outgoing video working
+Vertical Slice	2-6	One check end to end: call → frames → verify → speech → HUD
+Perception	6-12	Predicates, voting, geometry vetoes, eval harness on real video
+Pivot	12-16	From escape game to kids' routine coach: routines, timer, lives, monster
+Polish	16-22	Themed worlds, greeting and world selection, parent editor, full-screen video
+Freeze	Last 2 hrs	Merge, full test run, rehearsal
+🚧 Roadblocks & Solutions
+1️⃣ Vision Reliability
 
----
+Judging an action from a few frames can be wrong, and a flickering verdict ruins the game.
 
-## 🗺️ Development Timeline (24 Hours)
+Solution:
 
-| Phase | Hours | Goal |
-|---|---|---|
-| **Spike** | 0-1.5 | Confirm what Chert exposes (frames, instruction injection, latency). Repo and interfaces. |
-| **Vertical Slice** | 1.5-6 | One mission end to end: call → frame → verify → speech → dashboard |
-| **Build Out** | 6-12 | Object scan and role assignment, missions 2 and 3, hint escalation, anti-cheat |
-| **Reliability** | 12-16 | Labeled test set, accuracy measurement, threshold tuning, lighting and clutter tests |
-| **Polish** | 14-20 | Ship-system animations, mission report, rehearsals, backup demo video |
-| **Freeze** | Last 2 hrs | Code freeze, final rehearsal |
+Ask one narrow question per check, from a small set of checks
+Require 2 of 3 frames to agree, at confidence 0.7 or higher, in two rounds in a row
+Fail closed: no clear answer means not verified
+Measured on a labeled set from real video: 81.1% accuracy with a 7.7% false-positive rate (37 desk-object cases). Routine actions are next to be measured.
+2️⃣ Free-Tier Limits
 
----
+Groq's free tier allows about 30 requests a minute and 1,000 a day, and a full routine uses roughly 50.
 
-## 🚧 Roadblocks & Possible Solutions
+Solution:
 
-### 1️⃣ Chert Integration Surface
-What the FaceTime integration exposes (incoming frames, instruction injection, outgoing video) determines the architecture.
+Check only fresh frames, and only while a step is active
+Pause checks while ORBIT is speaking
+Retry on the next check after an error, and never count an error as a pass
+3️⃣ FaceTime Video Sizing
 
-**Solution:**
-Verify first. The Chert adapter sits behind an interface with interchangeable strategies:
-- **Frames out, instructions in:** full backend verification pipeline
-- **Agent-as-judge:** the agent emits structured markers that the engine consumes
-- **Degraded mode:** voice-led game with a simpler dashboard
+FaceTime showed the portrait HUD sideways and small on a portrait phone.
 
-### 2️⃣ Vision Reliability
-Spatial judgments from a few frames can be wrong, and flickering results ruin a demo.
+Solution:
 
-**Solution:**
-- Restrict missions to a small predicate vocabulary that vision handles well
-- Require agreement across multiple frames and a stable verdict
-- Fail closed: low confidence means not verified
-- Measure accuracy on a labeled test set and report the real number
+Draw the HUD in portrait and send it pre-rotated a quarter turn, so the phone's own rotation shows it upright and full-screen
+4️⃣ LLM Over-Trust
 
-### 3️⃣ Latency
-A slow loop makes the game feel broken.
+A model deciding progress on its own is unpredictable, and kids will claim "done".
 
-**Solution:**
-- Downscale frames and sample sparingly
-- Cache the object inventory so checks only evaluate the predicate
-- Have the agent give a short stalling line while verification runs
-- Track per-step timing in a debug panel
+Solution: The model answers one question per check. The deterministic engine owns steps, timers, lives and the outcome. Spoken "done" only triggers a check, and a failed check costs time.
 
-### 4️⃣ LLM Over-Trust
-A model deciding game state by itself is unpredictable.
+5️⃣ Privacy
 
-**Solution:**
-The LLM proposes flavor and answers one narrow question per check. The deterministic engine owns state, timers, and win conditions.
+The product processes live video of a child at home.
 
-### 5️⃣ Privacy
-The product processes live video of a person's surroundings.
+Solution:
 
-**Solution:**
-- Announce at the start of the call that video is analyzed during the game
-- Do not retain frames beyond the session
-- Keep only the evidence frames needed for the mission report, in memory
+ORBIT says at the start of the call that the camera is used to check steps, and a parent should be present
+Frames are not retained beyond the session
+Only the evidence frame for each verified step is kept, for the parent report
+The parent editor runs locally only
+🔮 Beyond Routines
 
----
-
-## 🔮 Beyond the Game
-
-Reality.exe's core is a loop that asks whether a physical task was actually done. The same engine could power guided assembly, training and onboarding, chore verification, or step-by-step support. The game is the fastest way to stress-test it.
-
----
-
+Reality.exe's core is a loop that checks whether a physical task was actually done. The same engine could support therapy homework, chore charts, medication reminders for older kids, guided assembly, or step-by-step training. Routines for kids are where it helps most right away.
