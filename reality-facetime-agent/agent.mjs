@@ -47,7 +47,7 @@ export default defineAgent({
     callerVideo.on('frame', frame => {
       if (++delivered === 1 || delivered % 25 === 0) diagnostic('camera_delivery', { frames: delivered, generation: frame.generation });
     });
-    const sampler = process.env.DEBUG_CALLER_FRAMES === 'yes'
+    const sampler = !routine && process.env.DEBUG_CALLER_FRAMES === 'yes'
       ? new FrameSampler(join('.local', 'frames', `${Date.now()}-${ctx.job.id.replace(/[^a-zA-Z0-9_-]/g, '_')}`)) : null;
     if (sampler) callerVideo.on('frame', frame => {
       void sampler.offer(frame, () => callerVideo.isCurrent(frame)).then(saved => {

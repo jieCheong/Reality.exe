@@ -31,7 +31,7 @@ export class RoutineMissionEngine extends EventEmitter {
   resetEvidence() { this.streak = 0; this.inventoryCandidate = ''; }
   instruction() {
     if (this.escaped) return `Routine finished. You completed ${this.results.filter(r => r.status === 'done').length} of ${this.routine.steps.length} steps. Thank you for trying with ORBIT.`;
-    if (this.phase === 'SCAN') return `I am ORBIT, your routine guide. A parent should be with you. I will use the camera to check visible steps. Show me ${this.missing.join(', ') || this.routine.objects.join(', ')} and hold the camera still.`;
+    if (this.phase === 'SCAN') return `I am ORBIT, your routine guide. A parent should be with you. I will use the camera to check visible steps and keep a photo of each verified step for your parent. Show me ${this.missing.join(', ') || this.routine.objects.join(', ')} and hold the camera still.`;
     const step = this.routine.steps[this.stepIndex];
     const orientation = ['LEFT_OF','ORDER_LEFT_TO_RIGHT'].includes(step.check) ? ' Left and right mean the edges of the camera picture.' : '';
     return `Step ${this.stepIndex + 1}: ${step.label}. You have ${this.budgetSeconds} seconds.${orientation}`;

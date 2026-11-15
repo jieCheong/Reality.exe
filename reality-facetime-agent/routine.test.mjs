@@ -153,3 +153,29 @@ test('local parent report is written atomically and retains done/missed/photo co
     await assert.rejects(readFile(join(directory,'report.json.tmp')));
   } finally {await rm(directory,{recursive:true,force:true});}
 });
+
+test('runtime report uses the positive verdict frame_index even when verdicts are reordered',async()=>{
+  let now=1000,sequence=0,expectedId;const reports=[];
+  const camera=new EventEmitter();camera.isCurrent=()=>true;
+  const routine=structuredClone(fixture);routine.steps=routine.steps.slice(0,1);
+  let game;
+  const vision={allowMock:true,newRequestId:()=>`request-${sequence}`,analyze:async req=>{
+    expectedId=req.frames[2].id;
+    return {status:'checked',predicate:req.predicate,satisfied:true,votes_for:2,votes_total:3,
+      frame_verdicts:[2,0,1].map(frame_index=>({frame_index,satisfied:frame_index!==1,confidence:.95,error:null,geometry_override:null}))};
+  }};
+  game=new GameRuntime({callerVideo:camera,hud:{setState(){}},say:async()=>{},vision,routine,now:()=>now,
+    intervalMs:0,encode:async f=>Buffer.from(`synthetic-${f.sequence}`),onReport:async report=>reports.push(report)});
+  try {
+    game.start({auto:false});await game.speech;
+    apply(game.engine,{status:'checked',objects});apply(game.engine,{status:'checked',objects});await game.speech;
+    for(const time of [2000,4000]){
+      now=time;
+      for(let i=0;i<3;i++)camera.emit('frame',{sequence:++sequence,generation:1,capturedAtMs:now-600+i*200});
+      await game.tick();await game.speech;
+    }
+    await game.flushReport();
+    assert.equal(reports.length,1);assert.equal(reports[0].steps[0].evidenceFrame.id,expectedId);
+    assert.equal(reports[0].steps[0].evidenceFrame.dataUrl,`data:image/jpeg;base64,${Buffer.from(`synthetic-${sequence}`).toString('base64')}`);
+  } finally {await game.close();}
+});
