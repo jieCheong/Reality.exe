@@ -8,7 +8,7 @@ import { GameRuntime } from './game-runtime.mjs';
 
 // Test content only. None of these names are available in the production registry.
 const fixtures = [
-  { id: 'mock-a', name: 'Mock Alpha', aliases: ['alpha'], intro: 'Test introduction.', missionIntros: { POWER: 'Test power narration.' } },
+  { id: 'mock-a', name: 'Mock Alpha', aliases: ['alpha'], intro: 'Test introduction.', missionIntros: { HAIR: 'Test hair narration.' } },
   { id: 'mock-b', name: 'Mock Beta', aliases: ['beta'] },
   { id: 'mock-c', name: 'Mock Gamma', aliases: ['gamma'] },
 ];
@@ -114,13 +114,13 @@ test('theme is narration-only; mission authority, voice-failure gating and resum
   const runtime = new GameRuntime({ callerVideo: camera, hud: { setState() {} }, say: (text, options) => speech.say(text, options),
     vision: { allowMock: true }, now: () => 1000 });
   runtime.setTheme(validateThemes(fixtures)[0]); runtime.start({ auto: false }); await runtime.speech;
-  assert.equal(runtime.voiceFailed, true); assert.equal(await runtime.tick(), false); assert.equal(runtime.engine.phase, 'SCAN');
+  assert.equal(runtime.voiceFailed, true); assert.equal(await runtime.tick(), false); assert.equal(runtime.engine.phase, 'TEETH');
   fail = false; await runtime.announce(runtime.engine.instruction(), { force: true });
   assert.equal(runtime.voiceFailed, false); assert.equal(runtime.notBefore, 1000);
   runtime.pause(); assert.equal(runtime.notBefore, Infinity);
   await runtime.announce(runtime.engine.instruction(), { force: true });
   assert.equal(runtime.engine.apply(runtime.engine.request(), { status: 'checked', satisfied: true }), false);
-  assert.equal(runtime.engine.phase, 'SCAN');
+  assert.equal(runtime.engine.phase, 'TEETH');
   await runtime.speech; await runtime.close(); await speech.close();
 });
 
@@ -142,13 +142,13 @@ test('mock confirmed theme flows through every deterministic mission with one sp
   const flow = new ThemeSelection({ themes: fixtures, speech, game });
   await flow.start(); assert.equal(await game.tick(), false); assert.equal(requests, 0);
   await flow.handleTranscript(transcript('one')); await flow.handleTranscript(transcript('yes')); await game.speech;
-  for (let round=0;round<12;round++) { // 2 scan + 5 missions x 2 rounds
+  for (let round=0;round<18;round++) { // 9 routine steps x 2 rounds
     for (let i=0;i<3;i++) { clock += 220; camera.emit('frame', { sequence: ++sequence, generation: 1, capturedAtMs: clock }); }
     await game.tick(); await game.speech;
   }
   assert.equal(game.engine.escaped, true); assert.equal(hud.at(-1).missionProgress, 1);
-  assert.equal(spoken.filter(text => text.includes('Test power narration.')).length, 1);
-  assert.equal(spoken.filter(text => text.includes('Escape complete')).length, 1);
+  assert.equal(spoken.filter(text => text.includes('Test hair narration.')).length, 1);
+  assert.equal(spoken.filter(text => text.includes('Morning Launch complete')).length, 1);
   assert.equal(game.theme.id, 'mock-a');
   await flow.close();
 });

@@ -1,3 +1,4 @@
+import { PHASES } from './routine.mjs';
 import { measureRgbaContent } from './video-geometry.mjs';
 import { HUD_VIDEO_PROFILE } from './hud-video-profile.mjs';
 import { drawDiagnostic } from './hud-diagnostic.mjs';
@@ -7,7 +8,7 @@ import { drawFace, normalizeGameState, FPS, HEIGHT, WIDTH } from './spaceship-fa
 /** Existing Part A entry point, now rendering Juan's adapted spaceship HUD. */
 export function drawHud(tick, { reactor = 'offline', speaking = false, gameState = undefined } = {}) {
   if (!['offline', 'online'].includes(reactor)) throw new Error('reactor must be offline or online');
-  return drawFace(tick, speaking, gameState ?? { phase: reactor === 'online' ? 'POWER' : 'SCAN' });
+  return drawFace(tick, speaking, gameState ?? { phase: reactor === 'online' ? PHASES[1] ?? PHASES[0] : PHASES[0] });
 }
 
 /** One camera publisher on the SAME participant as the starter's voice. */

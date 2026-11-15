@@ -4,8 +4,8 @@ import { MissionEngine } from './mission-engine.mjs';
 import { VisionClient } from './vision-client.mjs';
 import { GameRuntime } from './game-runtime.mjs';
 import { EventEmitter } from 'node:events';
+import { DEFAULT_ROUTINE, PHASES, validateRoutine } from './routine.mjs';
 
-const objects = ['bottle', 'notebook', 'pen'].map((name, i) => ({ name, description: name, box_2d: [100, 100 + i*250, 300, 200 + i*250] }));
 let sequence = 0;
 function apply(engine, result) {
   const request = engine.request();
@@ -14,12 +14,12 @@ function apply(engine, result) {
 }
 const passing = engine => ({ status: 'checked', satisfied: true, predicate: engine.request().predicate,
   votes_for: 2, votes_total: 3, frame_verdicts: [0,1,2].map(i => ({ frame_index: i, satisfied: i < 2, confidence: .95, error: null, geometry_override: null })) });
-function scanned() { const e = new MissionEngine(); apply(e, { status: 'checked', objects }); apply(e, { status: 'checked', objects }); return e; }
+const fresh = () => new MissionEngine();
 
-test('all missions require two fresh consensus rounds; raw done never progresses state', () => {
-  const engine = scanned(); assert.equal(engine.phase, 'POWER');
+test('every routine step requires two fresh consensus rounds; raw done never progresses state', () => {
+  const engine = fresh(); assert.equal(engine.phase, PHASES[0]);
   assert.equal(engine.apply(engine.request(), { satisfied: true, status: 'checked' }), false);
-  for (const phase of ['POWER', 'SECURITY', 'HIDE', 'FIND', 'PORTAL']) {
+  for (const phase of PHASES) {
     assert.equal(engine.phase, phase);
     assert.equal(apply(engine, passing(engine)), false);
     assert.equal(apply(engine, passing(engine)), true);
@@ -35,21 +35,18 @@ test('failed, low-confidence, malformed and wrong-predicate verdicts reset the s
     r => { r.predicate = 'HELD_UP(other)'; }, r => { r.status = 'model_error'; },
     r => { r.frame_verdicts[0].error = 'timeout'; }, r => { r.frame_verdicts[1].frame_index = 0; },
   ]) {
-    const engine = scanned(); apply(engine, passing(engine));
+    const engine = fresh(); apply(engine, passing(engine));
     const result = passing(engine); mutate(result); assert.equal(apply(engine, result), false);
     assert.equal(apply(engine, passing(engine)), false, 'one round after failure must not pass');
-    assert.equal(engine.phase, 'POWER');
+    assert.equal(engine.phase, PHASES[0]);
   }
 });
 
-test('replayed images, stale revisions and inconsistent inventories cannot complete a stage', () => {
-  const engine = scanned(), request = engine.request(); request.frameIds = ['same-a','same-b','same-c'];
+test('replayed images and stale revisions cannot complete a step', () => {
+  const engine = fresh(), request = engine.request(); request.frameIds = ['same-a','same-b','same-c'];
   engine.apply(request, passing(engine)); engine.apply(request, passing(engine));
-  assert.equal(engine.phase, 'POWER');
+  assert.equal(engine.phase, PHASES[0]);
   assert.equal(engine.apply({ ...request, revision: -1 }, passing(engine)), false);
-  const scan = new MissionEngine(); apply(scan, { status: 'checked', objects });
-  apply(scan, { status: 'checked', objects: objects.slice(0,2) });
-  assert.equal(scan.phase, 'SCAN');
 });
 
 test('HTTP client rejects redirects, remote origins, mock results in real mode, and mismatched receipts', async () => {
@@ -72,37 +69,49 @@ test('camera invalidation rejects an in-flight result and detaches on close', as
     now: () => 1000, encode: async () => Buffer.from('jpeg'), intervalMs: 0 });
   runtime.start({ auto: false }); await runtime.speech;
   runtime.notBefore = 0;
-  for (let i=0;i<2;i++) camera.emit('frame', { sequence: i, generation: 1, capturedAtMs: 600 + i*200 });
+  for (let i=0;i<3;i++) camera.emit('frame', { sequence: i, generation: 1, capturedAtMs: 400 + i*200 });
   const pending = runtime.tick();
   await new Promise(resolve => setImmediate(resolve));
   camera.emit('status', { state: 'unavailable' });
-  finish({ status: 'checked', objects }); await pending;
-  assert.equal(runtime.engine.phase, 'SCAN'); assert.equal(runtime.engine.streak, 0);
+  finish(passing(runtime.engine)); await pending;
+  assert.equal(runtime.engine.phase, PHASES[0]); assert.equal(runtime.engine.streak, 0);
   await runtime.close(); assert.equal(camera.listenerCount('frame'), 0);
 });
 
-test('mission variants: every variant is reachable, valid, stable across retries, and finishable', () => {
-  const VALID = /^(ON_TOP_OF|HELD_UP|COVERED|HIDDEN|SHOW|ORDER_LEFT_TO_RIGHT)\([a-z0-9 ,-]+\)$/;
-  const seen = new Set();
-  for (let seed = 0; seed < 40; seed++) {
-    let x = (seed + 1) * 2654435761 % 2147483647 || 1;  // deterministic PRNG per game
-    const random = () => ((x = (x * 48271) % 2147483647) / 2147483647);
-    for (let i = 0; i < 5; i++) random();  // warm up so small seeds don't all start near 0
-    const e = new MissionEngine({ random });
-    apply(e, { status: 'checked', objects }); apply(e, { status: 'checked', objects });
-    assert.ok(!['bottle', 'notebook', 'pen'].includes(e.findKind), 'FIND never asks for a scanned object');
-    while (!e.escaped) {
-      const { predicate } = e.request();
-      assert.match(predicate, VALID); seen.add(`${e.phase}:${predicate.split('(')[0]}:${predicate}`);
-      assert.ok(e.instruction().length > 10 && e.hudState().objective.length > 3);
-      assert.equal(apply(e, passing(e)), false);
-      assert.equal(e.request().predicate, predicate, 'retries keep the same task');
-      assert.equal(apply(e, passing(e)), true);
-    }
+test('routine: 9-step morning default, per-step catalog within the bridge limit, every check well-formed', () => {
+  assert.equal(PHASES.length, 9);
+  const e = fresh();
+  const VALID = /^(SHOW|HELD_UP|COVERED|HIDDEN|ON_TOP_OF|LEFT_OF|ORDER_LEFT_TO_RIGHT)\([a-z ,-]+\)$/;
+  assert.match(e.instruction(), /9 steps/);
+  while (!e.escaped) {
+    const req = e.request();
+    assert.match(req.predicate, VALID);
+    assert.ok(req.catalog.length <= 3, 'bridge accepts at most 3 objects');
+    if (req.predicate.startsWith('SHOW(')) assert.equal(req.catalog.length, 0);
+    else for (const name of req.predicate.slice(req.predicate.indexOf('(') + 1, -1).split(', '))
+      assert.ok(req.catalog.some(o => o.name === name), `${name} sent with its check`);
+    assert.ok(e.hudState().objective.length > 3);
+    apply(e, passing(e)); apply(e, passing(e));
   }
-  const kinds = new Set([...seen].map(s => s.split(':').slice(0, 2).join(':')));
-  for (const k of ['POWER:ON_TOP_OF', 'SECURITY:HELD_UP', 'SECURITY:COVERED', 'HIDE:HIDDEN', 'FIND:SHOW', 'PORTAL:ORDER_LEFT_TO_RIGHT'])
-    assert.ok(kinds.has(k), `variant ${k} never chosen`);
-  assert.ok(new Set([...seen].filter(s => s.startsWith('PORTAL')).map(s => s.split(':')[2])).size >= 4, 'portal order varies');
-  assert.ok(new Set([...seen].filter(s => s.startsWith('FIND')).map(s => s.split(':')[2])).size >= 4, 'find object varies');
+  assert.match(e.instruction(), /complete/);
+});
+
+test('parent routines: a custom routine runs; malformed ones are rejected with a readable reason', () => {
+  const custom = validateRoutine({ name: 'Bedtime', steps: [
+    { short: 'PJS', check: 'SHOW', objects: ['pajamas'], say: 'Put on your pajamas and show me.' },
+    { short: 'BOOK', check: 'ON_TOP_OF', objects: ['book', 'pillow'], hud: 'Book on pillow' }] });
+  const e = new MissionEngine({ routine: custom });
+  assert.deepEqual(e.phases, ['PJS', 'BOOK']);
+  apply(e, passing(e)); apply(e, passing(e));
+  assert.equal(e.request().predicate, 'ON_TOP_OF(book, pillow)'); assert.equal(e.hudState().objective, 'BOOK ON PILLOW');
+  apply(e, passing(e)); apply(e, passing(e)); assert.ok(e.escaped);
+  for (const [bad, why] of [
+    [{ steps: [] }, /1 to 9/],
+    [{ steps: Array(10).fill({ check: 'SHOW', objects: ['cup'] }) }, /1 to 9/],
+    [{ steps: [{ check: 'TELEPORT', objects: ['cup'] }] }, /unknown check/],
+    [{ steps: [{ check: 'ON_TOP_OF', objects: ['cup'] }] }, /takes 2/],
+    [{ steps: [{ check: 'SHOW', objects: ['Cup!'] }] }, /lowercase/],
+    [{ steps: [{ short: 'A', check: 'SHOW', objects: ['cup'] }, { short: 'A', check: 'SHOW', objects: ['pen'] }] }, /unique/],
+  ]) assert.throws(() => validateRoutine(bad), why);
+  assert.doesNotThrow(() => validateRoutine(DEFAULT_ROUTINE));
 });

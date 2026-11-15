@@ -5,6 +5,8 @@ import { GlobalFonts, createCanvas } from '@napi-rs/canvas';
 import { fileURLToPath } from 'node:url';
 import { LANDSCAPE_LAYOUT, drawLandscape, landscapeObjectiveLines } from './spaceship-landscape.mjs';
 import { HUD_VIDEO_PROFILE } from './hud-video-profile.mjs';
+import { ROUTINE, PHASES } from './routine.mjs';
+export { PHASES };
 export const WIDTH = HUD_VIDEO_PROFILE.width, HEIGHT = HUD_VIDEO_PROFILE.height, FPS = HUD_VIDEO_PROFILE.fps;
 const extra = HEIGHT - 960, objectiveOffset = extra / 3, progressOffset = extra * 2 / 3, checkpointOffset = extra;
 const landscape = HUD_VIDEO_PROFILE.name === 'landscape-test';
@@ -19,12 +21,9 @@ export const HUD_LAYOUT = landscape ? LANDSCAPE_LAYOUT : Object.freeze({
 
 const fontPath = fileURLToPath(new URL('./assets/Orbitron.ttf', import.meta.url));
 if (!GlobalFonts.registerFromPath(fontPath, 'Orbitron')) throw new Error('Could not load the bundled Orbitron HUD font');
-export const PHASES = Object.freeze(['SCAN', 'POWER', 'SECURITY', 'HIDE', 'FIND', 'PORTAL']);
-const OBJECTIVES = {
-  SCAN: 'SHOW 3 OBJECTS', POWER: 'RESTORE REACTOR POWER',
-  SECURITY: 'UNLOCK SHIP SECURITY', HIDE: 'ENGAGE CLOAKING', FIND: 'LOCATE THE BEACON',
-  PORTAL: 'OPEN THE PORTAL',
-};
+const OBJECTIVES = Object.fromEntries(ROUTINE.steps.map(s => [s.short, s.hud]));
+// More than 6 checkpoints: tighter rail, smaller type, so up to 9 fit the same panel.
+const RAIL = PHASES.length > 6 ? { label: 15, status: 11, dot: 6, active: 8 } : { label: 18, status: 12, dot: 7, active: 9 };
 const COLORS = Object.freeze({
   background: '#07131d', panel: '#101f2a', panelRaised: '#142733',
   border: '#28404b', text: '#eaf4f5', muted: '#8ba1a9',
@@ -36,7 +35,7 @@ const ctx = canvas.getContext('2d');
 /** @param {import('./part-a-types.js').GameHudState} [input] */
 export function normalizeGameState(input = {}) {
   if (!input || typeof input !== 'object' || Array.isArray(input)) throw new Error('Game HUD state must be an object');
-  const phase = input.phase ?? 'SCAN';
+  const phase = input.phase ?? PHASES[0];
   if (!PHASES.includes(phase)) throw new Error('Unknown HUD phase');
   if (input.objective !== undefined && typeof input.objective !== 'string') throw new Error('HUD objective must be text');
   const index = PHASES.indexOf(phase);
@@ -72,11 +71,11 @@ export function drawFace(tick, speaking = false, gameState = undefined) {
 
     ctx.fillStyle = COLORS.cyan; ctx.font = '700 28px Orbitron'; ctx.fillText('REALITY.EXE', 24, 55);
     drawBox(HUD_LAYOUT.status, true);
-    ctx.fillStyle = state.phase === 'SCAN' ? COLORS.amber : COLORS.cyan;
+    ctx.fillStyle = state.phase === PHASES[0] ? COLORS.amber : COLORS.cyan;
     ctx.beginPath(); ctx.arc(44, 106, 4, 0, Math.PI * 2); ctx.fill();
     ctx.fillStyle = COLORS.text; ctx.font = '700 16px Orbitron'; ctx.fillText(state.phase, 61, 112);
     drawVoiceIndicator(tick, speaking);
-    ctx.fillStyle = state.phase === 'SCAN' ? COLORS.amber : COLORS.cyan;
+    ctx.fillStyle = state.phase === PHASES[0] ? COLORS.amber : COLORS.cyan;
     ctx.fillRect(0, STATUS_STRIPE_Y, WIDTH, 4);
 
     drawBox(HUD_LAYOUT.objective);
@@ -98,14 +97,14 @@ export function drawFace(tick, speaking = false, gameState = undefined) {
       const x = 62, y = 652 + checkpointOffset + i * (222 / (PHASES.length - 1)), status = state.checkpoints[label];
       const color = status === 'active' ? COLORS.amber : status === 'complete' ? COLORS.cyan : COLORS.dim;
       ctx.fillStyle = status === 'pending' ? COLORS.panelRaised : color; ctx.strokeStyle = color; ctx.lineWidth = 2;
-      ctx.beginPath(); ctx.arc(x, y, status === 'active' ? 9 : 7, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      ctx.beginPath(); ctx.arc(x, y, status === 'active' ? RAIL.active : RAIL.dot, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
       if (status === 'complete') {
         ctx.strokeStyle = COLORS.background; ctx.lineWidth = 2;
         ctx.beginPath(); ctx.moveTo(x - 4, y); ctx.lineTo(x - 1, y + 3); ctx.lineTo(x + 4, y - 3); ctx.stroke();
       }
       ctx.fillStyle = status === 'pending' ? COLORS.muted : COLORS.text;
-      ctx.font = '700 18px Orbitron'; ctx.fillText(label, 88, y + 6);
-      ctx.fillStyle = color; ctx.font = '700 12px Orbitron'; ctx.textAlign = 'right'; ctx.fillText(status.toUpperCase(), 496, y + 5); ctx.textAlign = 'left';
+      ctx.font = `700 ${RAIL.label}px Orbitron`; ctx.fillText(label, 88, y + RAIL.label / 3);
+      ctx.fillStyle = color; ctx.font = `700 ${RAIL.status}px Orbitron`; ctx.textAlign = 'right'; ctx.fillText(status.toUpperCase(), 496, y + RAIL.status / 3); ctx.textAlign = 'left';
     });
     return new Uint8Array(ctx.getImageData(0, 0, WIDTH, HEIGHT).data);
   } finally { ctx.restore(); }

@@ -1,3 +1,4 @@
+import { PHASES } from './routine.mjs';
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { spawn } from 'node:child_process';
@@ -48,22 +49,22 @@ test('MOCK end-to-end: camera → JPEG → local Python perception/voting → mi
       }
       await runtime.tick();
     }
-    await round(); assert.equal(runtime.engine.phase, 'SCAN');
-    await round(); assert.equal(runtime.engine.phase, 'POWER');
-    scenario = 'fail'; await round(); assert.equal(runtime.engine.phase, 'POWER');
+    // Step 1: one passing round is not enough, and a failed check holds the step and speaks a hint.
+    await round(); assert.equal(runtime.engine.phase, PHASES[0], 'first passing round cannot advance');
+    scenario = 'fail'; await round(); assert.equal(runtime.engine.phase, PHASES[0]);
     assert.ok(spoken.some(text => text.includes('requested position')));
     scenario = undefined;
-    for (const phase of ['POWER','SECURITY','HIDE','FIND','PORTAL']) {
+    for (const phase of PHASES) {
       assert.equal(runtime.engine.phase, phase);
       await round(); assert.equal(runtime.engine.phase, phase, 'first passing round cannot advance');
       await round();
     }
     await runtime.speech;
     assert.equal(runtime.engine.escaped, true);
-    assert.deepEqual([...new Set(states.map(s => s.phase))], ['SCAN','POWER','SECURITY','HIDE','FIND','PORTAL']);
+    assert.deepEqual([...new Set(states.map(s => s.phase))], [...PHASES]);
     assert.equal(states.at(-1).missionProgress, 1);
     assert.ok(states.every(s => s.objective.startsWith('[MOCK VISION]')));
-    assert.ok(spoken.some(text => text.includes('Escape complete')));
+    assert.ok(spoken.some(text => text.includes('Morning Launch complete')));
     assert.ok(replies.filter(r => r.predicate).every(r => r.votes_total === 3));
     console.log(JSON.stringify({ scope: 'MOCK_ONLY_LOCAL_HTTP', phaseUpdates: states.length, utterances: spoken.length,
       visionRounds: replies.length, providerCalls: 0, chertCalls: 0, realWorldVerification: false }));
