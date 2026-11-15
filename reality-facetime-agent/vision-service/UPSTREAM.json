@@ -1,0 +1,14 @@
+{
+  "source": "Reality.exe-Shivam.zip/backend",
+  "files": {
+    "app/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "app/perception/__init__.py": "2ff4bf001809e22e55d91c7e6588f8a7e5e2e6e0a106c5e6e84196ba7af3f9d1",
+    "app/perception/frames.py": "7b2d918879e0fa5bfe8312ddee29e303f2e4c73f0633c816337315f29704fc04",
+    "app/perception/model.py": "c551354b6f33f3bdd77b893209b790b2031c6b6c829e7658988d6747289e8d2c",
+    "app/perception/predicates.py": "f8b369e9ac53450978896963ce6107244198d2b049ad394c7300e1b9677b28b9",
+    "app/perception/schemas.py": "2998a1b33538f6cbd549530a16882cae4cc2c9bb3655e716975beb0a3ce237c4",
+    "app/perception/service.py": "45b935e94fdeb79a205dcccfbab6b944b7328344e477735d784b24f2480c7679",
+    "app/perception/voting.py": "73dc1889c269896a5d7a87e7cb4b79fe02eb56a529fefedb8eb7486ec80bc391",
+    "tests/test_perception.py": "981d66807d6462a8e118ac8ed5af607590c068152063a053699f2db433caa010"
+  }
+}

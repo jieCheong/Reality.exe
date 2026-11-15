@@ -1,0 +1,11 @@
+node_modules/
+.env
+.env.*
+!.env.example
+*.log
+.DS_Store
+
+# Linux dependency directory is linked from the WSL cache.
+/node_modules
+
+.local/
