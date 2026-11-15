@@ -101,6 +101,8 @@ class PerceptionService:
             correction_hint=j.correction_hint,
             objects_seen=[o.name for o in j.objects if o.visible],
             geometry_override=veto,
+            model_satisfied=j.satisfied,
+            boxes={o.name: o.box_2d for o in j.objects if o.visible and len(o.box_2d) == 4},
             latency_ms=round((time.perf_counter() - t0) * 1000, 1),
         )
 

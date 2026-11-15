@@ -6,6 +6,7 @@ export interface ThemeDefinition {
   name: string;
   aliases?: string[];
   intro?: string;
+  description?: string;
   missionIntros?: Partial<Record<HudPhase, string>>;
 }
 export type ThreeThemes = readonly [ThemeDefinition, ThemeDefinition, ThemeDefinition];

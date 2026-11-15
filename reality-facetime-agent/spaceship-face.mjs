@@ -1,3 +1,6 @@
+import { drawJuanRoutine } from './juan-theme-hud.mjs';
+import { normalizeRoutineHud } from './routine-hud-state.mjs';
+import { drawRoutineGame } from './routine-game-hud.mjs';
 // Adapted from Juan's agent/face.mjs on branch Juan, commit 0e1b95ff.
 // His Orbitron typography, colors, panels, checkpoint rail and voice indicator
 // are retained in a native portrait layout for Part A's RGBA camera track.
@@ -35,6 +38,7 @@ const ctx = canvas.getContext('2d');
 /** @param {import('./part-a-types.js').GameHudState} [input] */
 export function normalizeGameState(input = {}) {
   if (!input || typeof input !== 'object' || Array.isArray(input)) throw new Error('Game HUD state must be an object');
+  if (input.mode === 'routine') return normalizeRoutineHud(input);
   const phase = input.phase ?? 'SCAN';
   if (!PHASES.includes(phase)) throw new Error('Unknown HUD phase');
   if (input.objective !== undefined && typeof input.objective !== 'string') throw new Error('HUD objective must be text');
@@ -52,7 +56,18 @@ export function normalizeGameState(input = {}) {
 
 /** Part C renderer: optional display snapshot; no game transitions or inference. */
 export function drawFace(tick, speaking = false, gameState = undefined) {
+  if (HUD_VIDEO_PROFILE.name === 'juan-themes') return drawJuanRoutine(tick,speaking,gameState);
   const state = normalizeGameState(gameState);
+  if (state.mode === 'routine') {
+    if (HUD_VIDEO_PROFILE.name === 'juan-original') {
+      return drawJuanRoutine(tick, speaking, {
+        ...state,
+        selectedTheme: state.selectedTheme ?? 'space',
+      });
+    }
+    drawRoutineGame(ctx, tick, speaking, state);
+    return new Uint8Array(ctx.getImageData(0, 0, WIDTH, HEIGHT).data);
+  }
   ctx.save();
   try {
     ctx.fillStyle = COLORS.background;

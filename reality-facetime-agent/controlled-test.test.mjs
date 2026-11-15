@@ -9,7 +9,7 @@ test('test catalog requires explicit opt-in and never mutates production themes'
   assert.equal(selectGameThemes(THEMES, {}), THEMES);
   assert.throws(() => selectGameThemes(THEMES, { GAME_TEST_MODE: 'yes' }));
   assert.equal(validateThemes(selectGameThemes(THEMES, { GAME_TEST_MODE: 'yes', ENABLE_GAME: 'yes' })).length, 3);
-  assert.equal(THEMES.length, 0);
+  assert.deepEqual(THEMES.map(t=>t.id),['space','odyssey','backrooms']);
 });
 test('diagnostics reject payloads, object names, credentials, and arbitrary field values', () => {
   let output;

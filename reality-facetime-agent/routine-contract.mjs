@@ -9,8 +9,10 @@ const keys = (value, allowed) => value && typeof value === 'object' && !Array.is
 
 /** Shared parent-file contract. No predicates, code or model output can alter it. */
 export function validateRoutine(input) {
-  if (!keys(input, ['id','name','theme','timer','objects','steps']) || !text(input.id, 64) ||
+  if (!keys(input, ['id','name','theme','timer','objects','steps','lives','monsterSeconds']) || !text(input.id, 64) ||
       !text(input.name, 120) || !text(input.theme, 64)) throw new Error('Invalid routine identity/name/theme');
+  if (input.lives !== undefined && (!Number.isInteger(input.lives) || input.lives < 1 || input.lives > 9)) throw new Error('Invalid lives');
+  if (input.monsterSeconds !== undefined && (!Number.isInteger(input.monsterSeconds) || input.monsterSeconds < 0 || input.monsterSeconds > 300)) throw new Error('Invalid monster window');
   const timerKeys = ['startSeconds','stepDecreaseSeconds','minSeconds','fakeDonePenaltySeconds','missPenaltySeconds'];
   if (!keys(input.timer, timerKeys) || timerKeys.some(key => !Number.isSafeInteger(input.timer[key]) ||
       input.timer[key] < 0 || input.timer[key] > 3600) || input.timer.minSeconds < 1 ||
@@ -27,6 +29,8 @@ export function validateRoutine(input) {
     return Object.freeze({ label: step.label.trim(), check: step.check, objects: Object.freeze([...step.objects]) });
   });
   return Object.freeze({ id: input.id.trim(), name: input.name.trim(), theme: input.theme.trim(),
+    ...(input.lives !== undefined ? { lives: input.lives } : {}),
+    ...(input.monsterSeconds !== undefined ? { monsterSeconds: input.monsterSeconds } : {}),
     timer: Object.freeze({ ...input.timer }), objects: Object.freeze([...input.objects]), steps: Object.freeze(steps) });
 }
 

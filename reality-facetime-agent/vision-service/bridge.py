@@ -37,6 +37,7 @@ class Request(BaseModel):
     catalog: list[dict] = Field(default_factory=list, max_length=3)
     predicate: str | None = None
     mockScenario: str | None = None
+    expectedObjects: list[str] | None = Field(default=None, max_length=3)
 
 
 class GroqOnlyVision:
@@ -55,6 +56,18 @@ class GroqOnlyVision:
                     {'role': 'user', 'content': content}],
                 temperature=0, response_format={'type': 'json_object'}, reasoning_effort='none', max_completion_tokens=700)
         return schema.model_validate(json.loads(_strip_fences(response.choices[0].message.content or '')), strict=True)
+
+
+class TargetInventoryModel:
+    """Adapter-only naming context; never invents absent required objects."""
+    def __init__(self, model, names): self.model, self.names = model, names
+    async def ask(self, images, prompt, schema):
+        if schema is InventoryResult:
+            prompt += ('\nRoutine inventory targets: ' + ', '.join(self.names) +
+                       '. Look for these actual physical objects. Use the exact target name only when '
+                       'the matching object is visibly present. Omit missing or uncertain targets; '
+                       'never invent an object just because it is requested. Do not list background items instead.')
+        return await self.model.ask(images, prompt, schema)
 
 
 class SafeModel:
@@ -87,7 +100,7 @@ def fixture_model(scenario):
             ]}
         names = re.findall(r'^- "([^"]+)"', prompt, re.M)
         boxes = [[100, 100 + 250*i, 300, 200 + 250*i] for i in range(len(names))]
-        if 'ON TOP OF' in prompt: boxes = [[50, 120, 150, 180], [150, 100, 350, 300]]
+        if 'must be ON TOP' in prompt: boxes = [[50, 120, 150, 180], [150, 100, 350, 300]]
         if scenario == 'geometry_veto': boxes.reverse()
         return {'satisfied': scenario != 'fail', 'confidence': 0.4 if scenario == 'low_confidence' else 0.95,
                 'objects': [{'name': name, 'visible': True, 'box_2d': box} for name, box in zip(names, boxes)],
@@ -104,6 +117,8 @@ class Bridge:
     async def analyze(self, body):
         request = Request.model_validate(body)
         if request.operation not in ('inventory', 'verify'): raise ValueError('Unknown operation')
+        if request.expectedObjects is not None and (request.operation != 'inventory' or not request.expectedObjects or any(not re.fullmatch(r'[a-z0-9][a-z0-9 -]{0,47}', name) for name in request.expectedObjects) or len(set(request.expectedObjects)) != len(request.expectedObjects)):
+            raise ValueError('Invalid inventory targets')
         if self.provider != 'mock' and request.mockScenario is not None: raise ValueError('Mock scenario forbidden in real mode')
         needed = 3 if request.operation == 'verify' else 2
         if len(request.frames) != needed: raise ValueError('Insufficient independent frames')
@@ -126,8 +141,9 @@ class Bridge:
         scene = check_scene(frames)
         if not scene.ok:
             return {**envelope, 'result': {'status': 'unstable_scene', 'satisfied': False,
-                    'correction_hint': 'Add light and hold the camera still so I can check.'}}
+                    'scene_reason': scene.reason, 'correction_hint': 'Add light and hold the camera still so I can check.'}}
         model = self.model or (fixture_model(request.mockScenario) if self.provider == 'mock' else GroqOnlyVision())
+        if request.expectedObjects: model = TargetInventoryModel(model, request.expectedObjects)
         service = PerceptionService(SafeModel(model), PerceptionConfig(flip_left_right=False, scene_check=False))
         if request.operation == 'inventory':
             result = (await service.inventory(frames)).model_dump()

@@ -20,7 +20,8 @@ No three-theme placeholder catalog is needed in routine mode: the parent file
 already supplies the theme. Existing theme selection stays in the fixed-game path.
 Routine mode uses the existing ORBIT scripted-speech lane, STT/TTS, Chert connection,
 caller-video adapter, JPEG encoder, LiveKit publisher and configured video profile.
-No HUD renderer, video setting, provider implementation or teammate source changed.
+The later final sprint adds an opt-in routine-game renderer; provider and teammate
+upstream implementations remain unchanged. See FINAL-DEMO-RUNBOOK.md.
 
 Two current Part B limits are detected BEFORE worker registration:
 
@@ -101,11 +102,10 @@ Runtime already calls the existing `hud.setState({gameState})` API with:
 }
 ```
 
-IMPORTANT: the existing spaceship normalizeGameState renderer currently drops
-unknown fields. C2 must retain/read these routine fields and draw its countdown/
-step list. Jie did NOT modify that teammate-owned renderer. Until Juan's change
-lands, the legacy shell displays the objective/progress, while the routine engine
-and outgoing state snapshots contain the full countdown. Legacy `phase` values
+Final sprint update: normalizeGameState now preserves routine fields and dispatches
+them to a dedicated routine-game renderer, retaining the legacy spaceship mode.
+The countdown, three steps, verification feedback and actual completed count render
+natively in the portrait frame. The user authorized these edits on Jie. Legacy `phase` values
 SCAN/POWER/PORTAL are compatibility shell values, not routine checkpoint names.
 Use routineSteps and stepIndex for the new UI, not the old four fixed checkpoints.
 
@@ -235,3 +235,19 @@ There is no automatic recorder and no recording has been made here. Finish by
 hanging up, Ctrl+C connector (wait for dev_stopped), then agent and Python; unset
 GROQ_API_KEY in terminal A. Do not keep real reports in Git or claim the MOCK run
 is a completed real-phone demo.
+
+## Selective perception refresh and local replay
+
+See [LOCAL-GROQ-GAMEPLAY.md](LOCAL-GROQ-GAMEPLAY.md) for the pinned Shivam integration,
+retained contact policy, measured-cache latency analysis, local sequence runner,
+real-provider approval gates and later FaceTime startup commands. HIDDEN/SHOW remain
+disabled in these routine contracts. No real request is implied by offline passes.
+
+## Routine-coach HUD state and final demo
+
+Jie's agent-side display adapter is routine-presentation.mjs; it adds deterministic
+UI/verification events to the existing hud.setState port without changing engine
+progression. The final sprint now retains/renders these fields in routine mode.
+See [JUAN-ROUTINE-HUD-HANDOFF.md](JUAN-ROUTINE-HUD-HANDOFF.md) and
+[FINAL-DEMO-RUNBOOK.md](FINAL-DEMO-RUNBOOK.md). `npm run demo:routine:ui` writes an
+explicitly mock morning-state replay without starting media or provider services.

@@ -30,7 +30,7 @@ def test_undeclared_content_change_is_detected(tmp_path, relative):
 
 def test_changed_review_patch_is_detected(tmp_path):
     target = copy_tree(tmp_path)
-    (target / 'patches/support-contact-v1.patch').write_text('wrong patch\n')
+    (target / 'patches/support-contact-v2.patch').write_text('wrong patch\n')
     assert any('Patch artifact mismatch' in error for error in verify(target))
 
 

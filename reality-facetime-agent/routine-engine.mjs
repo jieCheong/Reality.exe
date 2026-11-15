@@ -16,9 +16,11 @@ export class RoutineMissionEngine extends EventEmitter {
     this.phase = 'SCAN'; this.revision = 0; this.escaped = false; this.catalog = []; this.stepIndex = -1;
     this.results = []; this.misses = 0; this.usedFrames = new Set(); this.missing = [...this.routine.objects];
     this.clockStarted = null; this.elapsedMs = 0; this.penaltyMs = 0; this.resetEvidence();
+    this.maxLives=this.routine.lives??null;this.lives=this.maxLives;this.outcome=null;
   }
   resetEvidence() { this.streak = 0; this.inventoryCandidate = ''; }
   instruction() {
+    if (this.escaped && this.outcome === 'failed') return `The time monster caught up this time. You completed ${this.results.filter(r => r.status === 'done').length} of ${this.routine.steps.length} steps. We can try again another time.`;
     if (this.escaped) return `Routine finished. You completed ${this.results.filter(r => r.status === 'done').length} of ${this.routine.steps.length} steps. Thank you for trying with ORBIT.`;
     if (this.phase === 'SCAN') return `I am ORBIT, your routine guide. A parent should be with you. I will use the camera to check visible steps and keep a photo of each verified step for your parent. Show me ${this.missing.join(', ') || this.routine.objects.join(', ')} and hold the camera still.`;
     const step = this.routine.steps[this.stepIndex];
@@ -29,16 +31,23 @@ export class RoutineMissionEngine extends EventEmitter {
   pauseClock(now = this.now()) { this.elapsedMs = this.activeElapsed(now); this.clockStarted = null; }
   resumeClock(now = this.now()) { if (this.phase !== 'SCAN' && !this.escaped && this.clockStarted === null) this.clockStarted = now; }
   timeLeft(now = this.now()) { return this.phase === 'SCAN' || this.escaped ? null : Math.max(0, Math.ceil((this.budgetSeconds * 1000 - this.penaltyMs - this.activeElapsed(now)) / 1000)); }
+  monster(now=this.now()) {
+    const window=(this.routine.monsterSeconds??0)*1000;
+    if(this.phase==='SCAN'||this.escaped||!window)return {visible:this.outcome==='failed',closeness:this.outcome==='failed'?1:0};
+    const left=Math.max(0,this.budgetSeconds*1000-this.penaltyMs-this.activeElapsed(now));
+    return left>window?{visible:false,closeness:0}:{visible:true,closeness:Math.round((1-left/window)*100)/100};
+  }
   hudState() {
     return { phase: this.phase, objective: this.escaped ? 'ROUTINE COMPLETE' : this.phase === 'SCAN' ? `SHOW: ${this.missing.join(', ')}` : this.routine.steps[this.stepIndex].label,
       missionProgress: this.results.length / this.routine.steps.length, mode: 'routine', routineId: this.routine.id,
-      routineName: this.routine.name, theme: this.routine.theme, stepIndex: this.stepIndex,
+      routineName: this.routine.name, theme: this.routine.theme,
+      ...(this.maxLives!==null?{lives:this.lives,maxLives:this.maxLives,monster:this.monster(),outcome:this.outcome}:{}),stepIndex: this.stepIndex,
       timeLeftSeconds: this.timeLeft(), budgetSeconds: this.budgetSeconds ?? null,
       routineSteps: this.routine.steps.map((step, i) => ({ label: step.label,
         status: this.results[i]?.status || (i === this.stepIndex && !this.escaped ? 'active' : 'pending') })) };
   }
-  report() { return { routineId: this.routine.id, routineName: this.routine.name, complete: this.escaped,
-    steps: structuredClone(this.results) }; }
+  report() { return { routineId: this.routine.id, routineName: this.routine.name, complete: this.escaped && this.outcome!=='failed',
+    ...(this.maxLives!==null?{outcome:this.outcome,livesLeft:this.lives}:{}),steps: structuredClone(this.results) }; }
   request() {
     const step = this.routine.steps[this.stepIndex];
     return { revision: this.revision, operation: this.phase === 'SCAN' ? 'inventory' : 'verify', catalog: this.catalog,
@@ -46,13 +55,15 @@ export class RoutineMissionEngine extends EventEmitter {
   }
   feedback(hint) { this.resetEvidence(); this.emit('message', clean(hint) || 'I cannot check that yet. Keep the objects visible and hold still.'); }
   enterStep(prefix = '') {
-    if (this.stepIndex >= this.routine.steps.length) {
-      this.escaped = true; this.phase = 'PORTAL'; this.clockStarted = null;
+    if (this.lives === 0) {
+      this.escaped=true;this.outcome='failed';this.phase='PORTAL';this.clockStarted=null;
+    } else if (this.stepIndex >= this.routine.steps.length) {
+      this.escaped = true; this.outcome='complete'; this.phase = 'PORTAL'; this.clockStarted = null;
     } else {
       this.phase = 'POWER'; const t = this.routine.timer;
       // minSeconds is the hard floor after both index decrease and carried misses.
       this.budgetSeconds = Math.max(t.minSeconds, t.startSeconds - this.stepIndex * t.stepDecreaseSeconds - this.misses * t.missPenaltySeconds);
-      this.clockStarted = null; this.elapsedMs = 0; this.penaltyMs = 0;
+      this.clockStarted = null; this.elapsedMs = 0; this.penaltyMs = 0; this.monsterWarned=false;
     }
     this.revision++; this.resetEvidence(); this.emit('state', this.hudState()); this.emit('message', `${prefix}${this.instruction()}`);
   }
@@ -62,7 +73,7 @@ export class RoutineMissionEngine extends EventEmitter {
       seconds: Math.round(this.elapsedMs / 100) / 10,
       evidence: status === 'done' ? clean(result.evidence) || 'Verified by two independent passing rounds.' : 'Step timer expired.',
       evidenceFrame: status === 'done' && evidenceFrame ? structuredClone(evidenceFrame) : null };
-    this.results.push(record); if (status === 'missed') this.misses++;
+    this.results.push(record); if (status === 'missed') {this.misses++;if(this.lives!==null)this.lives=Math.max(0,this.lives-1);}
     this.emit('step_result', structuredClone(record)); this.stepIndex++; this.enterStep(status === 'done' ? 'Step verified. ' : 'Time is up. Let us move on. ');
   }
   tick(now = this.now()) {
@@ -70,6 +81,9 @@ export class RoutineMissionEngine extends EventEmitter {
     if (this.budgetSeconds * 1000 - this.penaltyMs - this.activeElapsed(now) <= 0) { this.finishStep('missed'); return true; }
     const seconds = this.timeLeft(now);
     if (seconds !== this.lastSeconds) { this.lastSeconds = seconds; this.emit('state', this.hudState()); }
+    if (this.maxLives!==null && !this.monsterWarned && this.routine.monsterSeconds && seconds<=this.routine.monsterSeconds && seconds<this.budgetSeconds) {
+      this.monsterWarned=true; this.emit('message', `The time monster is getting closer. Keep working on: ${this.routine.steps[this.stepIndex].label}.`);
+    }
     return false;
   }
   apply(request, result, evidenceFrame = null) {

@@ -163,7 +163,7 @@ def test_service_verify_pass_and_prompt_contents():
     svc.set_catalog(CATALOG)
     r = run(svc.verify(Predicate.parse("ON_TOP_OF(bottle, notebook)"), frames()))
     assert r.satisfied and r.votes_for == 3 and len(model.calls) == 3
-    assert '"bottle": water bottle' in model.calls[0] and "ON TOP OF" in model.calls[0]
+    assert '"bottle": water bottle' in model.calls[0] and "must be ON TOP" in model.calls[0]
 
 
 def test_service_geometry_overrides_model_yes():
@@ -230,3 +230,91 @@ def test_lenient_name_matching():
         ObjectLocation(name="Silver Pen", visible=True, box_2d=BOX_L),
         ObjectLocation(name="notebook", visible=True, box_2d=BOX_R)])
     assert geometry_veto(left, j) is None
+
+
+# ----------------------------------------------------------------- hide / show tasks
+def test_hidden_veto():
+    hid = Predicate.parse("HIDDEN(keys)")
+    ok = judgment(True, .9, {"keys": None, "wallet": BOX_L})
+    assert geometry_veto(hid, ok) is None                                   # gone, desk still in view
+    assert geometry_veto(hid, judgment(True, .9, {"keys": BOX_R, "wallet": BOX_L}))  # still visible
+    assert geometry_veto(hid, judgment(True, .9, {"keys": None, "wallet": None}))    # blank/blocked camera
+    assert geometry_veto(hid, judgment(True, .9, {}))                                 # nothing reported
+
+
+def test_show_veto():
+    show = Predicate.parse("SHOW(pen)")
+    assert geometry_veto(show, judgment(True, .9, {"pen": BOX_M})) is None
+    assert geometry_veto(show, judgment(True, .9, {"pen": None})) is not None
+    assert geometry_veto(show, judgment(True, .9, {"marker": BOX_M})) is not None
+
+
+def test_hidden_prompt_lists_other_objects():
+    model = FakeVision(lambda im, p, s: judgment(True, .9, {"keys": None, "wallet": BOX_L, "phone": BOX_R}))
+    svc = PerceptionService(model, PerceptionConfig(flip_left_right=False))
+    svc.set_catalog([DetectedObject(name="keys", description="silver keys"),
+                     DetectedObject(name="wallet", description="brown wallet"),
+                     DetectedObject(name="phone", description="black phone")])
+    r = run(svc.verify(Predicate.parse("HIDDEN(keys)"), frames()))
+    assert r.satisfied
+    prompt = model.calls[0]
+    assert 'must be HIDDEN' in prompt and '"wallet": brown wallet' in prompt and '"phone": black phone' in prompt
+
+
+def test_show_generic_object_not_in_catalog():
+    model = FakeVision(lambda im, p, s: judgment(True, .9, {"pen": BOX_M}))
+    svc = PerceptionService(model, PerceptionConfig(flip_left_right=False))
+    svc.set_catalog(CATALOG[:2])  # pen is NOT one of the scanned objects
+    r = run(svc.verify(Predicate.parse("SHOW(pen)"), frames()))
+    assert r.satisfied and 'any pen counts' in model.calls[0]
+
+
+# ----------------------------------------------------------------- B1 geometry: stacking and side by side
+from app.perception.predicates import side_by_side_veto, stacking_veto
+
+WALLET = [400, 300, 700, 700]        # flat, wide
+KEYS_ON_WALLET = [480, 420, 600, 560]  # small, sitting inside the wallet's box (seen from above)
+BOTTLE_ON_BOOK = [100, 440, 470, 560]  # tall, base at the book's top surface (seen from the side)
+BOOK = [440, 300, 620, 700]
+
+
+def test_stacking_accepts_real_stacks():
+    assert stacking_veto(KEYS_ON_WALLET, WALLET, "keys", "wallet") is None       # flat on flat
+    assert stacking_veto(BOTTLE_ON_BOOK, BOOK, "bottle", "book") is None          # tall on flat
+
+
+def test_stacking_rejects_reversed_stack():
+    # the eval's two false passes: asked "wallet on keys" when keys are on the wallet
+    assert "sits inside" in stacking_veto(WALLET, KEYS_ON_WALLET, "wallet", "keys")
+
+
+def test_stacking_rejects_in_front_held_above_and_beside():
+    in_front = [380, 450, 820, 550]      # standing nearer the camera: base lower than the book's bottom edge
+    assert "in front" in stacking_veto(in_front, BOOK, "bottle", "book")
+    held_above = [60, 450, 300, 550]     # base well above the book's top edge
+    assert "floats above" in stacking_veto(held_above, BOOK, "bottle", "book")
+    beside = [460, 720, 600, 860]        # no horizontal overlap
+    assert "not over" in stacking_veto(beside, BOOK, "keys", "book")
+    edge = [480, 650, 600, 850]          # only 25% of its width over the book
+    assert "not over" in stacking_veto(edge, BOOK, "keys", "book")
+
+
+def test_side_by_side():
+    left, right = [400, 100, 600, 300], [400, 500, 600, 700]
+    assert side_by_side_veto(left, right, "a", "b") is None
+    assert "not left of" in side_by_side_veto(right, left, "b", "a")
+    stacked = [300, 120, 450, 320]       # centre slightly left, but mostly over the other box
+    assert "overlap" in side_by_side_veto(stacked, [400, 160, 600, 360], "a", "b")
+
+
+def test_on_top_of_veto_runs_through_service():
+    # model says YES, boxes show the reverse stack -> not verified
+    model = FakeVision(lambda im, p, s: judgment(True, .95, {"wallet": WALLET, "keys": KEYS_ON_WALLET}))
+    svc = PerceptionService(model, PerceptionConfig(flip_left_right=False))
+    svc.set_catalog([DetectedObject(name="wallet", description="brown wallet"),
+                     DetectedObject(name="keys", description="silver keys")])
+    r = run(svc.verify(Predicate.parse("ON_TOP_OF(wallet, keys)"), frames()))
+    assert not r.satisfied and all("sits inside" in v.geometry_override for v in r.frame_verdicts)
+    assert all(v.model_satisfied is True and v.boxes["keys"] == KEYS_ON_WALLET for v in r.frame_verdicts)
+    prompt = model.calls[0]
+    assert 'must be ON TOP is "wallet"' in prompt and 'UNDERNEATH is "keys"' in prompt

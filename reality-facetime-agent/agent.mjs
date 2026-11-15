@@ -1,3 +1,5 @@
+import { HUD_VIDEO_PROFILE } from './hud-video-profile.mjs';
+import { RoutineThemeSession } from './routine-theme-session.mjs';
 import { fileURLToPath } from 'node:url';
 import { AutoSubscribe, cli, defineAgent, ServerOptions, voice } from '@livekit/agents';
 import { createVoiceOptions, requireFreeBuild } from './voice-stack.mjs';
@@ -20,7 +22,9 @@ import { diagnostic } from './diagnostics.mjs';
 
 const gameEnabled = process.env.ENABLE_GAME === 'yes';
 // Validate parent input and installed verifier capabilities before worker registration.
-const routine = gameEnabled && process.env.ROUTINE_FILE ? await loadRoutine(process.env.ROUTINE_FILE) : null;
+const parentRoutine = gameEnabled && process.env.ROUTINE_FILE ? await loadRoutine(process.env.ROUTINE_FILE) : null;
+const themedRoutine = parentRoutine && HUD_VIDEO_PROFILE.name === 'juan-themes';
+const routine = themedRoutine ? {...parentRoutine,lives:parentRoutine.lives??3,monsterSeconds:parentRoutine.monsterSeconds??25} : parentRoutine;
 class OrbitAgent extends voice.Agent {
   // Game mode uses scripted TTS. Free-form LLM replies cannot announce an unverified win.
   async onUserTurnCompleted() { throw new voice.StopResponse(); }
@@ -100,7 +104,9 @@ export default defineAgent({
       say: (text, options) => speech.say(text, options),
       vision: new VisionClient({ url: process.env.VISION_SERVICE_URL || 'http://127.0.0.1:8765', allowMock: process.env.VISION_MODE === 'mock' }),
     }) : null;
-    const selection = game ? (routine ? new RoutineSession({ game, speech }) : new ThemeSelection({ themes: selectGameThemes(THEMES), speech, game })) : null;
+    // Seed the actual parent routine before bridge_ready; no timer or speech starts here.
+    if (game && routine) game.updateHud(game.engine.hudState());
+    const selection = game ? (routine ? (themedRoutine ? new RoutineThemeSession({themes:THEMES,game,speech}) : new RoutineSession({ game, speech })) : new ThemeSelection({ themes: selectGameThemes(THEMES), speech, game })) : null;
     if (game) {
       const onTranscript = event => {
         void selection.handleTranscript(event).catch(() => { game.pause(); });
