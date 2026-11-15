@@ -1,9 +1,12 @@
 import { EventEmitter } from 'node:events';
+import { HUD_VIDEO_PROFILE } from './hud-video-profile.mjs';
 
 export const PHASES = ['SCAN', 'POWER', 'SECURITY', 'HIDE', 'FIND', 'PORTAL'];
 /** FIND asks for a generic everyday object; the first kind not already scanned is used. */
 export const FIND_KINDS = ['pen', 'spoon', 'cup', 'book', 'key', 'phone'];
 const article = word => (/^[aeiou]/.test(word) ? 'an' : 'a');
+// The landscape HUD only fills the screen when the player's phone is sideways.
+const ROTATE_HINT = HUD_VIDEO_PROFILE.name === 'landscape-test' ? 'Turn your phone sideways for the full ship display. ' : '';
 const clean = text => String(text || '').replace(/[\x00-\x1f]/g, ' ').slice(0, 180);
 
 /** Deterministic state only. Neither speech nor a raw model YES advances a mission. */
@@ -19,7 +22,7 @@ export class MissionEngine extends EventEmitter {
     const [reactor, panel, key] = this.catalog.map(o => o.name);
     if (this.escaped) return 'Escape complete. All ship systems verified. Well done, crew!';
     return {
-      SCAN: 'I am ORBIT, your AI ship guide. Show three distinct desk objects to the camera, then hold still.',
+      SCAN: `I am ORBIT, your AI ship guide. ${ROTATE_HINT}Show three distinct desk objects to the camera, then hold still.`,
       POWER: `The ${reactor} is our reactor, the ${panel} our control panel, and the ${key} our access key. Place the ${reactor} on top of the ${panel}, then hold still.`,
       SECURITY: `Hold the ${key} up in your hand toward the camera, clearly off the desk.`,
       HIDE: `Hide the ${key} completely out of sight, but keep the ${reactor} and ${panel} in view. Then hold still.`,
