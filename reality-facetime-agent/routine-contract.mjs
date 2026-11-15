@@ -54,6 +54,7 @@ export function validateRoutine(input) {
 export function assertRoutineCapabilities(routine) {
   // Up to 3 objects: one opening scan names them all. More than 3: no scan; each step sends only its own
   // objects (the bridge accepts at most 3 per check, and every check names 1-3).
+  if (routine.steps.length > 12) throw new Error('The HUD shows at most 12 steps per routine');
   if (routine.steps.some(step => step.check === 'HIDDEN')) throw new Error('HIDDEN is in the shared contract but not implemented by installed Part B');
   // The vision bridge accepts a SHOW description of lowercase letters, spaces and hyphens, up to 31 characters.
   if (routine.steps.some(step => ['SHOW','DOING'].includes(step.check) && !/^[a-z][a-z -]{0,30}$/.test(step.objects[0])))

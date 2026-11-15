@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ORBIT routines: parent editor</title>
+<style>
+  :root { --bg:#07131d; --panel:#101f2a; --raised:#142733; --border:#28404b; --text:#eaf4f5; --muted:#8ba1a9;
+          --cyan:#66e5d1; --amber:#ffcb78; --red:#ff8a7a; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font:16px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 860px; margin: 0 auto; padding: 28px 20px 80px; }
+  h1 { font-size: 26px; margin: 0 0 4px; color: var(--cyan); letter-spacing: .02em; }
+  .sub { color: var(--muted); margin: 0 0 22px; }
+  .tabs { display:flex; gap:8px; margin-bottom: 18px; }
+  .tabs button { flex:1; padding: 12px; font-size: 17px; }
+  .tabs button[aria-selected=true] { background: var(--cyan); color: #06222a; border-color: var(--cyan); }
+  button { background: var(--raised); color: var(--text); border: 1px solid var(--border); border-radius: 10px;
+           padding: 8px 12px; font: inherit; cursor: pointer; }
+  button:hover { border-color: var(--cyan); }
+  button.primary { background: var(--cyan); color:#06222a; border-color: var(--cyan); font-weight: 700; }
+  button.icon { padding: 6px 10px; }
+  .panel { background: var(--panel); border:1px solid var(--border); border-radius: 14px; padding: 16px 18px; margin-bottom: 16px; }
+  .panel h2 { font-size: 13px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin: 0 0 12px; }
+  label { display:block; font-size: 13px; color: var(--muted); margin-bottom: 4px; }
+  input, select { width:100%; background: var(--bg); color: var(--text); border:1px solid var(--border); border-radius: 8px;
+                  padding: 8px 10px; font: inherit; }
+  input:focus, select:focus, button:focus-visible { outline: 2px solid var(--cyan); outline-offset: 1px; }
+  .grid { display:grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+  .step { display:grid; grid-template-columns: 34px 1fr auto; gap: 12px; align-items: start; background: var(--raised);
+          border: 1px solid var(--border); border-radius: 12px; padding: 12px; margin-bottom: 10px; }
+  .step.bad { border-color: var(--red); }
+  .num { width:34px; height:34px; border-radius:50%; background: var(--bg); border:2px solid var(--cyan); display:grid; place-items:center; font-weight:700; }
+  .fields { display:grid; gap:10px; grid-template-columns: 1.3fr 1fr 1fr .6fr .8fr; }
+  .fields .span2 { grid-column: span 2; }
+  .fields .wide { grid-column: 1 / -1; }
+  .actions { display:flex; flex-direction:column; gap:6px; }
+  .templates { display:flex; flex-wrap:wrap; gap:8px; }
+  .templates button { font-size: 14px; }
+  .err { color: var(--red); font-size: 13px; margin-top: 4px; }
+  .bar { position: sticky; bottom: 0; display:flex; gap: 12px; align-items:center; justify-content: space-between;
+         background: rgba(7,19,29,.94); border-top:1px solid var(--border); padding: 14px 0; }
+  #status { color: var(--muted); }
+  #status.ok { color: var(--cyan); } #status.bad { color: var(--red); }
+  .hint { color: var(--muted); font-size: 14px; }
+  @media (max-width: 680px) { .fields { grid-template-columns: 1fr 1fr; } }
+</style>
+</head>
+<body>
+<main>
+  <h1>ORBIT routines</h1>
+  <p class="sub">Your child says <b>“good morning”</b> or <b>“good night”</b> on the call, and ORBIT runs that routine.
+    Each step has a time limit: the monster shows up near the end, and running out of time costs a life.</p>
+
+  <div class="tabs" role="tablist">
+    <button role="tab" id="tab-morning" aria-selected="true" data-which="morning">☀️ Morning</button>
+    <button role="tab" id="tab-night" aria-selected="false" data-which="night">🌙 Night</button>
+  </div>
+
+  <section class="panel">
+    <h2>Routine</h2>
+    <div class="grid">
+      <div><label for="name">Name</label><input id="name" maxlength="120"></div>
+      <div><label for="lives">Lives</label><input id="lives" type="number" min="1" max="9"></div>
+      <div><label for="monster">Monster appears with … seconds left</label><input id="monster" type="number" min="0" max="300"></div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>Steps</h2>
+    <div id="steps"></div>
+    <button id="add">+ Add a blank step</button>
+    <p class="hint">“Doing” steps: ORBIT watches your child do it (brushing teeth, reading).
+      “Show” steps: your child shows the item to the camera when done (lunchbox, folded blanket).
+      Items and actions: lowercase words, up to 31 letters. Up to 12 steps.</p>
+  </section>
+
+  <section class="panel">
+    <h2>Quick add</h2>
+    <div class="templates" id="templates"></div>
+  </section>
+
+  <div class="bar">
+    <span id="status" role="status"></span>
+    <span><button id="reload">Discard changes</button> <button class="primary" id="save">Save routine</button></span>
+  </div>
+</main>
+<script>
+const KINDS = {
+  DOING: { text: 'Doing an action', field: 'Action', example: 'brushing their teeth' },
+  SHOW: { text: 'Show something', field: 'Item', example: 'lunchbox' },
+  HELD_UP: { text: 'Hold it up', field: 'Item', example: 'shoes' },
+  ON_TOP_OF: { text: 'Put on top of', field: 'Item on top', example: 'lunchbox' },
+};
+const TEMPLATES = [
+  ['Brush teeth', 'Brush your teeth where I can see you', 'DOING', ['brushing their teeth'], 90, 'TEETH'],
+  ['Wash face', 'Wash your face', 'DOING', ['washing their face'], 60, 'FACE'],
+  ['Skin care', 'Put on your face cream', 'DOING', ['putting on face cream'], 45, 'SKIN'],
+  ['Brush hair', 'Brush or comb your hair', 'DOING', ['brushing their hair'], 45, 'HAIR'],
+  ['Drink water', 'Drink a glass of water', 'DOING', ['drinking water'], 45, 'WATER'],
+  ['Eat breakfast', 'Eat your breakfast', 'DOING', ['eating breakfast'], 90, 'FOOD'],
+  ['Read a book', 'Read a book for a little bit', 'DOING', ['reading a book'], 60, 'BOOK'],
+  ['Toys away', 'Put your toys away', 'DOING', ['putting toys away'], 90, 'TOYS'],
+  ['Fold sheets', 'Fold your bedsheets and show me the folded blanket', 'SHOW', ['folded blanket'], 60, 'BED'],
+  ['Pack lunch', 'Pack your lunch and show me your lunchbox', 'SHOW', ['lunchbox'], 60, 'LUNCH'],
+  ['Shoes on', 'Put on your shoes and show me your feet', 'SHOW', ['feet wearing shoes'], 60, 'SHOES'],
+  ['Pajamas', 'Put on your pajamas and show them to me', 'SHOW', ['pajamas'], 90, 'PJS'],
+  ['Pack bag', 'Pack your school bag for tomorrow and show it to me', 'SHOW', ['packed backpack'], 60, 'BAG'],
+  ['Lay out clothes', 'Lay out your clothes for tomorrow and show me', 'SHOW', ['folded clothes'], 60, 'OUTFIT'],
+];
+const ITEM = /^[a-z][a-z -]{0,30}$/, SHORT = /^[A-Z]{1,6}$/;
+let which = 'morning', routine = null, dirty = false;
+const $ = id => document.getElementById(id);
+
+function status(text, kind = '') { const s = $('status'); s.textContent = text; s.className = kind; }
+function el(tag, props = {}, ...kids) { const e = Object.assign(document.createElement(tag), props); e.append(...kids); return e; }
+
+async function load() {
+  status('Loading…');
+  try {
+    const res = await fetch(`/api/routines/${which}`);
+    if (!res.ok) throw new Error((await res.json()).error);
+    routine = await res.json(); dirty = false; render(); status('');
+  } catch (e) { status(`Could not load: ${e.message}`, 'bad'); }
+}
+
+function stepProblems(step, i, steps) {
+  const p = [];
+  if (!step.label.trim()) p.push('What should ORBIT say?');
+  if (step.objects.some(o => !ITEM.test(o))) p.push('Items/actions: lowercase letters, spaces and hyphens, up to 31 characters.');
+  if (step.check === 'ON_TOP_OF' && step.objects[0] === step.objects[1]) p.push('Pick two different items.');
+  if (!(step.seconds >= 10 && step.seconds <= 900)) p.push('Time must be 10 to 900 seconds.');
+  if (step.short && !SHORT.test(step.short)) p.push('Short name: up to 6 capital letters.');
+  if (step.short && steps.findIndex(s => s.short === step.short) !== i) p.push('Short name is used twice.');
+  return p;
+}
+
+function render() {
+  $('name').value = routine.name; $('lives').value = routine.lives ?? 3; $('monster').value = routine.monsterSeconds ?? 25;
+  const list = $('steps'); list.replaceChildren();
+  routine.steps.forEach((step, i) => {
+    step.seconds ??= 60;
+    const problems = stepProblems(step, i, routine.steps);
+    const kind = el('select', { 'aria-label': 'Kind of step' }, ...Object.entries(KINDS).map(([k, v]) => el('option', { value: k, textContent: v.text, selected: k === step.check })));
+    kind.onchange = () => { step.check = kind.value; step.objects = kind.value === 'ON_TOP_OF' ? [step.objects[0] || '', step.objects[1] || ''] : [step.objects[0] || '']; changed(); };
+    const input = (labelText, value, onInput, attrs = {}) => {
+      const id = `f${Math.random().toString(36).slice(2)}`;
+      const { wide, span2, ...rest } = attrs; const box = el('input', { id, value: value ?? '', ...rest }); box.oninput = () => { onInput(box.value); dirty = true; status('Unsaved changes'); };
+      box.onchange = () => render();
+      return el('div', attrs.wide ? { className: 'wide' } : attrs.span2 ? { className: 'span2' } : {}, el('label', { htmlFor: id, textContent: labelText }), box);
+    };
+    const fields = el('div', { className: 'fields' },
+      input('ORBIT says', step.label, v => { step.label = v; }, { maxLength: 180, wide: true }),
+      el('div', {}, el('label', { textContent: 'Kind' }), kind),
+      input(KINDS[step.check].field, step.objects[0], v => { step.objects[0] = v.toLowerCase(); },
+        { maxLength: 31, placeholder: KINDS[step.check].example, span2: step.check !== 'ON_TOP_OF' }),
+      ...(step.check === 'ON_TOP_OF' ? [input('…on top of', step.objects[1], v => { step.objects[1] = v.toLowerCase(); }, { maxLength: 31, placeholder: 'backpack' })] : []),
+      input('Seconds', step.seconds, v => { step.seconds = Number(v); }, { type: 'number', min: 10, max: 900 }),
+      input('Short name', step.short, v => { step.short = v.toUpperCase().replace(/[^A-Z]/g, '').slice(0, 6) || undefined; }, { maxLength: 6 }));
+    const move = (d) => { const j = i + d; if (j < 0 || j >= routine.steps.length) return; [routine.steps[i], routine.steps[j]] = [routine.steps[j], routine.steps[i]]; changed(); };
+    const actions = el('div', { className: 'actions' },
+      el('button', { className: 'icon', title: 'Move up', ariaLabel: `Move step ${i + 1} up`, textContent: '↑', onclick: () => move(-1) }),
+      el('button', { className: 'icon', title: 'Move down', ariaLabel: `Move step ${i + 1} down`, textContent: '↓', onclick: () => move(1) }),
+      el('button', { className: 'icon', title: 'Remove', ariaLabel: `Remove step ${i + 1}`, textContent: '✕', onclick: () => { routine.steps.splice(i, 1); changed(); } }));
+    const body = el('div', {}, fields, ...problems.map(t => el('div', { className: 'err', textContent: t })));
+    list.append(el('div', { className: `step${problems.length ? ' bad' : ''}` }, el('div', { className: 'num', textContent: i + 1 }), body, actions));
+  });
+  $('add').disabled = routine.steps.length >= 12;
+  $('templates').replaceChildren(...TEMPLATES.map(([name, label, check, objects, seconds, short]) =>
+    el('button', { textContent: `+ ${name}`, disabled: routine.steps.length >= 12, onclick: () => {
+      routine.steps.push({ short: routine.steps.some(s => s.short === short) ? undefined : short, label, check, objects: [...objects], seconds }); changed();
+    } })));
+}
+function changed() { dirty = true; status('Unsaved changes'); render(); }
+
+function toFile() {
+  const steps = routine.steps.map(s => ({ ...(s.short ? { short: s.short } : {}), label: s.label.trim(), check: s.check,
+    objects: s.objects.map(o => o.trim()), seconds: s.seconds }));
+  // Routine objects = every physical item a step names (actions are not objects).
+  const objects = [...new Set(steps.filter(s => s.check !== 'DOING').flatMap(s => s.objects))];
+  return { ...routine, name: $('name').value.trim(), lives: Number($('lives').value), monsterSeconds: Number($('monster').value),
+    greeting: which, objects, steps };
+}
+
+$('save').onclick = async () => {
+  if (routine.steps.some((s, i) => stepProblems(s, i, routine.steps).length)) return status('Fix the steps marked in red first.', 'bad');
+  if (!routine.steps.length) return status('Add at least one step.', 'bad');
+  status('Saving…');
+  try {
+    const res = await fetch(`/api/routines/${which}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(toFile()) });
+    const body = await res.json();
+    if (!res.ok) throw new Error(body.error);
+    routine = toFile(); dirty = false; render();
+    status(`Saved. ORBIT uses it from the next call (restart the agent if it is running).`, 'ok');
+  } catch (e) { status(`Not saved: ${e.message}`, 'bad'); }
+};
+$('reload').onclick = () => { if (!dirty || confirm('Discard your changes?')) load(); };
+$('add').onclick = () => { routine.steps.push({ label: '', check: 'DOING', objects: [''], seconds: 60 }); changed(); };
+for (const [id, key] of [['name', 'name'], ['lives', 'lives'], ['monster', 'monsterSeconds']])
+  $(id).oninput = () => { routine[key] = key === 'name' ? $(id).value : Number($(id).value); dirty = true; status('Unsaved changes'); };
+document.querySelectorAll('[role=tab]').forEach(tab => tab.onclick = () => {
+  if (tab.dataset.which === which) return;
+  if (dirty && !confirm('You have unsaved changes. Switch anyway?')) return;
+  which = tab.dataset.which;
+  document.querySelectorAll('[role=tab]').forEach(t => t.setAttribute('aria-selected', String(t === tab)));
+  load();
+});
+window.onbeforeunload = e => { if (dirty) { e.preventDefault(); return ''; } };
+load();
+</script>
+</body>
+</html>
