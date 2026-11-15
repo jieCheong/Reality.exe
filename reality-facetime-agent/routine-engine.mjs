@@ -51,6 +51,7 @@ export class RoutineMissionEngine extends EventEmitter {
       routineName: this.routine.name, theme: this.routine.theme, stepIndex: this.stepIndex,
       timeLeftSeconds: this.timeLeft(), budgetSeconds: this.budgetSeconds ?? null,
       lives: this.lives, maxLives: this.maxLives, monster: this.monster(), outcome: this.outcome,
+      elapsedSeconds: Math.floor(this.results.reduce((sum, r) => sum + r.seconds, 0) + (!this.escaped && this.stepIndex >= 0 ? this.activeElapsed() / 1000 : 0)),
       routineSteps: this.routine.steps.map((step, i) => ({ label: step.label, short: step.short ?? `${i + 1}`,
         status: this.results[i]?.status || (i === this.stepIndex && !this.escaped ? 'active' : 'pending') })) };
   }

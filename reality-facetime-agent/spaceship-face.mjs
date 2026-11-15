@@ -6,6 +6,8 @@ import { fileURLToPath } from 'node:url';
 import { LANDSCAPE_LAYOUT, drawLandscape, landscapeObjectiveLines } from './spaceship-landscape.mjs';
 import { HUD_VIDEO_PROFILE } from './hud-video-profile.mjs';
 import { drawHearts, drawMonster, normalizeLives, normalizeMonster } from './monster.mjs';
+// Juan's renderer (fonts + background art) loads only when a juan-themes profile is selected.
+const { drawJuanRoutine } = HUD_VIDEO_PROFILE.themes ? await import('./juan-theme-hud.mjs') : {};
 // WIDTH/HEIGHT: the published frame. LW/LH: the layout the HUD is drawn in (differs only for rotated profiles).
 export const WIDTH = HUD_VIDEO_PROFILE.width, HEIGHT = HUD_VIDEO_PROFILE.height, FPS = HUD_VIDEO_PROFILE.fps;
 const LW = HUD_VIDEO_PROFILE.layoutWidth ?? WIDTH, LH = HUD_VIDEO_PROFILE.layoutHeight ?? HEIGHT;
@@ -53,15 +55,23 @@ function normalizeRoutine(input) {
 }
 export const clock = seconds => `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
 const canvas = createCanvas(LW, LH);
+const juanCanvas = HUD_VIDEO_PROFILE.themes && HUD_VIDEO_PROFILE.rotate ? createCanvas(LW, LH) : null;
+/** Juan's themed worlds: his renderer + routine overlay, then the same quarter turn as the other rotated profiles. */
+function drawThemed(tick, speaking, input) {
+  const rgba = drawJuanRoutine(tick, speaking, input ?? {});
+  if (!juanCanvas) return rgba;
+  const jctx = juanCanvas.getContext('2d'), img = jctx.createImageData(LW, LH); img.data.set(rgba); jctx.putImageData(img, 0, 0);
+  return pixelsOut(juanCanvas);
+}
 const rotated = HUD_VIDEO_PROFILE.rotate ? createCanvas(WIDTH, HEIGHT) : null;
 /** Read the drawn HUD as RGBA, turned a quarter turn first for rotated profiles. */
-function pixelsOut() {
-  if (!rotated) return new Uint8Array(ctx.getImageData(0, 0, LW, LH).data);
+function pixelsOut(source = canvas) {
+  if (!rotated) return new Uint8Array(source.getContext('2d').getImageData(0, 0, LW, LH).data);
   const out = rotated.getContext('2d'); out.save();
   // ccw: the portrait top ends up on the left edge; cw: on the right edge.
   if (HUD_VIDEO_PROFILE.rotate === 'ccw') { out.translate(0, HEIGHT); out.rotate(-Math.PI / 2); }
   else { out.translate(WIDTH, 0); out.rotate(Math.PI / 2); }
-  out.drawImage(canvas, 0, 0); out.restore();
+  out.drawImage(source, 0, 0); out.restore();
   return new Uint8Array(out.getImageData(0, 0, WIDTH, HEIGHT).data);
 }
 const ctx = canvas.getContext('2d');
@@ -87,6 +97,7 @@ export function normalizeGameState(input = {}) {
 
 /** Part C renderer: optional display snapshot; no game transitions or inference. */
 export function drawFace(tick, speaking = false, gameState = undefined) {
+  if (HUD_VIDEO_PROFILE.themes) return drawThemed(tick, speaking, gameState);
   const state = normalizeGameState(gameState);
   ctx.save();
   try {

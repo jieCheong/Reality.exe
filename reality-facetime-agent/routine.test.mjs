@@ -7,7 +7,7 @@ import { EventEmitter } from 'node:events';
 import { validateRoutine, assertRoutineCapabilities, loadRoutine } from './routine-contract.mjs';
 import { RoutineMissionEngine, MissionEngine } from './mission-engine.mjs';
 import { GameRuntime } from './game-runtime.mjs';
-import { RoutineSession, greetingChoice, GREETING_PROMPT } from './routine-session.mjs';
+import { RoutineSession, greetingChoice, worldChoice, GREETING_PROMPT, WORLD_PROMPT } from './routine-session.mjs';
 import { SpeechCoordinator } from './speech-coordinator.mjs';
 import { routineReportWriter } from './routine-report.mjs';
 
@@ -317,4 +317,47 @@ test('one installed routine starts right away without asking for a greeting', ()
   let starts = 0; const game = { start() { starts++; }, close: async () => {} };
   const session = new RoutineSession({ game, speech: new SpeechCoordinator({ speak: async () => {} }), routines: { morning: kids, night: null } });
   session.start(); assert.equal(starts, 1);
+});
+
+test('worldChoice: number or world name picks one of Juan\'s three worlds', () => {
+  for (const [t, id] of [['one', 'space'], ['Space!', 'space'], ['number 2', 'odyssey'], ['the ocean', 'odyssey'],
+    ['three', 'backrooms'], ['I want to go to the backrooms', 'backrooms'], ['go to space', 'space']]) assert.equal(worldChoice(t), id, t);
+  for (const t of ['hello', 'one or two', 'space and ocean', 'done', '']) assert.equal(worldChoice(t), null, t);
+});
+
+function fakeGame() {
+  const calls = [], states = [];
+  return { calls, states, started: false, engine: { instruction: () => '' },
+    hud: { setState: u => states.push(u.gameState) },
+    announce: async text => { calls.push(['say', text]); },
+    setRoutine: r => calls.push(['routine', r.id]), setTheme: t => calls.push(['theme', t.id]),
+    start() { this.started = true; calls.push(['start']); }, pause() {}, close: async () => {} };
+}
+const said = (session, transcript, id) => session.handleTranscript({ isFinal: true, itemId: id, transcript });
+
+test('themed HUD: greeting, then world, then the routine starts in that world', async () => {
+  const game = fakeGame(), speech = new SpeechCoordinator({ speak: async () => {} });
+  const session = new RoutineSession({ game, speech, routines: { morning: kids, night }, worlds: true });
+  await session.start();
+  assert.deepEqual(game.calls, [['say', GREETING_PROMPT]]);
+  await said(session, 'three', 'a');                       // world first: remembered, still asks for the greeting
+  assert.equal(game.started, false); assert.deepEqual(game.calls.at(-1), ['say', GREETING_PROMPT]);
+  await said(session, 'good night', 'b');                  // world already known -> starts
+  assert.deepEqual(game.calls.slice(-3), [['routine', 'kids-night'], ['theme', 'backrooms'], ['start']]);
+
+  const game2 = fakeGame(), s2 = new RoutineSession({ game: game2, speech, routines: { morning: kids, night }, worlds: true });
+  await s2.start(); await said(s2, 'good morning', 'a');
+  assert.equal(game2.started, false); assert.deepEqual(game2.calls.at(-1), ['say', WORLD_PROMPT]);
+  assert.equal(game2.states.at(-1).objective, 'PICK YOUR WORLD: 1 SPACE, 2 ODYSSEY, 3 BACKROOMS');
+  await said(s2, 'hmm', 'b'); assert.deepEqual(game2.calls.at(-1), ['say', WORLD_PROMPT]);
+  await said(s2, 'two', 'c');
+  assert.deepEqual(game2.calls.slice(-3), [['routine', 'kids-morning'], ['theme', 'odyssey'], ['start']]);
+
+  const game3 = fakeGame(), s3 = new RoutineSession({ game: game3, speech, routines: { morning: kids, night }, worlds: true });
+  await s3.start(); await said(s3, 'Good morning, space!', 'a');   // both answers at once
+  assert.deepEqual(game3.calls.slice(-3), [['routine', 'kids-morning'], ['theme', 'space'], ['start']]);
+
+  const game4 = fakeGame(), s4 = new RoutineSession({ game: game4, speech, routines: { morning: kids, night: null }, worlds: true });
+  await s4.start(); assert.deepEqual(game4.calls, [['say', WORLD_PROMPT]]);           // one routine: only the world question
+  await said(s4, 'one', 'a'); assert.deepEqual(game4.calls.slice(-2), [['theme', 'space'], ['start']]);
 });

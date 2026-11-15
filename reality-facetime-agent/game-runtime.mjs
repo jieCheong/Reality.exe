@@ -90,7 +90,8 @@ export class GameRuntime {
   }
   updateHud(state) {
     diagnostic('hud_update', { phase: state.phase, progress: state.missionProgress });
-    this.hud.setState({ gameState: { ...state, objective: `${this.vision.allowMock ? '[MOCK VISION] ' : ''}${state.objective}` } });
+    this.hud.setState({ gameState: { ...state, ...(this.routine && this.theme ? { selectedTheme: this.theme.id } : {}),
+      objective: `${this.vision.allowMock ? '[MOCK VISION] ' : ''}${state.objective}` } });
   }
   invalidate() { this.frames = []; this.epoch++; this.engine.resetEvidence(); this.abort?.abort(); }
   setTheme(theme) {

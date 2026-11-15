@@ -7,11 +7,15 @@
 ENABLE_GAME=yes
 ROUTINE_MORNING_FILE=examples/routines/kids-morning.json
 ROUTINE_NIGHT_FILE=examples/routines/kids-night.json
-HUD_VIDEO_PROFILE=rotated-ccw      # upright full-screen on a portrait phone; try rotated-cw if upside down
+HUD_VIDEO_PROFILE=juan-themes-rotated-ccw   # Juan's 3 worlds, upright full-screen; try -cw if upside down
 ```
 
 On the call ORBIT says *"Say good morning … or good night …"*. The child's greeting picks the routine.
 With only one routine file set (or `ROUTINE_FILE`), it starts right away.
+
+With a `juan-themes*` profile, ORBIT then asks *"Pick your world! Say one for Space, two for Odyssey, or three
+for Backrooms."* The child can also answer both at once: *"Good morning, space!"*. Profiles without
+`juan-themes` keep the original single HUD and skip the world question.
 
 ## Parent editor
 

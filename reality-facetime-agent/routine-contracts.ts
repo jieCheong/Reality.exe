@@ -26,7 +26,7 @@ export interface RoutineHudState {
   /** -1 during scan, steps.length after completion. */
   stepIndex: number;
   timeLeftSeconds: number | null; budgetSeconds: number | null;
-  lives: number; maxLives: number;
+  lives: number; maxLives: number; elapsedSeconds: number;
   /** closeness: 0 when it first appears, 1 when time runs out. */
   monster: { visible: boolean; closeness: number };
   outcome: 'complete' | 'failed' | null;

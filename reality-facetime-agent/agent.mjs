@@ -1,3 +1,4 @@
+import { HUD_VIDEO_PROFILE } from './hud-video-profile.mjs';
 import { fileURLToPath } from 'node:url';
 import { AutoSubscribe, cli, defineAgent, ServerOptions, voice } from '@livekit/agents';
 import { createVoiceOptions, requireFreeBuild } from './voice-stack.mjs';
@@ -104,7 +105,7 @@ export default defineAgent({
       say: (text, options) => speech.say(text, options),
       vision: new VisionClient({ url: process.env.VISION_SERVICE_URL || 'http://127.0.0.1:8765', allowMock: process.env.VISION_MODE === 'mock' }),
     }) : null;
-    const selection = game ? (routine ? new RoutineSession({ game, speech, routines }) : new ThemeSelection({ themes: selectGameThemes(THEMES), speech, game })) : null;
+    const selection = game ? (routine ? new RoutineSession({ game, speech, routines, worlds: HUD_VIDEO_PROFILE.themes === true }) : new ThemeSelection({ themes: selectGameThemes(THEMES), speech, game })) : null;
     if (game) {
       const onTranscript = event => {
         void selection.handleTranscript(event).catch(() => { game.pause(); });

@@ -50,3 +50,34 @@ test('rotated profiles draw the portrait HUD and publish it as a quarter-turned 
     assert.equal(result.status, 0, result.stderr);
   }
 });
+
+test("juan-themes profiles: Juan's three worlds with the routine on top, upright or quarter-turned", () => {
+  assert.equal(resolveHudVideoProfile('juan-themes').height, 1170);
+  assert.deepEqual(resolveHudVideoProfile('juan-themes-rotated-ccw'), { name: 'juan-themes-rotated-ccw', width: 1170, height: 540, fps: 15,
+    themes: true, rotate: 'ccw', layoutWidth: 540, layoutHeight: 1170 });
+  const script = (w, h) => `
+    import assert from 'node:assert/strict';
+    import { drawFace, WIDTH, HEIGHT } from './spaceship-face.mjs';
+    assert.equal(WIDTH, ${w}); assert.equal(HEIGHT, ${h});
+    const steps = ['BED','TEETH'].map((short, i) => ({ label: short, short, status: i ? 'active' : 'done' }));
+    const live = theme => ({ phase: 'POWER', mode: 'routine', selectedTheme: theme, objective: 'Brush your teeth', stepIndex: 1,
+      timeLeftSeconds: 20, lives: 3, maxLives: 3, monster: { visible: false, closeness: 0 }, outcome: null, routineSteps: steps });
+    const hash = px => { let h = 0; for (let i = 0; i < px.length; i += 97) h = (h * 31 + px[i]) >>> 0; return h; };
+    const frames = [drawFace(0, false, { phase: 'SCAN', objective: 'PICK YOUR WORLD' }), ...['space','odyssey','backrooms'].map(t => drawFace(0, false, live(t)))];
+    for (const px of frames) assert.equal(px.length, ${w} * ${h} * 4);
+    assert.equal(new Set(frames.map(hash)).size, 4, 'menu + three distinct worlds');
+    const withMonster = drawFace(0, false, { ...live('space'), monster: { visible: true, closeness: .8 } });
+    assert.notEqual(hash(withMonster), hash(frames[1]));
+  `;
+  for (const [profile, w, h] of [['juan-themes', 540, 1170], ['juan-themes-rotated-ccw', 1170, 540], ['juan-themes-rotated-cw', 1170, 540]]) {
+    const result = spawnSync(process.execPath, ['--input-type=module', '-e', script(w, h)], { env: { ...process.env, HUD_VIDEO_PROFILE: profile }, encoding: 'utf8', timeout: 30000 });
+    assert.equal(result.status, 0, `${profile}: ${result.stderr}`);
+  }
+});
+
+test("Juan's renderer and art match the hashes pinned from his branch", async () => {
+  const { createHash } = await import('node:crypto'); const { readFile } = await import('node:fs/promises');
+  const pinned = JSON.parse(await readFile(new URL('./juan-hud/UPSTREAM.json', import.meta.url), 'utf8'));
+  for (const [file, sha] of Object.entries(pinned.files))
+    assert.equal(createHash('sha256').update(await readFile(new URL(`./juan-hud/${file}`, import.meta.url))).digest('hex'), sha, file);
+});

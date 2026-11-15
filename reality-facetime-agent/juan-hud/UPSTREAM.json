@@ -1,0 +1,21 @@
+{
+  "repository": "https://github.com/jieCheong/Reality.exe",
+  "ref": "Juan",
+  "commit": "b22198de821fe098e4c42dbc8c98e1469ae8b2d6",
+  "files": {
+    "face.mjs": "d6e2f1295789c76df0c288dcd9cce16b323ed36b2127550f983382a45a2a0ce1",
+    "test/face.test.mjs": "1ca31317fb0da92c3b4834edc328e6ab87b559bf4a21bf4b9788c918bed6aa1a",
+    "assets/GFSDidot-Regular.ttf": "4fc784ab824e8866eeef8ad55976b93e7e170fb1b8237fd4f8781b5b4dd297f9",
+    "assets/IBMPlexSansCondensed-Regular.ttf": "e7437c072eef2ef592ae6f2beb0000446287385907abb57ac1cf07bcbaa2aa33",
+    "assets/IBMPlexSansCondensed-SemiBold.ttf": "a081ca60548aea14100757a2d6fe71ca60fd90ebce779c9a8ae5a0c8fb4526d4",
+    "assets/Michroma-Regular.ttf": "b62301163788bc5b7f8fcac0b74b184e34e1827e577b499ecb724da065098f87",
+    "assets/OFL-GFS-Didot.txt": "bd6f68cef92d9b95b61702a9d83f416594bc9b7bcc5a094e906eac44dc62b6d5",
+    "assets/OFL-IBM-Plex-Sans-Condensed.txt": "37784b44044a4ffd9256702b7c0982c37e5c8887ba90c6dca0479aea93dc898d",
+    "assets/OFL-Michroma.txt": "33c39ce59a45bfb0dae3280e98bdb46be59d6d68efc62d4dc5fae90a26d2f393",
+    "assets/OFL-Orbitron.txt": "ab609b0e110d622435ff337cdf233288556e011bbf9bd0550be98846c0630819",
+    "assets/Orbitron.ttf": "f42db2dd16e642258e35782916eceb1dcdbea06fb958d77ad71dc5963587e8fd",
+    "assets/backrooms-wall.webp": "341f0a844b3975ef3ef613563f90c1c35bb287ce19df1cd5ea54b9917ae3cfb5",
+    "assets/odyssey-sea.webp": "d67e88bca9ece4ab2b93b5c8f494d6a7ed92f7289a435350e77e0a9de0d5df03",
+    "assets/space-moon.webp": "3da953f82cb9091d6bf370283efca5f0cda8294ce7a564f23277a15429435fec"
+  }
+}
