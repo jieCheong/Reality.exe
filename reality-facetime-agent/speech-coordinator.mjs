@@ -55,7 +55,9 @@ export function sessionSpeechOutput(session) {
   let handle;
   return {
     async speak(text) {
-      handle = session.say(text, { allowInterruptions: true });
+      // Scripted instructions must survive ordinary caller speech/STT turns.
+      // Explicit stop/pause still uses current.interrupt(true) below.
+      handle = session.say(text, { allowInterruptions: false });
       const current = handle;
       try {
         await current.waitForPlayout();

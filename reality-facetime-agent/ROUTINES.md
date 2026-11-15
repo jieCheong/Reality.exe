@@ -46,3 +46,15 @@ same validator the agent uses (`routine-contract.mjs`). Restart the agent to pic
 
 Arguments for `DOING`/`SHOW` are lowercase letters, spaces and hyphens, up to 31 characters.
 Every check still needs 2 of 3 frames to agree, and 2 passing rounds in a row, before a step is done.
+
+## HUD profiles (`HUD_VIDEO_PROFILE`)
+
+| profile | what it shows |
+|---|---|
+| `juan-themes-rotated-ccw` / `-cw` | Juan's 3 worlds, quarter-turned for upright full-screen FaceTime (recommended) |
+| `juan-themes` | Juan's 3 worlds, portrait 540x1170 |
+| `rotated-ccw` / `rotated-cw` | step-rail HUD with hearts and monster, quarter-turned |
+| `default` | step-rail HUD, portrait 540x960 |
+| `routine-game` | Jie's routine game HUD, portrait 540x960 |
+| `juan-original` | Juan's Space art for routines, portrait 540x1170 |
+| `landscape-test` | step-rail HUD, 640x360 |

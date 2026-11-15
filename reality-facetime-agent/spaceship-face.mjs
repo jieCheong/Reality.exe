@@ -1,3 +1,6 @@
+import { drawJuanRoutine } from './juan-theme-hud.mjs';
+import { normalizeRoutineHud } from './routine-hud-state.mjs';
+import { drawRoutineGame } from './routine-game-hud.mjs';
 // Adapted from Juan's agent/face.mjs on branch Juan, commit 0e1b95ff.
 // His Orbitron typography, colors, panels, checkpoint rail and voice indicator
 // are retained in a native portrait layout for Part A's RGBA camera track.
@@ -6,8 +9,6 @@ import { fileURLToPath } from 'node:url';
 import { LANDSCAPE_LAYOUT, drawLandscape, landscapeObjectiveLines } from './spaceship-landscape.mjs';
 import { HUD_VIDEO_PROFILE } from './hud-video-profile.mjs';
 import { drawHearts, drawMonster, normalizeLives, normalizeMonster } from './monster.mjs';
-// Juan's renderer (fonts + background art) loads only when a juan-themes profile is selected.
-const { drawJuanRoutine } = HUD_VIDEO_PROFILE.themes ? await import('./juan-theme-hud.mjs') : {};
 // WIDTH/HEIGHT: the published frame. LW/LH: the layout the HUD is drawn in (differs only for rotated profiles).
 export const WIDTH = HUD_VIDEO_PROFILE.width, HEIGHT = HUD_VIDEO_PROFILE.height, FPS = HUD_VIDEO_PROFILE.fps;
 const LW = HUD_VIDEO_PROFILE.layoutWidth ?? WIDTH, LH = HUD_VIDEO_PROFILE.layoutHeight ?? HEIGHT;
@@ -77,8 +78,13 @@ function pixelsOut(source = canvas) {
 const ctx = canvas.getContext('2d');
 
 /** @param {import('./part-a-types.js').GameHudState} [input] */
+// Jie's routine HUD (routine-game) and Juan's art in juan-original draw routine mode their own way;
+// every other profile uses the step-rail HUD below with hearts and the time monster.
+const JIE_ROUTINE_HUD = ['routine-game', 'juan-original'].includes(HUD_VIDEO_PROFILE.name);
 export function normalizeGameState(input = {}) {
   if (!input || typeof input !== 'object' || Array.isArray(input)) throw new Error('Game HUD state must be an object');
+  // Juan's themed worlds use the same routine snapshot as Jie's HUD (it keeps selectedTheme, lives, monster).
+  if (input.mode === 'routine' && (JIE_ROUTINE_HUD || HUD_VIDEO_PROFILE.themes)) return normalizeRoutineHud(input);
   const phase = input.phase ?? 'SCAN';
   if (!PHASES.includes(phase)) throw new Error('Unknown HUD phase');
   if (input.objective !== undefined && typeof input.objective !== 'string') throw new Error('HUD objective must be text');
@@ -91,14 +97,29 @@ export function normalizeGameState(input = {}) {
     if (!['pending', 'active', 'complete'].includes(status)) throw new Error('Unknown checkpoint status');
     return [name, status];
   }));
-  return { phase, objective: input.objective?.trim().slice(0, 300) || OBJECTIVES[phase], checkpoints, missionProgress,
-    routine: normalizeRoutine(input) };
+  const routine = normalizeRoutine(input);
+  // The publisher normalizes on setState and drawFace normalizes again, so a routine snapshot must survive
+  // a second pass: keep copies of the source fields normalizeRoutine reads.
+  const source = routine ? { mode: 'routine', stepIndex: input.stepIndex, timeLeftSeconds: input.timeLeftSeconds, outcome: input.outcome,
+    lives: input.lives, maxLives: input.maxLives, monster: input.monster ? { ...input.monster } : undefined,
+    routineSteps: input.routineSteps.map(step => ({ label: step.label, short: step.short, status: step.status })) } : {};
+  return { ...source, phase, objective: input.objective?.trim().slice(0, 300) || OBJECTIVES[phase], checkpoints, missionProgress, routine };
 }
 
 /** Part C renderer: optional display snapshot; no game transitions or inference. */
 export function drawFace(tick, speaking = false, gameState = undefined) {
   if (HUD_VIDEO_PROFILE.themes) return drawThemed(tick, speaking, gameState);
   const state = normalizeGameState(gameState);
+  if (state.mode === 'routine' && JIE_ROUTINE_HUD) {
+    if (HUD_VIDEO_PROFILE.name === 'juan-original') {
+      return drawJuanRoutine(tick, speaking, {
+        ...state,
+        selectedTheme: state.selectedTheme ?? 'space',
+      });
+    }
+    drawRoutineGame(ctx, tick, speaking, state);
+    return new Uint8Array(ctx.getImageData(0, 0, WIDTH, HEIGHT).data);
+  }
   ctx.save();
   try {
     ctx.fillStyle = COLORS.background;

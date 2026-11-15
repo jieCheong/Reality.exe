@@ -26,11 +26,12 @@ function setup({ speak, interrupt } = {}) {
 }
 
 test('production has no placeholder themes; invalid or ambiguous catalogs fail closed', async () => {
-  assert.deepEqual(THEMES, []);
+  assert.deepEqual(THEMES.map(t=>t.id), ['space','odyssey','backrooms']);
+  assert.equal(validateThemes(THEMES).length,3);
   assert.throws(() => validateThemes([]), /three/);
   assert.throws(() => validateThemes([fixtures[0], fixtures[0], fixtures[2]]), /duplicate/);
   assert.throws(() => validateThemes([fixtures[0], { ...fixtures[1], aliases: ['alpha'] }, fixtures[2]]), /Ambiguous/);
-  const f = setup(); f.flow.rawThemes = THEMES;
+  const f = setup(); f.flow.rawThemes = [];
   await f.flow.start();
   assert.equal(f.flow.state, 'unconfigured'); assert.equal(f.game.started, false);
   await f.flow.handleTranscript(transcript('one')); assert.equal(f.game.started, false);
@@ -151,4 +152,31 @@ test('mock confirmed theme flows through every deterministic mission with one sp
   assert.equal(spoken.filter(text => text.includes('Escape complete')).length, 1);
   assert.equal(game.theme.id, 'mock-a');
   await flow.close();
+});
+
+
+test('scripted opening survives automatic barge-in while explicit stop remains forced', async () => {
+  let resolvePlayout, options, handle;
+  const output = sessionSpeechOutput({ say: (text, supplied) => {
+    options = supplied;
+    handle = {
+      interrupted: false,
+      waitForPlayout: () => new Promise(resolve => { resolvePlayout = resolve; }),
+      done: () => false,
+      interrupt(force) {
+        assert.equal(force, true);
+        this.interrupted = true;
+        resolvePlayout();
+      },
+    };
+    return handle;
+  } });
+  const speaking = output.speak('I am ORBIT, your routine guide.');
+  assert.equal(options.allowInterruptions, false, 'ordinary STT turns cannot cancel the greeting');
+  const interruption = output.interrupt();
+  await assert.rejects(speaking, SpeechInterrupted);
+  // interrupt() also waits for playout; resolve that waiter after speak observed cancellation.
+  resolvePlayout();
+  await interruption;
+  assert.equal(handle.interrupted, true);
 });

@@ -14,3 +14,9 @@ region are not accepted as a stack.
 
 To vendor a new upstream version: copy the nine files listed in `UPSTREAM.json` from
 `backend/`, update their hashes, and run `python verify_provenance.py`.
+
+## Not adopted: support-contact-v2 (Jie's branch, 48ae0cf)
+
+v2 added a stricter edge-contact veto on top of B1 for ON_TOP_OF. The team kept B1 alone (Shivam's call),
+so the vendored copy stays an exact copy of `backend/` (which also adds DOING) and `local_patches` stays empty.
+Kept from that commit: bridge inventory targets (`expectedObjects`), `scene_reason` diagnostics and their tests.

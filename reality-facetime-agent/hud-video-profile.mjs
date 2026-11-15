@@ -3,7 +3,8 @@
  *  960x540 frame. FaceTime via Chert shows our landscape frame turned 90 degrees on a portrait phone, so the
  *  pre-rotation makes the HUD come out upright and full-screen. Which direction is right is a real-call test. */
 // juan-themes*: Juan's three worlds (space, odyssey, backrooms) at 540x1170, with the routine drawn on top.
-const PROFILES = ['default', 'juan-original', 'landscape-test', 'rotated-ccw', 'rotated-cw',
+// routine-game: Jie's routine game HUD at 540x960.
+const PROFILES = ['default', 'juan-original', 'landscape-test', 'routine-game', 'rotated-ccw', 'rotated-cw',
   'juan-themes', 'juan-themes-rotated-ccw', 'juan-themes-rotated-cw'];
 export function resolveHudVideoProfile(name = 'default') {
   if (!PROFILES.includes(name)) throw new Error(`HUD_VIDEO_PROFILE must be one of ${PROFILES.join(', ')}`);

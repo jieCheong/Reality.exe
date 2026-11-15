@@ -81,3 +81,33 @@ test("Juan's renderer and art match the hashes pinned from his branch", async ()
   for (const [file, sha] of Object.entries(pinned.files))
     assert.equal(createHash('sha256').update(await readFile(new URL(`./juan-hud/${file}`, import.meta.url))).digest('hex'), sha, file);
 });
+
+test('juan-original renders every routine screen with Juan artwork and the native portrait geometry', () => {
+  const script = `
+    import assert from 'node:assert/strict';
+    import { drawHud } from './hud-video.mjs';
+    import { drawJuanRoutine } from './juan-theme-hud.mjs';
+    import { normalizeRoutineHud } from './routine-hud-state.mjs';
+    import { HEIGHT, WIDTH } from './spaceship-face.mjs';
+    assert.deepEqual([WIDTH,HEIGHT],[540,1170]);
+    const snapshots=[
+      {mode:'routine',uiState:'scanning',pauseReasons:['not_started']},
+      {mode:'routine',uiState:'in_progress',currentStep:1,stepIndex:0,missionName:'Hold up the toothbrush'},
+      {mode:'routine',uiState:'verification_pending',currentStep:1,stepIndex:0,verificationStatus:'pending'},
+      {mode:'routine',uiState:'uncertain',currentStep:2,stepIndex:1,verificationStatus:'uncertain'},
+      {mode:'routine',uiState:'mission_missed',lastOutcome:{stepIndex:1,label:'Place the shoes',status:'missed'}},
+      {mode:'routine',uiState:'paused',paused:true,pauseReasons:['manual']},
+      {mode:'routine',uiState:'routine_completed',completedSteps:3,totalSteps:3},
+    ];
+    for(const snapshot of snapshots){
+      const actual=drawHud(2,{speaking:true,gameState:snapshot});
+      const expected=drawJuanRoutine(2,true,normalizeRoutineHud({...snapshot,selectedTheme:'space'}));
+      assert.equal(actual.length,540*1170*4,snapshot.uiState);
+      assert.equal(Buffer.compare(Buffer.from(actual),Buffer.from(expected)),0,snapshot.uiState);
+    }
+    const initial=normalizeRoutineHud({mode:'routine',uiState:'scanning',pauseReasons:['not_started'],selectedTheme:'space'});
+    assert.equal(Buffer.compare(Buffer.from(drawHud(0)),Buffer.from(drawJuanRoutine(0,false,initial))),0);
+  `;
+  const result=spawnSync(process.execPath,['--input-type=module','-e',script],{env:{...process.env,HUD_VIDEO_PROFILE:'juan-original'},encoding:'utf8',timeout:20000});
+  assert.equal(result.status,0,result.stderr);
+});

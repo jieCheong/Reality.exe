@@ -1,3 +1,4 @@
+import { RoutinePresentation } from './routine-presentation.mjs';
 import { isRecord, verdictRound } from './routine-evidence.mjs';
 import { diagnostic } from './diagnostics.mjs';
 import { MissionEngine, RoutineMissionEngine } from './mission-engine.mjs';
@@ -13,6 +14,7 @@ export class GameRuntime {
     this.now = now; this.encode = encode; this.intervalMs = intervalMs;
     this.routine = routine; this.onReport = onReport;
     this.engine = routine ? new RoutineMissionEngine(routine, { now }) : new MissionEngine(); this.frames = []; this.epoch = 0; this.closed = false;
+    this.presentation = routine ? new RoutinePresentation(this.engine) : null;
     this.narratedPhases = new Set();
     // Routine pause reasons compose: narration/help cannot clear camera or manual pauses.
     this.pauseReasons = new Set(routine ? ['not_started', 'camera'] : []);
@@ -55,8 +57,15 @@ export class GameRuntime {
         this.lastLoggedRevision = this.engine.revision;
         diagnostic('mission_transition', { phase: state.phase, revision: this.engine.revision, escaped: this.engine.escaped });
       }
+      if (this.presentation && this.presentationRevision !== this.engine.revision) {
+        this.presentationRevision = this.engine.revision;
+        this.presentation.transition(this.engine.escaped ? 'routine_completed' : this.engine.phase === 'SCAN' ? 'scan_started' : 'mission_starting');
+      }
       this.updateHud(state);
       if (this.routine && this.engine.escaped) void this.flushReport();
+    });
+    if (this.presentation) this.engine.on('step_result', record => {
+      this.presentation.outcome(record); this.updateHud(this.engine.hudState());
     });
     this.engine.on('message', text => this.announce(text));
   }
@@ -65,7 +74,8 @@ export class GameRuntime {
     if (this.started || this.closed) throw new Error('Cannot change routine after game start');
     if (!this.routine) throw new Error('Routine selection needs a routine-mode game');
     this.engine.removeAllListeners(); this.routine = routine;
-    this.engine = new RoutineMissionEngine(routine, { now: this.now }); this.attachEngine();
+    this.engine = new RoutineMissionEngine(routine, { now: this.now });
+    this.presentation = new RoutinePresentation(this.engine); this.presentationRevision = undefined; this.attachEngine();
   }
   isFreshCameraFrame(frame) {
     const now = this.now();
@@ -74,8 +84,10 @@ export class GameRuntime {
   }
   setPauseReason(reason, paused) {
     if (!this.routine) return;
+    const changed = this.pauseReasons.has(reason) !== paused;
     if (paused) this.pauseReasons.add(reason); else this.pauseReasons.delete(reason);
     this.syncRoutineClock();
+    if (changed && this.started && !this.closed) this.updateHud(this.engine.hudState());
   }
   syncRoutineClock() {
     if (!this.routine) return;
@@ -88,17 +100,24 @@ export class GameRuntime {
     this.setPauseReason('narration', true); this.setPauseReason('manual', false);
     return this.announce(this.engine.instruction(), { force: true });
   }
-  updateHud(state) {
-    diagnostic('hud_update', { phase: state.phase, progress: state.missionProgress });
-    this.hud.setState({ gameState: { ...state, ...(this.routine && this.theme ? { selectedTheme: this.theme.id } : {}),
-      objective: `${this.vision.allowMock ? '[MOCK VISION] ' : ''}${state.objective}` } });
+  displayEvent(name) {
+    if (!this.presentation || this.closed) return;
+    this.presentation.transition(name); this.updateHud(this.engine.hudState());
   }
-  invalidate() { this.frames = []; this.epoch++; this.engine.resetEvidence(); this.abort?.abort(); }
+  updateHud(state) {
+    if (this.presentation) state = this.presentation.snapshot(state, { pauseReasons: [...this.pauseReasons], voiceFailed: this.voiceFailed });
+    diagnostic('hud_update', { phase: state.phase, progress: state.missionProgress });
+    this.hud.setState({ gameState: { ...state, ...(this.routine ? { theme: this.theme?.id ?? state.theme, selectedTheme: this.theme?.id ?? null, verificationMode: this.vision.allowMock ? 'mock' : 'groq' } : {}), objective: `${this.vision.allowMock ? '[MOCK VISION] ' : ''}${state.objective}` } });
+  }
+  invalidate() {
+    this.frames = []; this.epoch++; this.engine.resetEvidence(); this.abort?.abort();
+    if (this.presentation?.verificationStatus === 'pending') this.displayEvent('verification_cancelled');
+  }
   setTheme(theme) {
     if (this.started) throw new Error('Cannot change theme after game start');
     this.theme = { id: theme.id, name: theme.name, missionIntros: { ...theme.missionIntros } };
   }
-  pause() { this.setPauseReason('manual', true); this.setPauseReason('narration', false); this.engine.pauseClock?.(this.now()); this.speechVersion = (this.speechVersion || 0) + 1; this.voiceFailed = true; this.notBefore = Infinity; this.invalidate(); }
+  pause() { this.setPauseReason('manual', true); this.setPauseReason('narration', false); this.engine.pauseClock?.(this.now()); this.speechVersion = (this.speechVersion || 0) + 1; this.voiceFailed = true; this.notBefore = Infinity; this.invalidate(); this.displayEvent('routine_paused'); }
   announce(text, { force = false } = {}) {
     if (this.closed) return Promise.resolve();
     if (!force && !this.voiceFailed && text === this.lastHint && this.now() - this.lastHintAt < 10000) return this.speech || Promise.resolve();
@@ -115,11 +134,15 @@ export class GameRuntime {
       if (!this.closed && this.speechVersion === version) {
         this.notBefore = this.now();
         this.setPauseReason('voice_failure', false); this.setPauseReason('narration', false);
-        if (missionLine) this.narratedPhases.add(phase);
+        if (missionLine) {
+          this.narratedPhases.add(phase);
+          if (!this.engine.escaped && !this.pauseReasons.has('manual')) this.displayEvent(phase === 'SCAN' ? 'scan_started' : 'mission_in_progress');
+        }
       }
     }).catch(() => {
       if (this.speechVersion === version) {
         this.voiceFailed = true; this.setPauseReason('voice_failure', true); this.setPauseReason('narration', false);
+        this.displayEvent('narration_failed');
       }
     });
     return this.speech;
@@ -137,7 +160,13 @@ export class GameRuntime {
     if (!this.started || this.closed || this.pending || (this.routine && this.pauseReasons.size) || this.voiceFailed || this.engine.escaped || this.now() < this.notBefore ||
       this.now() - this.lastAttempt < this.intervalMs) return Promise.resolve(false);
     const requestEpoch = this.epoch;
-    this.pending = this.check().catch(() => { if (!this.closed && requestEpoch === this.epoch) this.engine.feedback('My visual link is unavailable. Keep the camera on; I will retry.'); return false; })
+    this.pending = this.check().catch(() => {
+      if (!this.closed && requestEpoch === this.epoch) {
+        this.displayEvent('evidence_uncertain');
+        this.engine.feedback('My visual link is unavailable. Keep the camera on; I will retry.');
+      }
+      return false;
+    })
       .finally(() => { this.pending = null; });
     return this.pending;
   }
@@ -150,23 +179,32 @@ export class GameRuntime {
     const batch = selected.slice(-count), epoch = this.epoch;
     this.frames = []; // a second consensus round can only use newly received frames
     this.lastAttempt = this.now(); this.abort = new AbortController();
+    const encodeStartedAt = performance.now();
     const frames = [];
     for (const f of batch) frames.push({ id: `${f.generation}:${f.sequence}`, capturedAtMs: f.capturedAtMs, jpeg: (await this.encode(f)).toString('base64') });
-    if (this.closed || this.epoch !== epoch || !batch.every(f => this.callerVideo.isCurrent(f))) return false;
+    // Encoding can outlive freshness or a step deadline. Revalidate before upload.
+    this.engine.tick?.(this.now());
+    if (this.closed || this.epoch !== epoch || this.engine.revision !== request.revision) return false;
+    if (!batch.every(f => this.callerVideo.isCurrent(f) && this.now() - f.capturedAtMs < 5000)) {
+      this.invalidate(); return false;
+    }
+    const encodeMs = Math.round(performance.now() - encodeStartedAt);
     const startedAt = performance.now();
-    diagnostic('verification_started', { operation: request.operation, frames: frames.length, revision: request.revision });
+    diagnostic('verification_started', { operation: request.operation, frames: frames.length, revision: request.revision, encodeMs, captureAgeMs: this.now() - batch[0].capturedAtMs });
+    this.displayEvent('verification_pending');
     let result;
-    try { result = await this.vision.analyze({ ...request, requestId: this.vision.newRequestId(), frames }, this.abort.signal); }
+    try { result = await this.vision.analyze({ ...request, ...(this.routine && request.operation === 'inventory' ? {expectedObjects:[...this.routine.objects]} : {}), requestId: this.vision.newRequestId(), frames }, this.abort.signal); }
     catch { diagnostic('verification_finished', { state: 'failed', latencyMs: Math.round(performance.now() - startedAt) }); throw new Error('Vision request failed'); }
-    diagnostic('verification_finished', { state: 'complete', provider: this.vision.allowMock ? 'mock' : 'groq', latencyMs: Math.round(performance.now() - startedAt), errors: Array.isArray(result?.frame_verdicts) ? result.frame_verdicts.filter(v => isRecord(v) && v.error).length : 0 });
+    diagnostic('verification_finished', { state: 'complete', provider: this.vision.allowMock ? 'mock' : 'groq', latencyMs: Math.round(performance.now() - startedAt), captureAgeMs: this.now() - batch[0].capturedAtMs, resultStatus: result?.status, sceneReason: result?.scene_reason, errors: Array.isArray(result?.frame_verdicts) ? result.frame_verdicts.filter(v => isRecord(v) && v.error).length : 0 });
     if (this.closed || this.epoch !== epoch || this.engine.revision !== request.revision ||
       !batch.every(f => this.callerVideo.isCurrent(f) && this.now() - f.capturedAtMs < 6000)) {
       // A stale result breaks consecutive evidence, including frames queued while
       // waiting. Never reset evidence belonging to a newer epoch or mission.
-      if (!this.closed && this.epoch === epoch && this.engine.revision === request.revision) this.invalidate();
+      if (!this.closed && this.epoch === epoch && this.engine.revision === request.revision) { this.invalidate(); this.displayEvent('evidence_uncertain'); }
       diagnostic('verification_discarded', { state: 'discarded' }); return false;
     }
     if (!isRecord(result) || (request.operation === 'verify' && !verdictRound(result, request.predicate))) {
+      this.displayEvent('evidence_uncertain');
       this.engine.feedback('I could not check that response. Keep the objects visible and try again.');
       return false;
     }
@@ -176,6 +214,11 @@ export class GameRuntime {
       dataUrl: `data:image/jpeg;base64,${frames[evidenceIndex].jpeg}`,
     } : null;
     const accepted = this.engine.apply({ ...request, frameIds: frames.map(f => f.id) }, result, evidenceFrame);
+    if (this.presentation && this.engine.revision === request.revision) {
+      const round = request.operation === 'verify' ? verdictRound(result, request.predicate) : null;
+      diagnostic('inventory_progress', { missingObjects: this.engine.missing?.length ?? 0 });
+      this.displayEvent(this.engine.streak > 0 ? 'observation_accepted' : round?.conclusiveFailure ? 'evidence_retry' : 'evidence_uncertain');
+    }
     diagnostic('verification_applied', { accepted, phase: this.engine.phase });
     return accepted;
   }

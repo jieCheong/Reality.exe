@@ -7,7 +7,10 @@ import { drawFace, normalizeGameState, FPS, HEIGHT, WIDTH } from './spaceship-fa
 /** Existing Part A entry point, now rendering Juan's adapted spaceship HUD. */
 export function drawHud(tick, { reactor = 'offline', speaking = false, gameState = undefined } = {}) {
   if (!['offline', 'online'].includes(reactor)) throw new Error('reactor must be offline or online');
-  return drawFace(tick, speaking, gameState ?? { phase: reactor === 'online' ? 'POWER' : 'SCAN' });
+  const initial = ['juan-original','routine-game','juan-themes'].includes(HUD_VIDEO_PROFILE.name)
+    ? { mode: 'routine', uiState: 'scanning', pauseReasons: ['not_started'] }
+    : { phase: reactor === 'online' ? 'POWER' : 'SCAN' };
+  return drawFace(tick, speaking, gameState ?? initial);
 }
 
 /** One camera publisher on the SAME participant as the starter's voice. */
