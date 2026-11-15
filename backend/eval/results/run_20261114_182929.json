@@ -1,0 +1,1200 @@
+{
+  "model": "qwen/qwen3.8-27b",
+  "cases": [
+    {
+      "error": null,
+      "id": "img_0963_1_1_s01_on_f0_covered_charger",
+      "predicate": "COVERED(charger)",
+      "type": "COVERED",
+      "expected": false,
+      "tags": [
+        "cluttered",
+        "far_camera",
+        "negative"
+      ],
+      "n_images": 1,
+      "status": "checked",
+      "latency_ms": 23959.1,
+      "frame_verdicts": [
+        {
+          "frame_index": 0,
+          "satisfied": false,
+          "confidence": 0.95,
+          "evidence": "The white square charger is sitting on a black object on the table and is fully visible, not covered by a hand.",
+          "correction_hint": "Please place your hand on top of the charger to cover it.",
+          "objects_seen": [
+            "charger"
+          ],
+          "geometry_override": null,
+          "error": null,
+          "latency_ms": 23958.8
+        }
+      ],
+      "evidence": "The white square charger is sitting on a black object on the table and is fully visible, not covered by a hand.",
+      "correction_hint": "Please place your hand on top of the charger to cover it."
+    },
+    {
+      "error": null,
+      "id": "img_0963_1_1_s01_on_f0_held_up_charger",
+      "predicate": "HELD_UP(charger)",
+      "type": "HELD_UP",
+      "expected": false,
+      "tags": [
+        "cluttered",
+        "far_camera",
+        "negative"
+      ],
+      "n_images": 1,
+      "status": "checked",
+      "latency_ms": 23808.2,
+      "frame_verdicts": [
+        {
+          "frame_index": 0,
+          "satisfied": false,
+          "confidence": 0.95,
+          "evidence": "The white charger is resting on a black wallet on the desk, not held up in a hand.",
+          "correction_hint": "Please pick up the charger and hold it in your hand toward the camera.",
+          "objects_seen": [
+            "charger"
+          ],
+          "geometry_override": null,
+          "error": null,
+          "latency_ms": 23808.0
+        }
+      ],
+      "evidence": "The white charger is resting on a black wallet on the desk, not held up in a hand.",
+      "correction_hint": "Please pick up the charger and hold it in your hand toward the camera."
+    },
+    {
+      "error": null,
+      "id": "img_0963_1_1_s01_on_f0_on_top_of_charger_wallet",
+      "predicate": "ON_TOP_OF(charger, wallet)",
+      "type": "ON_TOP_OF",
+      "expected": true,
+      "tags": [
+        "cluttered",
+        "far_camera"
+      ],
+      "n_images": 1,
+      "status": "checked",
+      "latency_ms": 27069.8,
+      "frame_verdicts": [
+        {
+          "frame_index": 0,
+          "satisfied": true,
+          "confidence": 0.95,
+          "evidence": "The white square charger is clearly resting on top of the black wallet, with its base in direct contact with the wallet's surface.",
+          "correction_hint": null,
+          "objects_seen": [
+            "charger",
+            "wallet"
+          ],
+          "geometry_override": null,
+          "error": null,
+          "latency_ms": 27069.5
+        }
+      ],
+      "evidence": "The white square charger is clearly resting on top of the black wallet, with its base in direct contact with the wallet's surface.",
+      "correction_hint": null
+    },
+    {
+      "error": null,
+      "id": "img_0963_1_1_s01_on_f0_on_top_of_wallet_charger",
+      "predicate": "ON_TOP_OF(wallet, charger)",
+      "type": "ON_TOP_OF",
+      "expected": false,
+      "tags": [
+        "cluttered",
+        "far_camera",
+        "negative"
+      ],
+      "n_images": 1,
+      "status": "checked",
+      "latency_ms": 24826.8,
+      "frame_verdicts": [
+        {
+          "frame_index": 0,
+          "satisfied": false,
+          "confidence": 0.95,
+          "evidence": "The white charger is resting on top of the black wallet, not the other way around.",
+          "correction_hint": "Please place the wallet on top of the charger.",
+          "objects_seen": [
+            "wallet",
+            "charger"
+          ],
+          "geometry_override": null,
+          "error": null,
+          "latency_ms": 24826.6
+        }
+      ],
+      "evidence": "The white charger is resting on top of the black wallet, not the other way around.",
+      "correction_hint": "Please place the wallet on top of the charger."
+    },
+    {
+      "error": null,
+      "id": "img_0963_1_1_s01_on_f1_covered_charger",
+      "predicate": "COVERED(charger)",
+      "type": "COVERED",
+      "expected": false,
+      "tags": [
+        "cluttered",
+        "far_camera",
+        "negative"
+      ],
+      "n_images": 1,
+      "status": "checked",
+      "latency_ms": 26877.2,
+      "frame_verdicts": [
+        {
+          "frame_index": 0,
+          "satisfied": false,
+          "confidence": 0.95,
+          "evidence": "The white square charger is sitting on a black object on the table and is fully visible, not covered by a hand.",
+          "correction_hint": "Please place your hand on top of the charger to cover it.",
+          "objects_seen": [
+            "charger"
+          ],
+          "geometry_override": null,
+          "error": null,
+          "latency_ms": 26876.9
+        }
+      ],
+      "evidence": "The white square charger is sitting on a black object on the table and is fully visible, not covered by a hand.",
+      "correction_hint": "Please place your hand on top of the charger to cover it."
+    },
+    {
+      "error": null,
+      "id": "img_0963_1_1_s01_on_f1_held_up_charger",
+      "predicate": "HELD_UP(charger)",
+      "type": "HELD_UP",
+      "expected": false,
+      "tags": [
+        "cluttered",
+        "far_camera",
+        "negative"
+      ],
+      "n_images": 1,
+      "status": "checked",
+      "latency_ms": 27476.3,
+      "frame_verdicts": [
+        {
+          "frame_index": 0,
+          "satisfied": false,
+          "confidence": 0.95,
+          "evidence": "The charger is lying flat on the desk surface, not held up in a hand.",
+          "correction_hint": "Please pick up the charger and hold it up toward the camera.",
+          "objects_seen": [
+            "charger"
+          ],
+          "geometry_override": null,
+          "error": null,
+          "latency_ms": 27476.0
+        }
+      ],
+      "evidence": "The charger is lying flat on the desk surface, not held up in a hand.",
+      "correction_hint": "Please pick up the charger and hold it up toward the camera."
+    },
+    {
+      "error": null,
+      "id": "img_0963_1_1_s01_on_f1_on_top_of_charger_wallet",
+      "predicate": "ON_TOP_OF(charger, wallet)",
+      "type": "ON_TOP_OF",
+      "expected": true,
+      "tags": [
+        "cluttered",
+        "far_camera"
+      ],
+      "n_images": 1,
+      "status": "checked",
+      "latency_ms": 26002.9,
+      "frame_verdicts": [
+        {
+          "frame_index": 0,
+          "satisfied": true,
+          "confidence": 0.95,
+          "evidence": "The white square charger is clearly resting on top of the black wallet, with its base in contact with the wallet's surface.",
+          "correction_hint": null,
+          "objects_seen": [
+            "charger",
+            "wallet"
+          ],
+          "geometry_override": null,
+          "error": null,
+          "latency_ms": 26002.6
+        }
+      ],
+      "evidence": "The white square charger is clearly resting on top of the black wallet, with its base in contact with the wallet's surface.",
+      "correction_hint": null
+    },
+    {
+      "error": null,
+      "id": "img_0963_1_1_s01_on_f1_on_top_of_wallet_charger",
+      "predicate": "ON_TOP_OF(wallet, charger)",
+      "type": "ON_TOP_OF",
+      "expected": false,
+      "tags": [
+        "cluttered",
+        "far_camera",
+        "negative"
+      ],
+      "n_images": 1,
+      "status": "checked",
+      "latency_ms": 24998.2,
+      "frame_verdicts": [
+        {
+          "frame_index": 0,
+          "satisfied": true,
+          "confidence": 0.95,
+          "evidence": "The white square charger is clearly resting on top of the black wallet, with the wallet's base supporting the charger.",
+          "correction_hint": null,
+          "objects_seen": [
+            "wallet",
+            "charger"
+          ],
+          "geometry_override": null,
+          "error": null,
+          "latency_ms": 24997.9
+        }
+      ],
+      "evidence": "The white square charger is clearly resting on top of the black wallet, with the wallet's base supporting the charger.",
+      "correction_hint": null
+    },
+    {
+      "error": null,
+      "id": "img_0963_1_1_s02_on_f0_covered_phone",
+      "predicate": "COVERED(phone)",
+      "type": "COVERED",
+      "expected": false,
+      "tags": [
+        "cluttered",
+        "far_camera",
+        "negative"
+      ],
+      "n_images": 1,
+      "status": "checked",
+      "latency_ms": 53958.7,
+      "frame_verdicts": [
+        {
+          "frame_index": 0,
+          "satisfied": false,
+          "confidence": 0.95,
+          "evidence": "The smartphone is lying flat on the table and is fully visible, not covered by a hand.",
+          "correction_hint": "Please place your hand on top of the phone to cover it.",
+          "objects_seen": [
+            "phone"
+          ],
+          "geometry_override": null,
+          "error": null,
+          "latency_ms": 53958.5
+        }
+      ],
+      "evidence": "The smartphone is lying flat on the table and is fully visible, not covered by a hand.",
+      "correction_hint": "Please place your hand on top of the phone to cover it."
+    },
+    {
+      "error": null,
+      "id": "img_0963_1_1_s02_on_f0_held_up_phone",
+      "predicate": "HELD_UP(phone)",
+      "type": "HELD_UP",
+      "expected": false,
+      "tags": [
+        "cluttered",
+        "far_camera",
+        "negative"
+      ],
+      "n_images": 1,
+      "status": "checked",
+      "latency_ms": 23700.5,
+      "frame_verdicts": [
+        {
+          "frame_index": 0,
+          "satisfied": false,
+          "confidence": 0.95,
+          "evidence": "The smartphone is lying flat on the desk surface next to a laptop, not held up in a hand.",
+          "correction_hint": "Please pick up the phone and hold it up toward the camera.",
+          "objects_seen": [
+            "phone"
+          ],
+          "geometry_override": null,
+          "error": null,
+          "latency_ms": 23700.2
+        }
+      ],
+      "evidence": "The smartphone is lying flat on the desk surface next to a laptop, not held up in a hand.",
+      "correction_hint": "Please pick up the phone and hold it up toward the camera."
+    },
+    {
+      "error": null,
+      "id": "img_0963_1_1_s02_on_f0_on_top_of_phone_wallet",
+      "predicate": "ON_TOP_OF(phone, wallet)",
+      "type": "ON_TOP_OF",
+      "expected": true,
+      "tags": [
+        "cluttered",
+        "far_camera"
+      ],
+      "n_images": 1,
+      "status": "checked",
+      "latency_ms": 26969.3,
+      "frame_verdicts": [
+        {
+          "frame_index": 0,
+          "satisfied": true,
+          "confidence": 0.95,
+          "evidence": "The smartphone is clearly resting on top of the black wallet, with its base supported by the wallet's surface.",
+          "correction_hint": null,
+          "objects_seen": [
+            "phone",
+            "wallet"
+          ],
+          "geometry_override": null,
+          "error": null,
+          "latency_ms": 26969.1
+        }
+      ],
+      "evidence": "The smartphone is clearly resting on top of the black wallet, with its base supported by the wallet's surface.",
+      "correction_hint": null
+    },
+    {
+      "error": null,
+      "id": "img_0963_1_1_s02_on_f0_on_top_of_wallet_phone",
+      "predicate": "ON_TOP_OF(wallet, phone)",
+      "type": "ON_TOP_OF",
+      "expected": false,
+      "tags": [
+        "cluttered",
+        "far_camera",
+        "negative"
+      ],
+      "n_images": 1,
+      "status": "checked",
+      "latency_ms": 27962.7,
+      "frame_verdicts": [
+        {
+          "frame_index": 0,
+          "satisfied": true,
+          "confidence": 0.95,
+          "evidence": "The black wallet is clearly stacked directly on top of the smartphone, with its base resting on the phone's top surface.",
+          "correction_hint": null,
+          "objects_seen": [
+            "wallet",
+            "phone"
+          ],
+          "geometry_override": null,
+          "error": null,
+          "latency_ms": 27962.5
+        }
+      ],
+      "evidence": "The black wallet is clearly stacked directly on top of the smartphone, with its base resting on the phone's top surface.",
+      "correction_hint": null
+    },
+    {
+      "error": null,
+      "id": "img_0963_1_1_s02_on_f1_covered_phone",
+      "predicate": "COVERED(phone)",
+      "type": "COVERED",
+      "expected": false,
+      "tags": [
+        "cluttered",
+        "far_camera",
+        "negative"
+      ],
+      "n_images": 1,
+      "status": "checked",
+      "latency_ms": 24121.9,
+      "frame_verdicts": [
+        {
+          "frame_index": 0,
+          "satisfied": false,
+          "confidence": 0.9,
+          "evidence": "The player's hand is visible on the table reaching for a white object, but no smartphone is visible in the frame to be covered.",
+          "correction_hint": "Please place the phone on the table so it is visible to the camera.",
+          "objects_seen": [],
+          "geometry_override": null,
+          "error": null,
+          "latency_ms": 24121.6
+        }
+      ],
+      "evidence": "The player's hand is visible on the table reaching for a white object, but no smartphone is visible in the frame to be covered.",
+      "correction_hint": "Please place the phone on the table so it is visible to the camera."
+    },
+    {
+      "error": null,
+      "id": "img_0963_1_1_s02_on_f1_held_up_phone",
+      "predicate": "HELD_UP(phone)",
+      "type": "HELD_UP",
+      "expected": false,
+      "tags": [
+        "cluttered",
+        "far_camera",
+        "negative"
+      ],
+      "n_images": 1,
+      "status": "checked",
+      "latency_ms": 23716.0,
+      "frame_verdicts": [
+        {
+          "frame_index": 0,
+          "satisfied": false,
+          "confidence": 0.95,
+          "evidence": "The smartphone is lying flat on the desk surface on the right side, not held up in a hand.",
+          "correction_hint": "Please pick up the phone and hold it up toward the camera.",
+          "objects_seen": [
+            "phone"
+          ],
+          "geometry_override": null,
+          "error": null,
+          "latency_ms": 23715.7
+        }
+      ],
+      "evidence": "The smartphone is lying flat on the desk surface on the right side, not held up in a hand.",
+      "correction_hint": "Please pick up the phone and hold it up toward the camera."
+    },
+    {
+      "error": null,
+      "id": "img_0963_1_1_s02_on_f1_on_top_of_phone_wallet",
+      "predicate": "ON_TOP_OF(phone, wallet)",
+      "type": "ON_TOP_OF",
+      "expected": true,
+      "tags": [
+        "cluttered",
+        "far_camera"
+      ],
+      "n_images": 1,
+      "status": "checked",
+      "latency_ms": 26175.3,
+      "frame_verdicts": [
+        {
+          "frame_index": 0,
+          "satisfied": false,
+          "confidence": 0.95,
+          "evidence": "Neither the phone nor the wallet is visible in the frame; the table contains a laptop, a cup, and other small items.",
+          "correction_hint": "Please place the phone and wallet on the table so they are visible.",
+          "objects_seen": [],
+          "geometry_override": null,
+          "error": null,
+          "latency_ms": 26175.1
+        }
+      ],
+      "evidence": "Neither the phone nor the wallet is visible in the frame; the table contains a laptop, a cup, and other small items.",
+      "correction_hint": "Please place the phone and wallet on the table so they are visible."
+    },
+    {
+      "error": null,
+      "id": "img_0963_1_1_s02_on_f1_on_top_of_wallet_phone",
+      "predicate": "ON_TOP_OF(wallet, phone)",
+      "type": "ON_TOP_OF",
+      "expected": false,
+      "tags": [
+        "cluttered",
+        "far_camera",
+        "negative"
+      ],
+      "n_images": 1,
+      "status": "checked",
+      "latency_ms": 25528.6,
+      "frame_verdicts": [
+        {
+          "frame_index": 0,
+          "satisfied": false,
+          "confidence": 0.95,
+          "evidence": "The black leather bifold wallet is lying flat on the table surface, not resting on top of the smartphone.",
+          "correction_hint": "Please place the wallet directly on top of the phone.",
+          "objects_seen": [
+            "wallet",
+            "phone"
+          ],
+          "geometry_override": null,
+          "error": null,
+          "latency_ms": 25528.3
+        }
+      ],
+      "evidence": "The black leather bifold wallet is lying flat on the table surface, not resting on top of the smartphone.",
+      "correction_hint": "Please place the wallet directly on top of the phone."
+    },
+    {
+      "error": null,
+      "id": "img_0963_1_1_s03_on_f0_covered_bracelet",
+      "predicate": "COVERED(bracelet)",
+      "type": "COVERED",
+      "expected": false,
+      "tags": [
+        "cluttered",
+        "far_camera",
+        "negative"
+      ],
+      "n_images": 1,
+      "status": "checked",
+      "latency_ms": 26813.4,
+      "frame_verdicts": [
+        {
+          "frame_index": 0,
+          "satisfied": false,
+          "confidence": 0.9,
+          "evidence": "The bracelet is lying on the table surface and is not covered by a hand.",
+          "correction_hint": "Please place your hand on top of the bracelet to cover it.",
+          "objects_seen": [
+            "bracelet"
+          ],
+          "geometry_override": null,
+          "error": null,
+          "latency_ms": 26813.1
+        }
+      ],
+      "evidence": "The bracelet is lying on the table surface and is not covered by a hand.",
+      "correction_hint": "Please place your hand on top of the bracelet to cover it."
+    },
+    {
+      "error": null,
+      "id": "img_0963_1_1_s03_on_f0_held_up_bracelet",
+      "predicate": "HELD_UP(bracelet)",
+      "type": "HELD_UP",
+      "expected": false,
+      "tags": [
+        "cluttered",
+        "far_camera",
+        "negative"
+      ],
+      "n_images": 1,
+      "status": "checked",
+      "latency_ms": 23833.5,
+      "frame_verdicts": [
+        {
+          "frame_index": 0,
+          "satisfied": false,
+          "confidence": 0.95,
+          "evidence": "The bracelet of dark beads is lying flat on the desk surface next to a white case, not held up in a hand.",
+          "correction_hint": "Please pick up the bracelet and hold it up toward the camera.",
+          "objects_seen": [
+            "bracelet"
+          ],
+          "geometry_override": null,
+          "error": null,
+          "latency_ms": 23833.3
+        }
+      ],
+      "evidence": "The bracelet of dark beads is lying flat on the desk surface next to a white case, not held up in a hand.",
+      "correction_hint": "Please pick up the bracelet and hold it up toward the camera."
+    },
+    {
+      "error": null,
+      "id": "img_0963_1_1_s03_on_f0_on_top_of_bracelet_phone",
+      "predicate": "ON_TOP_OF(bracelet, phone)",
+      "type": "ON_TOP_OF",
+      "expected": true,
+      "tags": [
+        "cluttered",
+        "far_camera"
+      ],
+      "n_images": 1,
+      "status": "checked",
+      "latency_ms": 24008.2,
+      "frame_verdicts": [
+        {
+          "frame_index": 0,
+          "satisfied": false,
+          "confidence": 0.95,
+          "evidence": "The bracelet is lying flat on the table surface next to the phone, not resting on top of it.",
+          "correction_hint": "Please place the bracelet directly on top of the phone.",
+          "objects_seen": [
+            "bracelet",
+            "phone"
+          ],
+          "geometry_override": null,
+          "error": null,
+          "latency_ms": 24007.8
+        }
+      ],
+      "evidence": "The bracelet is lying flat on the table surface next to the phone, not resting on top of it.",
+      "correction_hint": "Please place the bracelet directly on top of the phone."
+    },
+    {
+      "error": null,
+      "id": "img_0963_1_1_s03_on_f0_on_top_of_phone_bracelet",
+      "predicate": "ON_TOP_OF(phone, bracelet)",
+      "type": "ON_TOP_OF",
+      "expected": false,
+      "tags": [
+        "cluttered",
+        "far_camera",
+        "negative"
+      ],
+      "n_images": 1,
+      "status": "checked",
+      "latency_ms": 24803.6,
+      "frame_verdicts": [
+        {
+          "frame_index": 0,
+          "satisfied": false,
+          "confidence": 0.95,
+          "evidence": "The phone is not visible in the frame, so it cannot be resting on the bracelet.",
+          "correction_hint": "Please place the phone on top of the bracelet.",
+          "objects_seen": [
+            "bracelet"
+          ],
+          "geometry_override": null,
+          "error": null,
+          "latency_ms": 24803.3
+        }
+      ],
+      "evidence": "The phone is not visible in the frame, so it cannot be resting on the bracelet.",
+      "correction_hint": "Please place the phone on top of the bracelet."
+    },
+    {
+      "error": null,
+      "id": "img_0963_1_1_s03_on_f1_covered_bracelet",
+      "predicate": "COVERED(bracelet)",
+      "type": "COVERED",
+      "expected": false,
+      "tags": [
+        "cluttered",
+        "far_camera",
+        "negative"
+      ],
+      "n_images": 1,
+      "status": "checked",
+      "latency_ms": 38056.2,
+      "frame_verdicts": [
+        {
+          "frame_index": 0,
+          "satisfied": false,
+          "confidence": 0.9,
+          "evidence": "The bracelet of dark beads is clearly visible on the table, and the player's hand is reaching for a white object nearby, not covering the bracelet.",
+          "correction_hint": "Please place your hand on top of the bracelet to cover it.",
+          "objects_seen": [
+            "bracelet"
+          ],
+          "geometry_override": null,
+          "error": null,
+          "latency_ms": 38056.0
+        }
+      ],
+      "evidence": "The bracelet of dark beads is clearly visible on the table, and the player's hand is reaching for a white object nearby, not covering the bracelet.",
+      "correction_hint": "Please place your hand on top of the bracelet to cover it."
+    },
+    {
+      "error": null,
+      "id": "img_0963_1_1_s03_on_f1_held_up_bracelet",
+      "predicate": "HELD_UP(bracelet)",
+      "type": "HELD_UP",
+      "expected": false,
+      "tags": [
+        "cluttered",
+        "far_camera",
+        "negative"
+      ],
+      "n_images": 1,
+      "status": "checked",
+      "latency_ms": 24160.0,
+      "frame_verdicts": [
+        {
+          "frame_index": 0,
+          "satisfied": false,
+          "confidence": 0.95,
+          "evidence": "The bracelet of dark beads is lying flat on the desk surface, not held up in a hand.",
+          "correction_hint": "Please pick up the bracelet and hold it up toward the camera.",
+          "objects_seen": [
+            "bracelet"
+          ],
+          "geometry_override": null,
+          "error": null,
+          "latency_ms": 24159.7
+        }
+      ],
+      "evidence": "The bracelet of dark beads is lying flat on the desk surface, not held up in a hand.",
+      "correction_hint": "Please pick up the bracelet and hold it up toward the camera."
+    },
+    {
+      "error": null,
+      "id": "img_0963_1_1_s03_on_f1_on_top_of_bracelet_phone",
+      "predicate": "ON_TOP_OF(bracelet, phone)",
+      "type": "ON_TOP_OF",
+      "expected": true,
+      "tags": [
+        "cluttered",
+        "far_camera"
+      ],
+      "n_images": 1,
+      "status": "checked",
+      "latency_ms": 25112.4,
+      "frame_verdicts": [
+        {
+          "frame_index": 0,
+          "satisfied": false,
+          "confidence": 0.95,
+          "evidence": "The bracelet is lying flat on the table surface to the left of the phone, not resting on top of it.",
+          "correction_hint": "Please place the bracelet directly on top of the phone.",
+          "objects_seen": [
+            "bracelet",
+            "phone"
+          ],
+          "geometry_override": null,
+          "error": null,
+          "latency_ms": 25112.0
+        }
+      ],
+      "evidence": "The bracelet is lying flat on the table surface to the left of the phone, not resting on top of it.",
+      "correction_hint": "Please place the bracelet directly on top of the phone."
+    },
+    {
+      "error": null,
+      "id": "img_0963_1_1_s03_on_f1_on_top_of_phone_bracelet",
+      "predicate": "ON_TOP_OF(phone, bracelet)",
+      "type": "ON_TOP_OF",
+      "expected": false,
+      "tags": [
+        "cluttered",
+        "far_camera",
+        "negative"
+      ],
+      "n_images": 1,
+      "status": "checked",
+      "latency_ms": 24885.5,
+      "frame_verdicts": [
+        {
+          "frame_index": 0,
+          "satisfied": false,
+          "confidence": 0.95,
+          "evidence": "The phone is lying flat on the table surface, not resting on top of the bracelet.",
+          "correction_hint": "Please place the phone on top of the bracelet.",
+          "objects_seen": [
+            "phone",
+            "bracelet"
+          ],
+          "geometry_override": null,
+          "error": null,
+          "latency_ms": 24885.2
+        }
+      ],
+      "evidence": "The phone is lying flat on the table surface, not resting on top of the bracelet.",
+      "correction_hint": "Please place the phone on top of the bracelet."
+    },
+    {
+      "error": null,
+      "id": "img_0963_1_1_s04_row_f0_left_of_phone_watch",
+      "predicate": "LEFT_OF(phone, watch)",
+      "type": "LEFT_OF",
+      "expected": true,
+      "tags": [
+        "cluttered",
+        "far_camera"
+      ],
+      "n_images": 1,
+      "status": "checked",
+      "latency_ms": 25359.2,
+      "frame_verdicts": [
+        {
+          "frame_index": 0,
+          "satisfied": true,
+          "confidence": 0.95,
+          "evidence": "The smartphone is lying flat on the table to the left of the silver metal watch.",
+          "correction_hint": null,
+          "objects_seen": [
+            "phone",
+            "watch"
+          ],
+          "geometry_override": null,
+          "error": null,
+          "latency_ms": 25358.8
+        }
+      ],
+      "evidence": "The smartphone is lying flat on the table to the left of the silver metal watch.",
+      "correction_hint": null
+    },
+    {
+      "error": null,
+      "id": "img_0963_1_1_s04_row_f0_left_of_watch_phone",
+      "predicate": "LEFT_OF(watch, phone)",
+      "type": "LEFT_OF",
+      "expected": false,
+      "tags": [
+        "cluttered",
+        "far_camera",
+        "negative"
+      ],
+      "n_images": 1,
+      "status": "checked",
+      "latency_ms": 24062.0,
+      "frame_verdicts": [
+        {
+          "frame_index": 0,
+          "satisfied": false,
+          "confidence": 0.9,
+          "evidence": "The silver metal watch is positioned to the right of the smartphone on the table.",
+          "correction_hint": "Please move the watch to the left of the phone.",
+          "objects_seen": [
+            "watch",
+            "phone"
+          ],
+          "geometry_override": null,
+          "error": null,
+          "latency_ms": 24061.8
+        }
+      ],
+      "evidence": "The silver metal watch is positioned to the right of the smartphone on the table.",
+      "correction_hint": "Please move the watch to the left of the phone."
+    },
+    {
+      "error": null,
+      "id": "img_0963_1_1_s04_row_f0_order_left_to_right_phone_wallet_keys_watch",
+      "predicate": "ORDER_LEFT_TO_RIGHT([phone, wallet, keys, watch])",
+      "type": "ORDER_LEFT_TO_RIGHT",
+      "expected": true,
+      "tags": [
+        "cluttered",
+        "far_camera"
+      ],
+      "n_images": 1,
+      "status": "checked",
+      "latency_ms": 16300.8,
+      "frame_verdicts": [
+        {
+          "frame_index": 0,
+          "satisfied": false,
+          "confidence": 0.9,
+          "evidence": "The watch is not visible in the frame, so the required sequence of four objects cannot be established.",
+          "correction_hint": "Please place the watch on the table to the right of the keys.",
+          "objects_seen": [
+            "phone",
+            "wallet",
+            "keys"
+          ],
+          "geometry_override": null,
+          "error": null,
+          "latency_ms": 16300.6
+        }
+      ],
+      "evidence": "The watch is not visible in the frame, so the required sequence of four objects cannot be established.",
+      "correction_hint": "Please place the watch on the table to the right of the keys."
+    },
+    {
+      "error": null,
+      "id": "img_0963_1_1_s04_row_f0_order_left_to_right_wallet_phone_keys_watch",
+      "predicate": "ORDER_LEFT_TO_RIGHT([wallet, phone, keys, watch])",
+      "type": "ORDER_LEFT_TO_RIGHT",
+      "expected": false,
+      "tags": [
+        "cluttered",
+        "far_camera",
+        "negative"
+      ],
+      "n_images": 1,
+      "status": "checked",
+      "latency_ms": 24573.2,
+      "frame_verdicts": [
+        {
+          "frame_index": 0,
+          "satisfied": false,
+          "confidence": 0.95,
+          "evidence": "The phone is positioned to the left of the wallet, and the watch is not visible on the table.",
+          "correction_hint": "Move the phone to the left of the wallet and place the watch on the far right.",
+          "objects_seen": [
+            "wallet",
+            "phone",
+            "keys"
+          ],
+          "geometry_override": null,
+          "error": null,
+          "latency_ms": 24573.0
+        }
+      ],
+      "evidence": "The phone is positioned to the left of the wallet, and the watch is not visible on the table.",
+      "correction_hint": "Move the phone to the left of the wallet and place the watch on the far right."
+    },
+    {
+      "error": null,
+      "id": "img_0963_1_1_s04_row_f0_order_left_to_right_watch_keys_wallet_phone",
+      "predicate": "ORDER_LEFT_TO_RIGHT([watch, keys, wallet, phone])",
+      "type": "ORDER_LEFT_TO_RIGHT",
+      "expected": false,
+      "tags": [
+        "cluttered",
+        "far_camera",
+        "negative"
+      ],
+      "n_images": 1,
+      "status": "checked",
+      "latency_ms": 25840.9,
+      "frame_verdicts": [
+        {
+          "frame_index": 0,
+          "satisfied": false,
+          "confidence": 0.95,
+          "evidence": "The visible objects are arranged from left to right as phone, wallet, and keys, which does not match the required order, and the watch is not visible.",
+          "correction_hint": "Place the watch on the far left, then keys, wallet, and phone to the right.",
+          "objects_seen": [
+            "keys",
+            "wallet",
+            "phone"
+          ],
+          "geometry_override": null,
+          "error": null,
+          "latency_ms": 25840.6
+        }
+      ],
+      "evidence": "The visible objects are arranged from left to right as phone, wallet, and keys, which does not match the required order, and the watch is not visible.",
+      "correction_hint": "Place the watch on the far left, then keys, wallet, and phone to the right."
+    },
+    {
+      "error": null,
+      "id": "img_0963_1_1_s04_row_f1_left_of_phone_watch",
+      "predicate": "LEFT_OF(phone, watch)",
+      "type": "LEFT_OF",
+      "expected": true,
+      "tags": [
+        "cluttered",
+        "far_camera"
+      ],
+      "n_images": 1,
+      "status": "checked",
+      "latency_ms": 26859.5,
+      "frame_verdicts": [
+        {
+          "frame_index": 0,
+          "satisfied": true,
+          "confidence": 0.95,
+          "evidence": "The smartphone is lying on the table to the left of the silver metal watch.",
+          "correction_hint": null,
+          "objects_seen": [
+            "phone",
+            "watch"
+          ],
+          "geometry_override": null,
+          "error": null,
+          "latency_ms": 26859.3
+        }
+      ],
+      "evidence": "The smartphone is lying on the table to the left of the silver metal watch.",
+      "correction_hint": null
+    },
+    {
+      "error": null,
+      "id": "img_0963_1_1_s04_row_f1_left_of_watch_phone",
+      "predicate": "LEFT_OF(watch, phone)",
+      "type": "LEFT_OF",
+      "expected": false,
+      "tags": [
+        "cluttered",
+        "far_camera",
+        "negative"
+      ],
+      "n_images": 1,
+      "status": "checked",
+      "latency_ms": 25844.4,
+      "frame_verdicts": [
+        {
+          "frame_index": 0,
+          "satisfied": false,
+          "confidence": 0.95,
+          "evidence": "The silver metal watch is visible on the far right of the table, while the smartphone is positioned to its left.",
+          "correction_hint": null,
+          "objects_seen": [
+            "watch",
+            "phone"
+          ],
+          "geometry_override": "boxes say \"watch\" is not left of \"phone\"",
+          "error": null,
+          "latency_ms": 25844.2
+        }
+      ],
+      "evidence": "The silver metal watch is visible on the far right of the table, while the smartphone is positioned to its left.",
+      "correction_hint": null
+    },
+    {
+      "error": null,
+      "id": "img_0963_1_1_s04_row_f1_order_left_to_right_phone_wallet_keys_watch",
+      "predicate": "ORDER_LEFT_TO_RIGHT([phone, wallet, keys, watch])",
+      "type": "ORDER_LEFT_TO_RIGHT",
+      "expected": true,
+      "tags": [
+        "cluttered",
+        "far_camera"
+      ],
+      "n_images": 1,
+      "status": "checked",
+      "latency_ms": 24129.1,
+      "frame_verdicts": [
+        {
+          "frame_index": 0,
+          "satisfied": false,
+          "confidence": 0.9,
+          "evidence": "The watch is not visible on the table, so the required sequence of four objects cannot be established.",
+          "correction_hint": "Please place the watch on the table to the right of the keys.",
+          "objects_seen": [
+            "phone",
+            "wallet",
+            "keys"
+          ],
+          "geometry_override": null,
+          "error": null,
+          "latency_ms": 24128.9
+        }
+      ],
+      "evidence": "The watch is not visible on the table, so the required sequence of four objects cannot be established.",
+      "correction_hint": "Please place the watch on the table to the right of the keys."
+    },
+    {
+      "error": null,
+      "id": "img_0963_1_1_s04_row_f1_order_left_to_right_wallet_phone_keys_watch",
+      "predicate": "ORDER_LEFT_TO_RIGHT([wallet, phone, keys, watch])",
+      "type": "ORDER_LEFT_TO_RIGHT",
+      "expected": false,
+      "tags": [
+        "cluttered",
+        "far_camera",
+        "negative"
+      ],
+      "n_images": 1,
+      "status": "checked",
+      "latency_ms": 28654.3,
+      "frame_verdicts": [
+        {
+          "frame_index": 0,
+          "satisfied": false,
+          "confidence": 0.95,
+          "evidence": "The phone is positioned to the left of the wallet, whereas the required order is wallet -> phone.",
+          "correction_hint": "Please move the phone to the right of the wallet.",
+          "objects_seen": [
+            "wallet",
+            "phone",
+            "keys",
+            "watch"
+          ],
+          "geometry_override": null,
+          "error": null,
+          "latency_ms": 28654.1
+        }
+      ],
+      "evidence": "The phone is positioned to the left of the wallet, whereas the required order is wallet -> phone.",
+      "correction_hint": "Please move the phone to the right of the wallet."
+    },
+    {
+      "error": null,
+      "id": "img_0963_1_1_s04_row_f1_order_left_to_right_watch_keys_wallet_phone",
+      "predicate": "ORDER_LEFT_TO_RIGHT([watch, keys, wallet, phone])",
+      "type": "ORDER_LEFT_TO_RIGHT",
+      "expected": false,
+      "tags": [
+        "cluttered",
+        "far_camera",
+        "negative"
+      ],
+      "n_images": 1,
+      "status": "checked",
+      "latency_ms": 27031.3,
+      "frame_verdicts": [
+        {
+          "frame_index": 0,
+          "satisfied": false,
+          "confidence": 0.95,
+          "evidence": "The smartphone is visible on the far left of the table, whereas the required order places it on the far right.",
+          "correction_hint": "Move the phone to the far right and place the watch on the far left.",
+          "objects_seen": [
+            "keys",
+            "wallet",
+            "phone"
+          ],
+          "geometry_override": null,
+          "error": null,
+          "latency_ms": 27031.1
+        }
+      ],
+      "evidence": "The smartphone is visible on the far left of the table, whereas the required order places it on the far right.",
+      "correction_hint": "Move the phone to the far right and place the watch on the far left."
+    },
+    {
+      "error": null,
+      "id": "test1_none",
+      "predicate": "ON_TOP_OF(keys, wallet)",
+      "type": "ON_TOP_OF",
+      "expected": false,
+      "tags": [
+        "good_light"
+      ],
+      "n_images": 1,
+      "status": "checked",
+      "latency_ms": 1023.4,
+      "frame_verdicts": [
+        {
+          "frame_index": 0,
+          "satisfied": false,
+          "confidence": 0.95,
+          "evidence": "The keys are lying flat on the table surface to the right of the wallet, not resting on top of it.",
+          "correction_hint": "Please place the keys directly on top of the wallet.",
+          "objects_seen": [
+            "keys",
+            "wallet"
+          ],
+          "geometry_override": null,
+          "error": null,
+          "latency_ms": 1023.1
+        }
+      ],
+      "evidence": "The keys are lying flat on the table surface to the right of the wallet, not resting on top of it.",
+      "correction_hint": "Please place the keys directly on top of the wallet."
+    },
+    {
+      "error": null,
+      "id": "test2_ontop_pos",
+      "predicate": "ON_TOP_OF(keys, wallet)",
+      "type": "ON_TOP_OF",
+      "expected": true,
+      "tags": [
+        "good_light"
+      ],
+      "n_images": 1,
+      "status": "checked",
+      "latency_ms": 30481.6,
+      "frame_verdicts": [
+        {
+          "frame_index": 0,
+          "satisfied": true,
+          "confidence": 0.95,
+          "evidence": "The set of keys is physically resting on the top surface of the brown leather wallet, with the wallet clearly supporting the weight of the keys.",
+          "correction_hint": null,
+          "objects_seen": [
+            "keys",
+            "wallet"
+          ],
+          "geometry_override": null,
+          "error": null,
+          "latency_ms": 30481.4
+        }
+      ],
+      "evidence": "The set of keys is physically resting on the top surface of the brown leather wallet, with the wallet clearly supporting the weight of the keys.",
+      "correction_hint": null
+    },
+    {
+      "error": null,
+      "id": "test3_ontop_neg",
+      "predicate": "ON_TOP_OF(keys, wallet)",
+      "type": "ON_TOP_OF",
+      "expected": false,
+      "tags": [
+        "good_light",
+        "hard_negative"
+      ],
+      "n_images": 1,
+      "status": "checked",
+      "latency_ms": 28005.6,
+      "frame_verdicts": [
+        {
+          "frame_index": 0,
+          "satisfied": false,
+          "confidence": 0.95,
+          "evidence": "The keys are lying flat on the table surface next to the wallet, not resting on top of it.",
+          "correction_hint": "Please place the keys directly on top of the wallet.",
+          "objects_seen": [
+            "keys",
+            "wallet"
+          ],
+          "geometry_override": null,
+          "error": null,
+          "latency_ms": 28005.4
+        }
+      ],
+      "evidence": "The keys are lying flat on the table surface next to the wallet, not resting on top of it.",
+      "correction_hint": "Please place the keys directly on top of the wallet."
+    }
+  ]
+}

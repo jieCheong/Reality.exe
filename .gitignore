@@ -1,5 +1,13 @@
+# Node
 **/node_modules/
+*.log
+
+# Secrets
 .env
 .env.*
 !.env.example
-*.log
+
+# Python
+.venv/
+__pycache__/
+.pytest_cache/
