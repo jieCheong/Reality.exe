@@ -28,8 +28,25 @@ const OBJECTIVES = {
 const COLORS = Object.freeze({
   background: '#07131d', panel: '#101f2a', panelRaised: '#142733',
   border: '#28404b', text: '#eaf4f5', muted: '#8ba1a9',
-  cyan: '#66e5d1', amber: '#ffcb78', dim: '#687e87',
+  cyan: '#66e5d1', amber: '#ffcb78', dim: '#687e87', red: '#ff8a7a',
 });
+const ROUTINE_STATUS = { done: 'complete', missed: 'missed', active: 'active', pending: 'pending' };
+
+/** Routine mode (Jie's RoutineMissionEngine): its own step list and countdown replace the fixed checkpoints. */
+function normalizeRoutine(input) {
+  if (input.mode !== 'routine' || !Array.isArray(input.routineSteps)) return null;
+  if (input.routineSteps.length < 1 || input.routineSteps.length > 12) throw new Error('HUD routine needs 1 to 12 steps');
+  const steps = input.routineSteps.map((s, i) => {
+    if (!s || !Object.hasOwn(ROUTINE_STATUS, s.status)) throw new Error('Unknown routine step status');
+    const short = typeof s.short === 'string' && /^[A-Z0-9]{1,6}$/.test(s.short) ? s.short : String(i + 1);
+    return { short, status: ROUTINE_STATUS[s.status] };
+  });
+  const t = input.timeLeftSeconds;
+  const timeLeft = Number.isFinite(t) && t >= 0 ? Math.min(5999, Math.floor(t)) : null;
+  const index = Number.isInteger(input.stepIndex) ? input.stepIndex : -1;
+  return { steps, timeLeft, label: index >= 0 && index < steps.length ? `STEP ${index + 1} / ${steps.length}` : null };
+}
+export const clock = seconds => `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
 const canvas = createCanvas(WIDTH, HEIGHT);
 const ctx = canvas.getContext('2d');
 
@@ -48,7 +65,8 @@ export function normalizeGameState(input = {}) {
     if (!['pending', 'active', 'complete'].includes(status)) throw new Error('Unknown checkpoint status');
     return [name, status];
   }));
-  return { phase, objective: input.objective?.trim().slice(0, 300) || OBJECTIVES[phase], checkpoints, missionProgress };
+  return { phase, objective: input.objective?.trim().slice(0, 300) || OBJECTIVES[phase], checkpoints, missionProgress,
+    routine: normalizeRoutine(input) };
 }
 
 /** Part C renderer: optional display snapshot; no game transitions or inference. */
@@ -74,7 +92,7 @@ export function drawFace(tick, speaking = false, gameState = undefined) {
     drawBox(HUD_LAYOUT.status, true);
     ctx.fillStyle = state.phase === 'SCAN' ? COLORS.amber : COLORS.cyan;
     ctx.beginPath(); ctx.arc(44, 106, 4, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = COLORS.text; ctx.font = '700 16px Orbitron'; ctx.fillText(state.phase, 61, 112);
+    ctx.fillStyle = COLORS.text; ctx.font = '700 16px Orbitron'; ctx.fillText(state.routine?.label ?? state.phase, 61, 112);
     drawVoiceIndicator(tick, speaking);
     ctx.fillStyle = state.phase === 'SCAN' ? COLORS.amber : COLORS.cyan;
     ctx.fillRect(0, STATUS_STRIPE_Y, WIDTH, 4);
@@ -82,6 +100,10 @@ export function drawFace(tick, speaking = false, gameState = undefined) {
     drawBox(HUD_LAYOUT.objective);
     ctx.fillStyle = COLORS.cyan; ctx.fillRect(44, 190 + objectiveOffset, 3, 20);
     ctx.fillStyle = COLORS.muted; ctx.font = '700 16px Orbitron'; ctx.fillText('OBJECTIVE', 60, 207 + objectiveOffset);
+    if (state.routine?.timeLeft != null) {  // countdown, amber in the last 10 seconds
+      ctx.fillStyle = state.routine.timeLeft <= 10 ? COLORS.amber : COLORS.text; ctx.font = '700 26px Orbitron';
+      ctx.textAlign = 'right'; ctx.fillText(clock(state.routine.timeLeft), 496, 210 + objectiveOffset); ctx.textAlign = 'left';
+    }
     drawObjective(state.objective);
 
     drawBox(HUD_LAYOUT.progress);
@@ -94,18 +116,21 @@ export function drawFace(tick, speaking = false, gameState = undefined) {
     drawBox(HUD_LAYOUT.checkpoints);
     ctx.strokeStyle = COLORS.border; ctx.lineWidth = 3;
     ctx.beginPath(); ctx.moveTo(62, 652 + checkpointOffset); ctx.lineTo(62, 874 + checkpointOffset); ctx.stroke();
-    PHASES.forEach((label, i) => {
-      const x = 62, y = 652 + checkpointOffset + i * (222 / (PHASES.length - 1)), status = state.checkpoints[label];
-      const color = status === 'active' ? COLORS.amber : status === 'complete' ? COLORS.cyan : COLORS.dim;
+    const rail = state.routine ? state.routine.steps.map(s => [s.short, s.status]) : PHASES.map(p => [p, state.checkpoints[p]]);
+    const tight = rail.length > 6, gap = rail.length > 1 ? 222 / (rail.length - 1) : 0;
+    rail.forEach(([label, status], i) => {
+      const x = 62, y = 652 + checkpointOffset + i * gap;
+      const color = status === 'active' ? COLORS.amber : status === 'complete' ? COLORS.cyan : status === 'missed' ? COLORS.red : COLORS.dim;
       ctx.fillStyle = status === 'pending' ? COLORS.panelRaised : color; ctx.strokeStyle = color; ctx.lineWidth = 2;
-      ctx.beginPath(); ctx.arc(x, y, status === 'active' ? 9 : 7, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      ctx.beginPath(); ctx.arc(x, y, status === 'active' ? (tight ? 8 : 9) : (tight ? 6 : 7), 0, Math.PI * 2); ctx.fill(); ctx.stroke();
       if (status === 'complete') {
         ctx.strokeStyle = COLORS.background; ctx.lineWidth = 2;
         ctx.beginPath(); ctx.moveTo(x - 4, y); ctx.lineTo(x - 1, y + 3); ctx.lineTo(x + 4, y - 3); ctx.stroke();
       }
       ctx.fillStyle = status === 'pending' ? COLORS.muted : COLORS.text;
-      ctx.font = '700 18px Orbitron'; ctx.fillText(label, 88, y + 6);
-      ctx.fillStyle = color; ctx.font = '700 12px Orbitron'; ctx.textAlign = 'right'; ctx.fillText(status.toUpperCase(), 496, y + 5); ctx.textAlign = 'left';
+      ctx.font = `700 ${tight ? 15 : 18}px Orbitron`; ctx.fillText(label, 88, y + (tight ? 5 : 6));
+      ctx.fillStyle = color; ctx.font = `700 ${tight ? 11 : 12}px Orbitron`; ctx.textAlign = 'right';
+      ctx.fillText((status === 'complete' && state.routine ? 'done' : status).toUpperCase(), 496, y + 4); ctx.textAlign = 'left';
     });
     return new Uint8Array(ctx.getImageData(0, 0, WIDTH, HEIGHT).data);
   } finally { ctx.restore(); }

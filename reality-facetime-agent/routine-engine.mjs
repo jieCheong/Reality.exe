@@ -1,6 +1,6 @@
 import { EventEmitter } from 'node:events';
 import { isRecord, verdictRound } from './routine-evidence.mjs';
-import { validateRoutine, assertRoutineCapabilities } from './routine-contract.mjs';
+import { validateRoutine, assertRoutineCapabilities, scansFirst } from './routine-contract.mjs';
 
 const clean = text => typeof text === 'string' ? text.replace(/[\x00-\x1f]/g, ' ').slice(0, 500) : '';
 const validObject = o => o && typeof o.name === 'string' && /^[a-z0-9][a-z0-9 -]{0,47}$/.test(o.name) &&
@@ -16,14 +16,19 @@ export class RoutineMissionEngine extends EventEmitter {
     this.phase = 'SCAN'; this.revision = 0; this.escaped = false; this.catalog = []; this.stepIndex = -1;
     this.results = []; this.misses = 0; this.usedFrames = new Set(); this.missing = [...this.routine.objects];
     this.clockStarted = null; this.elapsedMs = 0; this.penaltyMs = 0; this.resetEvidence();
+    // More than 3 objects: no opening scan; start at step 1 and send each step's own objects.
+    this.scanFirst = scansFirst(this.routine);
+    if (!this.scanFirst) { this.stepIndex = 0; this.setupStep(); }
   }
   resetEvidence() { this.streak = 0; this.inventoryCandidate = ''; }
   instruction() {
     if (this.escaped) return `Routine finished. You completed ${this.results.filter(r => r.status === 'done').length} of ${this.routine.steps.length} steps. Thank you for trying with ORBIT.`;
-    if (this.phase === 'SCAN') return `I am ORBIT, your routine guide. A parent should be with you. I will use the camera to check visible steps and keep a photo of each verified step for your parent. Show me ${this.missing.join(', ') || this.routine.objects.join(', ')} and hold the camera still.`;
+    const intro = 'I am ORBIT, your routine guide. A parent should be with you. I will use the camera to check visible steps and keep a photo of each verified step for your parent.';
+    if (this.phase === 'SCAN') return `${intro} Show me ${this.missing.join(', ') || this.routine.objects.join(', ')} and hold the camera still.`;
     const step = this.routine.steps[this.stepIndex];
     const orientation = ['LEFT_OF','ORDER_LEFT_TO_RIGHT'].includes(step.check) ? ' Left and right mean the edges of the camera picture.' : '';
-    return `Step ${this.stepIndex + 1}: ${step.label}. You have ${this.timeLeft() ?? this.budgetSeconds} seconds.${orientation}`;
+    const opening = !this.scanFirst && this.revision === 0 ? `${intro} ${this.routine.name} has ${this.routine.steps.length} steps. ` : '';
+    return `${opening}Step ${this.stepIndex + 1}: ${step.label}. You have ${this.timeLeft() ?? this.budgetSeconds} seconds.${orientation}`;
   }
   activeElapsed(now = this.now()) { return this.elapsedMs + (this.clockStarted === null ? 0 : Math.max(0, now - this.clockStarted)); }
   pauseClock(now = this.now()) { this.elapsedMs = this.activeElapsed(now); this.clockStarted = null; }
@@ -34,27 +39,31 @@ export class RoutineMissionEngine extends EventEmitter {
       missionProgress: this.results.length / this.routine.steps.length, mode: 'routine', routineId: this.routine.id,
       routineName: this.routine.name, theme: this.routine.theme, stepIndex: this.stepIndex,
       timeLeftSeconds: this.timeLeft(), budgetSeconds: this.budgetSeconds ?? null,
-      routineSteps: this.routine.steps.map((step, i) => ({ label: step.label,
+      routineSteps: this.routine.steps.map((step, i) => ({ label: step.label, short: step.short ?? `${i + 1}`,
         status: this.results[i]?.status || (i === this.stepIndex && !this.escaped ? 'active' : 'pending') })) };
   }
   report() { return { routineId: this.routine.id, routineName: this.routine.name, complete: this.escaped,
     steps: structuredClone(this.results) }; }
   request() {
     const step = this.routine.steps[this.stepIndex];
-    return { revision: this.revision, operation: this.phase === 'SCAN' ? 'inventory' : 'verify', catalog: this.catalog,
+    // Without an opening scan, each check carries only its step's objects (SHOW needs none).
+    const catalog = this.scanFirst || !step ? this.catalog
+      : step.check === 'SHOW' ? [] : step.objects.map(name => ({ name, description: name }));
+    return { revision: this.revision, operation: this.phase === 'SCAN' ? 'inventory' : 'verify', catalog,
       ...(step && !this.escaped ? { predicate: `${step.check}(${step.objects.join(', ')})` } : {}) };
   }
   feedback(hint) { this.resetEvidence(); this.emit('message', clean(hint) || 'I cannot check that yet. Keep the objects visible and hold still.'); }
   enterStep(prefix = '') {
     if (this.stepIndex >= this.routine.steps.length) {
       this.escaped = true; this.phase = 'PORTAL'; this.clockStarted = null;
-    } else {
-      this.phase = 'POWER'; const t = this.routine.timer;
-      // minSeconds is the hard floor after both index decrease and carried misses.
-      this.budgetSeconds = Math.max(t.minSeconds, t.startSeconds - this.stepIndex * t.stepDecreaseSeconds - this.misses * t.missPenaltySeconds);
-      this.clockStarted = null; this.elapsedMs = 0; this.penaltyMs = 0;
-    }
+    } else this.setupStep();
     this.revision++; this.resetEvidence(); this.emit('state', this.hudState()); this.emit('message', `${prefix}${this.instruction()}`);
+  }
+  setupStep() {
+    this.phase = 'POWER'; const t = this.routine.timer;
+    // minSeconds is the hard floor after both index decrease and carried misses.
+    this.budgetSeconds = Math.max(t.minSeconds, t.startSeconds - this.stepIndex * t.stepDecreaseSeconds - this.misses * t.missPenaltySeconds);
+    this.clockStarted = null; this.elapsedMs = 0; this.penaltyMs = 0;
   }
   finishStep(status, result = {}, evidenceFrame = null) {
     this.pauseClock();

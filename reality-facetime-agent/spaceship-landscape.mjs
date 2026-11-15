@@ -8,12 +8,18 @@ export const LANDSCAPE_LAYOUT = Object.freeze({
 });
 export function landscapeObjectiveLines(ctx, text) {
   ctx.save(); ctx.font = '700 23px Orbitron';
+  // Wrap between words; a single word wider than the line still breaks by character.
   const lines=[]; let line='';
-  for(const char of text.replace(/\s+/g,' ')) {
-    if(ctx.measureText(line+char).width>550) {lines.push(line.trim());line=char;}
-    else line+=char;
+  for(const word of text.replace(/\s+/g,' ').trim().split(' ')) {
+    const candidate=line?`${line} ${word}`:word;
+    if(ctx.measureText(candidate).width<=550) {line=candidate;continue;}
+    if(line) lines.push(line);
+    line='';
+    for(const char of word) {
+      if(ctx.measureText(line+char).width>550) {lines.push(line);line=char;} else line+=char;
+    }
   }
-  if(line) lines.push(line.trim());
+  if(line) lines.push(line);
   if(lines.length>2) {
     let last=lines[1];
     while(ctx.measureText(last+'…').width>550) last=last.slice(0,-1);
@@ -31,7 +37,7 @@ export function drawLandscape(ctx, tick, speaking, state, colors, phases) {
   panel(LANDSCAPE_LAYOUT.status,true);
   ctx.fillStyle=state.phase==='SCAN'?colors.amber:colors.cyan;
   ctx.beginPath();ctx.arc(431,27,3,0,Math.PI*2);ctx.fill();
-  ctx.fillStyle=colors.text;ctx.font='700 12px Orbitron';ctx.fillText(state.phase,443,31);
+  ctx.fillStyle=colors.text;ctx.font='700 12px Orbitron';ctx.fillText(state.routine?.label??state.phase,443,31);
   for(let i=0;i<5;i++) {
     const height=speaking?5+((tick+i*3)%12):3;
     ctx.fillStyle=speaking?colors.cyan:colors.muted;ctx.fillRect(566+i*7,27-height/2,3,height);
@@ -40,6 +46,10 @@ export function drawLandscape(ctx, tick, speaking, state, colors, phases) {
   panel(LANDSCAPE_LAYOUT.objective);
   ctx.fillStyle=colors.cyan;ctx.fillRect(43,91,3,17);
   ctx.fillStyle=colors.muted;ctx.font='700 13px Orbitron';ctx.fillText('OBJECTIVE',57,105);
+  if(state.routine?.timeLeft!=null) { // countdown, amber in the last 10 seconds
+    const t=state.routine.timeLeft;ctx.fillStyle=t<=10?colors.amber:colors.text;ctx.font='700 20px Orbitron';ctx.textAlign='right';
+    ctx.fillText(`${Math.floor(t/60)}:${String(t%60).padStart(2,'0')}`,600,108);ctx.textAlign='left';
+  }
   ctx.fillStyle=colors.text;ctx.font='700 23px Orbitron';
   for(const line of landscapeObjectiveLines(ctx,state.objective)) ctx.fillText(line.text,line.x,line.baseline);
   panel(LANDSCAPE_LAYOUT.progress);
@@ -50,9 +60,10 @@ export function drawLandscape(ctx, tick, speaking, state, colors, phases) {
   ctx.fillStyle=colors.muted;ctx.font='700 11px Orbitron';ctx.fillText('CHECKPOINTS',40,274);
   panel(LANDSCAPE_LAYOUT.checkpoints);
   ctx.strokeStyle=colors.border;ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(76,303);ctx.lineTo(564,303);ctx.stroke();
-  phases.forEach((label,i)=>{
-    const x=76+i*(488/(phases.length-1)),status=state.checkpoints[label];
-    const color=status==='active'?colors.amber:status==='complete'?colors.cyan:colors.dim;
+  const rail=state.routine?state.routine.steps.map(s=>[s.short,s.status]):phases.map(p=>[p,state.checkpoints[p]]);
+  rail.forEach(([label,status],i)=>{
+    const x=rail.length>1?76+i*(488/(rail.length-1)):320;
+    const color=status==='active'?colors.amber:status==='complete'?colors.cyan:status==='missed'?(colors.red??colors.amber):colors.dim;
     ctx.fillStyle=status==='pending'?colors.panelRaised:color;ctx.strokeStyle=color;ctx.lineWidth=2;
     ctx.beginPath();ctx.arc(x,303,status==='active'?7:5,0,Math.PI*2);ctx.fill();ctx.stroke();
     if(status==='complete') {

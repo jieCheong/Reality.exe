@@ -38,7 +38,8 @@ test('parent routine file validates, freezes input, and leaves fixed missions as
   }
   const hidden=structuredClone(fixture);hidden.steps[0].check='HIDDEN';
   assert.equal(validateRoutine(hidden).steps[0].check,'HIDDEN');assert.throws(()=>assertRoutineCapabilities(validateRoutine(hidden)),/HIDDEN/);
-  const large=structuredClone(fixture);large.objects.push('lunchbox');assert.throws(()=>assertRoutineCapabilities(validateRoutine(large)),/three/);
+  // More than 3 objects: accepted; the engine skips the opening scan and sends each step's own objects.
+  const large=structuredClone(fixture);large.objects.push('lunchbox');assert.doesNotThrow(()=>assertRoutineCapabilities(validateRoutine(large)));
 });
 
 test('scan waits for every named object and two matching inventories, then verifies only scanned names',()=>{
@@ -179,4 +180,50 @@ test('runtime report uses the positive verdict frame_index even when verdicts ar
     assert.equal(reports.length,1);assert.equal(reports[0].steps[0].evidenceFrame.id,expectedId);
     assert.equal(reports[0].steps[0].evidenceFrame.dataUrl,`data:image/jpeg;base64,${Buffer.from(`synthetic-${sequence}`).toString('base64')}`);
   } finally {await game.close();}
+});
+
+const kids = JSON.parse(await readFile(new URL('./examples/routines/kids-morning.json', import.meta.url), 'utf8'));
+
+test('kids morning routine: 9 steps, no opening scan, each check carries only its own objects', async () => {
+  const r = await loadRoutine(new URL('./examples/routines/kids-morning.json', import.meta.url));
+  assert.equal(r.steps.length, 9); assert.equal(r.objects.length, 9);
+  let now = 1000; const e = new RoutineMissionEngine(r, { now: () => now });
+  assert.equal(e.phase, 'POWER'); assert.equal(e.stepIndex, 0);
+  assert.match(e.instruction(), /Morning Launch has 9 steps\. Step 1: Brush your teeth/);
+  const shorts = [];
+  while (!e.escaped) {
+    const req = e.request(), step = r.steps[e.stepIndex];
+    assert.equal(req.operation, 'verify');
+    assert.ok(req.catalog.length <= 3, 'the bridge accepts at most 3 objects per check');
+    if (step.check === 'SHOW') assert.deepEqual(req.catalog, []);
+    else assert.deepEqual(req.catalog.map(o => o.name), [...step.objects]);
+    shorts.push(e.hudState().routineSteps[e.stepIndex].short);
+    e.resumeClock(); now += 1000;
+    apply(e, verdict(e)); assert.equal(apply(e, verdict(e)), true);
+  }
+  assert.deepEqual(shorts, ['TEETH', 'HAIR', 'PJS', 'SOCKS', 'WATER', 'FOOD', 'BAG', 'LUNCH', 'SHOES']);
+  assert.equal(e.report().steps.filter(s => s.status === 'done').length, 9);
+});
+
+test('kids routine timer: per-step decrease, floor, and a missed step carries its penalty forward', () => {
+  let now = 0; const e = new RoutineMissionEngine(kids, { now: () => now });
+  assert.equal(e.budgetSeconds, 90);
+  e.resumeClock(); now += 91_000; e.tick();                       // step 1 times out
+  assert.equal(e.report().steps[0].status, 'missed'); assert.equal(e.stepIndex, 1);
+  assert.equal(e.budgetSeconds, 90 - 5 - 15);                      // step 2: decrease + one carried miss
+  for (let i = 1; i < 8; i++) { e.resumeClock(); apply(e, verdict(e)); apply(e, verdict(e)); }
+  assert.equal(e.stepIndex, 8); assert.equal(e.budgetSeconds, 45, 'never below minSeconds');
+});
+
+test('SHOW: accepted by the contract, rejected when the description is not something the bridge can take', () => {
+  for (const bad of ['Toothbrush!', 'a very long description of a toothbrush that goes on', '1toothbrush']) {
+    const r = structuredClone(kids); r.objects[0] = bad; r.steps[0].objects = [bad];
+    assert.throws(() => assertRoutineCapabilities(validateRoutine(r)));
+  }
+  for (const bad of ['teeth', 'TOOTHBRUSH', 'AB1']) {
+    const r = structuredClone(kids); r.steps[0].short = bad;
+    assert.throws(() => validateRoutine(r), /short/);
+  }
+  const dup = structuredClone(kids); dup.steps[1].short = 'TEETH';
+  assert.throws(() => validateRoutine(dup), /short/);
 });

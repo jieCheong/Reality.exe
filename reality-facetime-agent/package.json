@@ -18,6 +18,7 @@
     "test:game:e2e": "node game.e2e.test.mjs",
     "test:routine": "node routine.test.mjs && node routine-reliability.test.mjs",
     "test:routine:e2e": "node routine.e2e.test.mjs",
+    "test:routine:kids:e2e": "node kids-routine.e2e.test.mjs",
     "demo:routine": "node routine-demo.mjs"
   },
   "dependencies": {

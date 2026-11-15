@@ -111,3 +111,18 @@ test('publisher rejects a mismatched landscape source before publishing', async 
     source: { width: 640, height: 360 },
   }), /portrait/);
 });
+
+test('routine mode: step rail, missed status and countdown come from the engine state', () => {
+  const steps = ['TEETH', 'HAIR', 'PJS'].map((short, i) => ({ label: short, short, status: ['done', 'missed', 'active'][i] }));
+  const base = { phase: 'POWER', objective: 'Fold your pajamas', mode: 'routine', stepIndex: 2, timeLeftSeconds: 40, routineSteps: steps };
+  const s = normalizeGameState(base);
+  assert.deepEqual(s.routine.steps.map(x => x.status), ['complete', 'missed', 'active']);
+  assert.equal(s.routine.label, 'STEP 3 / 3'); assert.equal(s.routine.timeLeft, 40);
+  const original = hash(drawFace(0, false, base));
+  assert.notEqual(hash(drawFace(0, false, { ...base, timeLeftSeconds: 9 })), original, 'countdown is drawn');
+  assert.notEqual(hash(drawFace(0, false, { ...base, routineSteps: steps.map(x => ({ ...x, status: 'done' })) })), original);
+  assert.notEqual(hash(drawFace(0, false, { phase: 'POWER', objective: 'Fold your pajamas' })), original, 'fixed missions unchanged');
+  assert.throws(() => normalizeGameState({ ...base, routineSteps: [{ status: 'exploded' }] }), /status/);
+  assert.throws(() => normalizeGameState({ ...base, routineSteps: [] }), /1 to 12/);
+  assert.equal(normalizeGameState({ ...base, routineSteps: [{ status: 'pending', short: 'bad label!' }] }).routine.steps[0].short, '1');
+});

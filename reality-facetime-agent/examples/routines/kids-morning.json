@@ -1,0 +1,25 @@
+{
+  "id": "kids-morning",
+  "name": "Morning Launch",
+  "theme": "space",
+  "timer": {
+    "startSeconds": 90,
+    "stepDecreaseSeconds": 5,
+    "minSeconds": 45,
+    "fakeDonePenaltySeconds": 5,
+    "missPenaltySeconds": 15
+  },
+  "objects": ["toothbrush", "hairbrush or comb", "folded pajamas", "socks", "cup of water",
+              "breakfast bowl or plate", "backpack", "lunchbox", "shoes"],
+  "steps": [
+    { "short": "TEETH", "label": "Brush your teeth, then show me your toothbrush", "check": "SHOW", "objects": ["toothbrush"] },
+    { "short": "HAIR", "label": "Brush your hair, then show me your hairbrush or comb", "check": "SHOW", "objects": ["hairbrush or comb"] },
+    { "short": "PJS", "label": "Fold your pajamas and hold them up", "check": "SHOW", "objects": ["folded pajamas"] },
+    { "short": "SOCKS", "label": "Put on your socks and show them to the camera", "check": "SHOW", "objects": ["socks"] },
+    { "short": "WATER", "label": "Get a cup of water and show it to me", "check": "SHOW", "objects": ["cup of water"] },
+    { "short": "FOOD", "label": "Breakfast time: show me your bowl or plate", "check": "SHOW", "objects": ["breakfast bowl or plate"] },
+    { "short": "BAG", "label": "Grab your backpack and show it to the camera", "check": "SHOW", "objects": ["backpack"] },
+    { "short": "LUNCH", "label": "Put your lunchbox on top of your backpack", "check": "ON_TOP_OF", "objects": ["lunchbox", "backpack"] },
+    { "short": "SHOES", "label": "Hold your shoes up to the camera", "check": "HELD_UP", "objects": ["shoes"] }
+  ]
+}

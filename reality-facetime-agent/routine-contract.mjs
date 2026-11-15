@@ -1,6 +1,7 @@
 import { readFile } from 'node:fs/promises';
 
-const ARITY = { HELD_UP: [1, 1], COVERED: [1, 1], HIDDEN: [1, 1], ON_TOP_OF: [2, 2],
+// SHOW(x): any item matching the short description x is shown (e.g. "folded pajamas"); added for kid routines.
+const ARITY = { SHOW: [1, 1], HELD_UP: [1, 1], COVERED: [1, 1], HIDDEN: [1, 1], ON_TOP_OF: [2, 2],
   LEFT_OF: [2, 2], ORDER_LEFT_TO_RIGHT: [2, 3] };
 const noun = value => typeof value === 'string' && /^[a-z0-9][a-z0-9 -]{0,47}$/.test(value);
 const text = (value, max) => typeof value === 'string' && value.trim().length > 0 && value.length <= max && !/[\x00-\x1f]/.test(value);
@@ -18,13 +19,19 @@ export function validateRoutine(input) {
   if (!Array.isArray(input.objects) || !input.objects.length || input.objects.length > 32 ||
       !input.objects.every(noun) || new Set(input.objects).size !== input.objects.length) throw new Error('Invalid routine objects');
   if (!Array.isArray(input.steps) || !input.steps.length || input.steps.length > 100) throw new Error('Invalid routine steps');
+  const shorts = new Set();
   const steps = input.steps.map(step => {
-    if (!keys(step, ['label','check','objects']) || !text(step.label, 180) || !Object.hasOwn(ARITY, step.check) ||
+    if (!keys(step, ['label','check','objects','short']) || !text(step.label, 180) || !Object.hasOwn(ARITY, step.check) ||
         !Array.isArray(step.objects)) throw new Error('Invalid routine step');
+    // Optional HUD checkpoint label: A-Z, up to 6 letters, unique.
+    if (step.short !== undefined && (typeof step.short !== 'string' || !/^[A-Z]{1,6}$/.test(step.short) || shorts.has(step.short)))
+      throw new Error('Invalid routine step short label');
+    if (step.short !== undefined) shorts.add(step.short);
     const [min,max] = ARITY[step.check];
     if (step.objects.length < min || step.objects.length > max || new Set(step.objects).size !== step.objects.length ||
         !step.objects.every(name => input.objects.includes(name))) throw new Error('Step names unknown objects or has wrong arity');
-    return Object.freeze({ label: step.label.trim(), check: step.check, objects: Object.freeze([...step.objects]) });
+    return Object.freeze({ label: step.label.trim(), check: step.check, objects: Object.freeze([...step.objects]),
+      ...(step.short !== undefined ? { short: step.short } : {}) });
   });
   return Object.freeze({ id: input.id.trim(), name: input.name.trim(), theme: input.theme.trim(),
     timer: Object.freeze({ ...input.timer }), objects: Object.freeze([...input.objects]), steps: Object.freeze(steps) });
@@ -32,10 +39,17 @@ export function validateRoutine(input) {
 
 /** Explicit compatibility gate for the installed Part B, not a fake HIDDEN verdict. */
 export function assertRoutineCapabilities(routine) {
-  if (routine.objects.length > 3) throw new Error('Installed Part B supports at most three routine objects; coordinate larger inventories with Shivam');
+  // Up to 3 objects: one opening scan names them all. More than 3: no scan; each step sends only its own
+  // objects (the bridge accepts at most 3 per check, and every check names 1-3).
   if (routine.steps.some(step => step.check === 'HIDDEN')) throw new Error('HIDDEN is in the shared contract but not implemented by installed Part B');
+  // The vision bridge accepts a SHOW description of lowercase letters, spaces and hyphens, up to 31 characters.
+  if (routine.steps.some(step => step.check === 'SHOW' && !/^[a-z][a-z -]{0,30}$/.test(step.objects[0])))
+    throw new Error('SHOW objects must be short lowercase descriptions (letters, spaces, hyphens; up to 31 characters)');
   return routine;
 }
+
+/** True when the routine starts with one scan of all its objects (Jie's original flow). */
+export const scansFirst = routine => routine.objects.length <= 3;
 
 export async function loadRoutine(file) {
   const bytes = await readFile(file);
