@@ -32,3 +32,21 @@ test('Juan geometry renders and publishes natively with dynamic state, no paddin
   const result=spawnSync(process.execPath,['--input-type=module','-e',script],{env:{...process.env,HUD_VIDEO_PROFILE:'juan-original'},encoding:'utf8',timeout:20000});
   assert.equal(result.status,0,result.stderr);
 });
+test('rotated profiles draw the portrait HUD and publish it as a quarter-turned 960x540 frame', () => {
+  assert.deepEqual(resolveHudVideoProfile('rotated-ccw'), { name: 'rotated-ccw', width: 960, height: 540, fps: 15, rotate: 'ccw', layoutWidth: 540, layoutHeight: 960 });
+  const script = (profile) => `
+    import assert from 'node:assert/strict';
+    import { drawFace, WIDTH, HEIGHT } from './spaceship-face.mjs';
+    assert.equal(WIDTH, 960); assert.equal(HEIGHT, 540);
+    const px = drawFace(0, false, { phase: 'POWER' }); assert.equal(px.length, 960 * 540 * 4);
+    // The portrait cyan status stripe (y=144..148 across the width) becomes a vertical stripe.
+    const at = (x, y) => px.subarray((y * 960 + x) * 4, (y * 960 + x) * 4 + 3);
+    const cyan = ([r, g, b]) => g > 180 && b > 160 && r < 140;
+    const x = ${profile === 'ccw' ? 146 : 960 - 1 - 146};
+    for (const y of [10, 270, 530]) assert.ok(cyan(at(x, y)), 'stripe at ' + y);
+  `;
+  for (const profile of ['ccw', 'cw']) {
+    const result = spawnSync(process.execPath, ['--input-type=module', '-e', script(profile)], { env: { ...process.env, HUD_VIDEO_PROFILE: `rotated-${profile}` }, encoding: 'utf8', timeout: 20000 });
+    assert.equal(result.status, 0, result.stderr);
+  }
+});

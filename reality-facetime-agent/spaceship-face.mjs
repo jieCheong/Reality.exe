@@ -6,8 +6,10 @@ import { fileURLToPath } from 'node:url';
 import { LANDSCAPE_LAYOUT, drawLandscape, landscapeObjectiveLines } from './spaceship-landscape.mjs';
 import { HUD_VIDEO_PROFILE } from './hud-video-profile.mjs';
 import { drawHearts, drawMonster, normalizeLives, normalizeMonster } from './monster.mjs';
+// WIDTH/HEIGHT: the published frame. LW/LH: the layout the HUD is drawn in (differs only for rotated profiles).
 export const WIDTH = HUD_VIDEO_PROFILE.width, HEIGHT = HUD_VIDEO_PROFILE.height, FPS = HUD_VIDEO_PROFILE.fps;
-const extra = HEIGHT - 960, objectiveOffset = extra / 3, progressOffset = extra * 2 / 3, checkpointOffset = extra;
+const LW = HUD_VIDEO_PROFILE.layoutWidth ?? WIDTH, LH = HUD_VIDEO_PROFILE.layoutHeight ?? HEIGHT;
+const extra = LH - 960, objectiveOffset = extra / 3, progressOffset = extra * 2 / 3, checkpointOffset = extra;
 const landscape = HUD_VIDEO_PROFILE.name === 'landscape-test';
 export const STATUS_STRIPE_Y = landscape ? 51 : 144;
 export const HUD_LAYOUT = landscape ? LANDSCAPE_LAYOUT : Object.freeze({
@@ -50,7 +52,18 @@ function normalizeRoutine(input) {
     lives: normalizeLives(input), monster: normalizeMonster(input) };
 }
 export const clock = seconds => `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
-const canvas = createCanvas(WIDTH, HEIGHT);
+const canvas = createCanvas(LW, LH);
+const rotated = HUD_VIDEO_PROFILE.rotate ? createCanvas(WIDTH, HEIGHT) : null;
+/** Read the drawn HUD as RGBA, turned a quarter turn first for rotated profiles. */
+function pixelsOut() {
+  if (!rotated) return new Uint8Array(ctx.getImageData(0, 0, LW, LH).data);
+  const out = rotated.getContext('2d'); out.save();
+  // ccw: the portrait top ends up on the left edge; cw: on the right edge.
+  if (HUD_VIDEO_PROFILE.rotate === 'ccw') { out.translate(0, HEIGHT); out.rotate(-Math.PI / 2); }
+  else { out.translate(WIDTH, 0); out.rotate(Math.PI / 2); }
+  out.drawImage(canvas, 0, 0); out.restore();
+  return new Uint8Array(out.getImageData(0, 0, WIDTH, HEIGHT).data);
+}
 const ctx = canvas.getContext('2d');
 
 /** @param {import('./part-a-types.js').GameHudState} [input] */
@@ -78,17 +91,17 @@ export function drawFace(tick, speaking = false, gameState = undefined) {
   ctx.save();
   try {
     ctx.fillStyle = COLORS.background;
-    ctx.fillRect(0, 0, WIDTH, HEIGHT);
-    const glow = ctx.createRadialGradient(WIDTH / 2, HEIGHT / 2, 20, WIDTH / 2, HEIGHT / 2, WIDTH);
+    ctx.fillRect(0, 0, LW, LH);
+    const glow = ctx.createRadialGradient(LW / 2, LH / 2, 20, LW / 2, LH / 2, LW);
     glow.addColorStop(0, '#102632'); glow.addColorStop(1, COLORS.background);
-    ctx.fillStyle = glow; ctx.fillRect(0, 0, WIDTH, HEIGHT);
+    ctx.fillStyle = glow; ctx.fillRect(0, 0, LW, LH);
     ctx.strokeStyle = '#18303a'; ctx.lineWidth = 1; ctx.globalAlpha = 0.55;
-    for (let x = 18; x < WIDTH; x += 36) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, HEIGHT); ctx.stroke(); }
-    for (let y = 18; y < HEIGHT; y += 36) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(WIDTH, y); ctx.stroke(); }
+    for (let x = 18; x < LW; x += 36) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, LH); ctx.stroke(); }
+    for (let y = 18; y < LH; y += 36) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(LW, y); ctx.stroke(); }
     ctx.globalAlpha = 1;
     if (landscape) {
       drawLandscape(ctx, tick, speaking, state, COLORS, PHASES);
-      return new Uint8Array(ctx.getImageData(0, 0, WIDTH, HEIGHT).data);
+      return pixelsOut();
     }
 
     ctx.fillStyle = COLORS.cyan; ctx.font = '700 28px Orbitron'; ctx.fillText('REALITY.EXE', 24, 55);
@@ -99,7 +112,7 @@ export function drawFace(tick, speaking = false, gameState = undefined) {
     ctx.fillStyle = COLORS.text; ctx.font = '700 16px Orbitron'; ctx.fillText(state.routine?.label ?? state.phase, 61, 112);
     drawVoiceIndicator(tick, speaking);
     ctx.fillStyle = state.phase === 'SCAN' ? COLORS.amber : COLORS.cyan;
-    ctx.fillRect(0, STATUS_STRIPE_Y, WIDTH, 4);
+    ctx.fillRect(0, STATUS_STRIPE_Y, LW, 4);
 
     drawBox(HUD_LAYOUT.objective);
     ctx.fillStyle = COLORS.cyan; ctx.fillRect(44, 190 + objectiveOffset, 3, 20);
@@ -139,7 +152,7 @@ export function drawFace(tick, speaking = false, gameState = undefined) {
     // The time monster lives in the open middle of the checkpoint panel and grows as time runs out.
     const monster = state.routine?.monster;
     if (monster?.visible) drawMonster(ctx, 300, 780 + checkpointOffset, 45 + 70 * monster.closeness, monster.closeness, tick);
-    return new Uint8Array(ctx.getImageData(0, 0, WIDTH, HEIGHT).data);
+    return pixelsOut();
   } finally { ctx.restore(); }
 }
 
