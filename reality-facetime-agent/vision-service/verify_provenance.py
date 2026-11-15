@@ -5,7 +5,10 @@ from pathlib import Path
 
 
 def digest(path):
-    return hashlib.sha256(path.read_bytes()).hexdigest() if path.is_file() else None
+    if not path.is_file():
+        return None
+    content = path.read_bytes().replace(b'\r\n', b'\n')
+    return hashlib.sha256(content).hexdigest()
 
 
 def verify(root):
@@ -26,7 +29,7 @@ def verify(root):
     for name, sha in expected.items():
         if digest(root / 'vendor' / name) != sha:
             errors.append(f'Installed file mismatch: {name}')
-    actual = {str(path.relative_to(root / 'vendor')) for path in (root / 'vendor').rglob('*.py')}
+    actual = {path.relative_to(root / 'vendor').as_posix() for path in (root / 'vendor').rglob('*.py')}
     for name in sorted(actual - expected.keys()):
         errors.append(f'Undeclared Python file: {name}')
     return errors
