@@ -4,6 +4,7 @@ import { test } from 'node:test';
 import { spawn } from 'node:child_process';
 import { EventEmitter, once } from 'node:events';
 import { createInterface } from 'node:readline';
+import { loadRoutine } from './routine-contract.mjs';
 import { GameRuntime } from './game-runtime.mjs';
 import { VisionClient } from './vision-client.mjs';
 import { SpeechCoordinator } from './speech-coordinator.mjs';
@@ -18,13 +19,7 @@ test('MOCK routine end-to-end: scan → fail/penalty → all parent steps → ev
   try {
     const ready=await Promise.race([once(lines,'line').then(([line])=>JSON.parse(line)),
       exited.then(()=>{throw Error('Mock vision service exited before startup');}),sleep(5000).then(()=>{throw Error('Mock startup timeout');})]);
-    const routine={id:'mock-routine',name:'MOCK ONLY routine',theme:'space',
-      timer:{startSeconds:90,stepDecreaseSeconds:10,minSeconds:30,fakeDonePenaltySeconds:5,missPenaltySeconds:15},
-      objects:['bottle','notebook','pen'],steps:[
-        {label:'Show the pen',check:'HELD_UP',objects:['pen']},
-        {label:'Bottle on notebook',check:'ON_TOP_OF',objects:['bottle','notebook']},
-        {label:'Notebook left of pen',check:'LEFT_OF',objects:['notebook','pen']},
-      ]};
+    const routine=await loadRoutine(new URL('./examples/routines/mock-desk.json',import.meta.url));
     const camera=new EventEmitter();camera.isCurrent=f=>f.generation===1;
     const vision=new VisionClient({url:`http://127.0.0.1:${ready.port}`,allowMock:true});
     const analyze=vision.analyze.bind(vision);let scenario,rounds=0;

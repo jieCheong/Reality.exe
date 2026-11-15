@@ -121,6 +121,7 @@ test('runtime timer progresses during pending vision and rejects the late result
 
 test('runtime starts countdown only after successful narration and keeps it paused after speech failure',async()=>{
   let now=1000,rejectSpeech=false;const camera=new EventEmitter();camera.isCurrent=()=>true;
+  camera.getLatestFrame=()=>({generation:1,capturedAtMs:now});
   const game=new GameRuntime({callerVideo:camera,hud:{setState(){}},say:async()=>{if(rejectSpeech)throw Error('offline');},
     vision:{allowMock:true},routine:fixture,now:()=>now});
   try {
@@ -135,7 +136,7 @@ test('runtime starts countdown only after successful narration and keeps it paus
 test('routine session handles stop/resume/done without theme placeholders or speech-only wins',async()=>{
   let starts=0,pauses=0,ticks=0,announcements=0;
   const speech=new SpeechCoordinator({speak:async()=>{},interrupt:async()=>{}});
-  const game={start(){starts++;},pause(){pauses++;},tick(){ticks++;},announce:async()=>{announcements++;},engine:{instruction:()=> 'instruction'},close:async()=>{}};
+  const game={start(){starts++;},pause(){pauses++;},tick(){ticks++;},resume:async()=>{announcements++;},announce:async()=>{announcements++;},engine:{instruction:()=> 'instruction'},close:async()=>{}};
   const session=new RoutineSession({game,speech});session.start();session.start();
   for(const [i,text] of ['stop','resume','done','I finished everything'].entries())await session.handleTranscript({isFinal:true,itemId:String(i),transcript:text});
   assert.equal(starts,1);assert.equal(pauses,1);assert.equal(announcements,1);assert.equal(ticks,1);

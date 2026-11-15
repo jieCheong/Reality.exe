@@ -72,7 +72,10 @@ request is pending; an expired step invalidates that in-flight evidence.
 
 Countdown starts after ORBIT successfully finishes the instruction. It pauses for
 ORBIT narration, explicit stop/wait/pause, camera unavailability, and voice failure.
-Resume/repeat/help/hint replays the authoritative instruction. Speech is serialized
+Pause reasons compose: narration completion never clears camera/manual/voice-failure
+blocks. A subscribed track must deliver a fresh current frame before countdown can
+resume. Only explicit resume releases a manual pause; repeat/help/hint replay the
+authoritative instruction while preserving it. Speech is serialized
 and duplicate hints remain throttled. A step's reported `seconds` is active elapsed
 time, excluding paused speech/camera intervals; penalty seconds are not fake elapsed
 time. Timer expiration records missed, moves forward once, and carries the penalty.
@@ -125,8 +128,21 @@ At finish (or interruption/close for a partial run), agent writes one local file
 has complete=false and only resolved steps; it does not mark untouched steps done.
 Evidence images appear only there/in-memory, never in ordinary HUD state/logs.
 The folder is ignored by Git; no report is uploaded or messaged automatically.
+Report saves share one in-flight task and a stable snapshot. Failed saves can be
+retried, up to three total attempts per call; cleanup exhausts the remaining budget.
+A successful save is never repeated. The existing temp-file/atomic-rename writer
+is unchanged. Exhausted disk failures remain available in runtime diagnostics
+(reportFailed/reportError/reportErrors); they do not become a successful save.
+Speech shutdown failure cannot skip game cleanup, and the original error is
+retained (multiple cleanup errors use AggregateError with the speech error as cause).
 Render parent/model strings as text, not HTML. `verification` identifies configured
 backend provenance, not measured accuracy or a medical claim.
+
+The separate `examples/routines/mock-desk.json` is explicitly MOCK ONLY and uses
+bottle/notebook/pen, matching the existing mock perception server. The real
+`morning.json` remains unchanged. Both the HTTP routine E2E and saved demo load
+this mock routine from disk. The mock service supplies scripted verdicts; it does
+not recognize objects in the synthetic images.
 
 Saved MOCK handoff (includes done/missed/done and countdown snapshots):
 
@@ -151,6 +167,7 @@ In WSL, from the agent folder, with existing Node 24/nvm:
 npm run check
 npm run check:types
 npm test
+npm run test:routine
 npm run demo:routine
 PYTHONDONTWRITEBYTECODE=1 /tmp/reality-vision-venv/bin/python -m pytest -q -p no:cacheprovider vision-service/test_bridge.py vision-service/test_provenance.py vision-service/vendor/tests
 python3 vision-service/verify_provenance.py

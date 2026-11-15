@@ -3,7 +3,7 @@ import { readFile, mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import sharp from 'sharp';
 import { RoutineMissionEngine } from './mission-engine.mjs';
-const routine=JSON.parse(await readFile(new URL('./examples/routines/morning.json',import.meta.url),'utf8'));
+const routine=JSON.parse(await readFile(new URL('./examples/routines/mock-desk.json',import.meta.url),'utf8'));
 let now=1000,sequence=0;const engine=new RoutineMissionEngine(routine,{now:()=>now});
 const states=[],messages=[];
 engine.on('state',s=>states.push(s));engine.on('message',s=>messages.push(s));

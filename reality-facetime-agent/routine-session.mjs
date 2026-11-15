@@ -10,8 +10,22 @@ export class RoutineSession {
     const text = event.transcript.toLowerCase().trim().replace(/[.!?]+$/, '');
     if (['stop','wait','pause'].includes(text)) { this.game.pause(); await this.speech.interrupt(); return; }
     if (this.speech.busy) return;
-    if (['resume','repeat','help','hint'].includes(text)) await this.game.announce(this.game.engine.instruction(), { force: true });
+    if (text === 'resume') await this.game.resume();
+    else if (['repeat','help','hint'].includes(text)) await this.game.announce(this.game.engine.instruction(), { force: true });
     else if (text === 'done') await this.game.tick(); // still requires camera/consensus/freshness
   }
-  async close() { this.closed = true; await this.speech.close(); await this.game.close(); }
+  close() {
+    if (this.closeTask) return this.closeTask;
+    this.closed = true;
+    // Stop timers/verification even if stopping audio throws or takes longer.
+    this.closeTask = Promise.allSettled([
+      Promise.resolve().then(() => this.speech.close()),
+      Promise.resolve().then(() => this.game.close()),
+    ]).then(results => {
+      const errors = results.filter(result => result.status === 'rejected').map(result => result.reason);
+      if (errors.length === 1) throw errors[0];
+      if (errors.length > 1) throw new AggregateError(errors, 'Routine session cleanup failed', { cause: errors[0] });
+    });
+    return this.closeTask;
+  }
 }

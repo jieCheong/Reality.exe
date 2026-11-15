@@ -1,4 +1,5 @@
 import { EventEmitter } from 'node:events';
+import { isRecord, verdictRound } from './routine-evidence.mjs';
 import { validateRoutine, assertRoutineCapabilities } from './routine-contract.mjs';
 
 const clean = text => typeof text === 'string' ? text.replace(/[\x00-\x1f]/g, ' ').slice(0, 500) : '';
@@ -7,18 +8,6 @@ const validObject = o => o && typeof o.name === 'string' && /^[a-z0-9][a-z0-9 -]
   Array.isArray(o.box_2d) && o.box_2d.length === 4 && o.box_2d.every(Number.isInteger) &&
   0 <= o.box_2d[0] && o.box_2d[0] < o.box_2d[2] && o.box_2d[2] <= 1000 &&
   0 <= o.box_2d[1] && o.box_2d[1] < o.box_2d[3] && o.box_2d[3] <= 1000;
-
-function verdictRound(result, predicate) {
-  const frames = result.frame_verdicts;
-  if (result.status !== 'checked' || result.predicate !== predicate || typeof result.satisfied !== 'boolean' ||
-      result.votes_total !== 3 || !Array.isArray(frames) || frames.length !== 3 ||
-      new Set(frames.map(f => f.frame_index)).size !== 3 || frames.some(f => ![0,1,2].includes(f.frame_index) ||
-        typeof f.satisfied !== 'boolean' || !Number.isFinite(f.confidence) || f.confidence < 0 || f.confidence > 1)) return null;
-  const yes = frames.filter(f => f.satisfied && f.confidence >= .7 && !f.error && !f.geometry_override).length;
-  if (result.votes_for !== yes || result.satisfied !== (yes >= 2)) return null;
-  return { pass: yes >= 2, conclusiveFailure: frames.every(f => !f.error) &&
-    frames.filter(f => !f.satisfied && f.confidence >= .7 || f.geometry_override).length >= 2 };
-}
 
 /** Deterministic routine mode. Existing fixed spaceship engine is unchanged. */
 export class RoutineMissionEngine extends EventEmitter {
@@ -85,6 +74,7 @@ export class RoutineMissionEngine extends EventEmitter {
   }
   apply(request, result, evidenceFrame = null) {
     this.tick();
+    if (!isRecord(request) || !isRecord(result)) { this.resetEvidence(); return false; }
     if (this.escaped || request.revision !== this.revision || request.operation !== this.request().operation || request.predicate !== this.request().predicate) return false;
     const count = request.operation === 'inventory' ? 2 : 3;
     if (!Array.isArray(request.frameIds) || request.frameIds.length !== count || new Set(request.frameIds).size !== count ||
