@@ -1,11 +1,15 @@
+import { measureRgbaContent } from './video-geometry.mjs';
 // Generated video only. No AgentSession, inference, Chert connector, or real call.
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
+import { mkdir } from 'node:fs/promises';
+import sharp from 'sharp';
 import { join } from 'node:path';
-import { Room, dispose } from '@livekit/rtc-node';
+import { Room, VideoFrame, VideoBufferType, dispose } from '@livekit/rtc-node';
 import { AccessToken, RoomServiceClient } from 'livekit-server-sdk';
 import { CallerVideoAdapter } from './caller-video.mjs';
 import { FrameSampler } from './frame-sampler.mjs';
+import { WIDTH, HEIGHT, STATUS_STRIPE_Y } from './spaceship-face.mjs';
 import { publishHud } from './hud-video.mjs';
 
 if (process.env.LIVEKIT_FREE_BUILD_CONFIRMED !== 'yes') throw new Error('Confirm the existing free Build plan before this transport-only room test.');
@@ -20,10 +24,20 @@ const adapter = new CallerVideoAdapter(receiver, { sampleIntervalMs: 100 });
 const directory = join('.local', 'synthetic-video', roomName);
 const sampler = new FrameSampler(directory, { minIntervalMs: 250 });
 const states = new Set();
-let received = 0, hud, toggle, created = false, saveError;
+const diagnosticPattern = process.env.HUD_VIDEO_DIAGNOSTIC === 'yes';
+let localSaved = false;
+let received = 0, hud, toggle, created = false, saveError, receivedWidth, receivedHeight;
 adapter.on('frame', frame => {
-  received++;
-  const i = 52 * frame.width * 4;
+  received++; receivedWidth = frame.width; receivedHeight = frame.height;
+  if (received === 1) console.log('[hud-remote-geometry]', JSON.stringify({
+    width: frame.width, height: frame.height, rotation: frame.rotation,
+    ...measureRgbaContent(frame.data, frame.width, frame.height),
+  }));
+  // WebRTC may align encoded dimensions (1170 source decoded as 1168 in this run).
+  assert.ok(Math.abs(frame.width - WIDTH) <= 4 && Math.abs(frame.height - HEIGHT) <= 4, 'Unexpected remote size change beyond codec alignment');
+  assert.equal(frame.height > frame.width, HEIGHT > WIDTH, 'Received frame orientation must match selected profile');
+  assert.equal(frame.rotation, 0);
+  const i = (Math.round((STATUS_STRIPE_Y + 2) * frame.height / HEIGHT) * frame.width + Math.floor(frame.width / 2)) * 4;
   // Classify the broad colored HUD stripe after lossy WebRTC video encoding.
   states.add(frame.data[i + 1] > frame.data[i] ? 'online' : 'offline');
   void sampler.offer(frame, () => adapter.isCurrent(frame)).catch(error => { saveError = error; });
@@ -41,7 +55,17 @@ try {
   await receiver.connect(url, await token('synthetic-receiver', false), { autoSubscribe: false, dynacast: false });
   adapter.scan();
   await sender.connect(url, await token(`chert-bridge-synthetic-${randomUUID()}`, true), { autoSubscribe: false, dynacast: false });
-  hud = await publishHud(sender.localParticipant, { fps: 10, trackName: 'facetime-remote-video' });
+  await mkdir(directory, { recursive: true });
+  hud = await publishHud(sender.localParticipant, { diagnosticPattern, trackName: 'facetime-remote-video',
+    createFrame: pixels => {
+      const frame = new VideoFrame(pixels, WIDTH, HEIGHT, VideoBufferType.RGBA);
+      assert.deepEqual(frame.data, pixels, 'SDK frame must contain exactly the rendered pixels');
+      if (!localSaved) { localSaved = true;
+        void sharp(frame.data, { raw: { width: frame.width, height: frame.height, channels: 4 } }).png().toFile(join(directory, 'submitted-local.png')).catch(error => { saveError = error; });
+      }
+      return frame;
+    },
+  });
   let online = false;
   toggle = setInterval(() => { online = !online; hud.setState({ reactor: online ? 'online' : 'offline' }); }, 800);
   const deadline = Date.now() + 15000;
@@ -49,10 +73,15 @@ try {
     if (saveError) throw saveError;
     await new Promise(resolve => setTimeout(resolve, 100));
   }
+  const publishedVideo = [...receiver.remoteParticipants.values()].flatMap(p => [...p.trackPublications.values()]).find(p => p.name === 'facetime-remote-video');
+  assert.ok(publishedVideo?.width && publishedVideo?.height, 'Remote publication must have dimensions');
+  assert.equal(publishedVideo.height > publishedVideo.width, HEIGHT > WIDTH, 'Remote publication orientation must match selected profile');
   assert.ok(states.has('online') && states.has('offline'), 'Must receive BOTH HUD states remotely');
   assert.equal(sampler.saved.length, 5, 'Must save five distinct generated camera JPEGs');
   assert.equal(new Set(sampler.saved.map(item => item.sha256)).size, 5);
   console.log(JSON.stringify({ result: 'PASS', scope: 'LIVEKIT_TRANSPORT_ONLY_SYNTHETIC',
+    receivedWidth, receivedHeight,
+    publishedWidth: publishedVideo.width, publishedHeight: publishedVideo.height, rotation: 0,
     received, states: [...states], saved: sampler.saved.length, directory,
     inferenceRequests: 0, chertCalls: 0 }));
 } finally {

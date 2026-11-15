@@ -8,5 +8,8 @@ const input: CallerVideoPort = new CallerVideoAdapter(new Room());
 const output: Promise<HudVideoPort> = publishHud(new Room().localParticipant!);
 const consume = (frame: CallerFrame) => { void frame.data; void frame.timestampUs; };
 input.on('frame', consume);
-const update: Partial<HudState> = { reactor: 'online' };
+const update: Partial<HudState> = { gameState: {
+  phase: 'POWER', objective: 'RESTORE REACTOR POWER', missionProgress: 0.3,
+  checkpoints: { SCAN: 'complete', POWER: 'active' },
+} };
 void output.then(hud => hud.setState(update));

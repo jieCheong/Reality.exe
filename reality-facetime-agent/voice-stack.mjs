@@ -1,4 +1,5 @@
 import { inference } from '@livekit/agents';
+import { createConfiguredTTS } from './tts-selection.mjs';
 
 export const MODELS = Object.freeze({
   stt: 'deepgram/flux-general-en',
@@ -30,7 +31,7 @@ export function createVoiceOptions(env = process.env, adapters = inference) {
   return {
     stt: new adapters.STT({ ...auth, model: MODELS.stt }),
     llm: new adapters.LLM({ ...auth, model: MODELS.llm, modelOptions: { max_tokens: 120 } }),
-    tts: new adapters.TTS({ ...auth, model: MODELS.tts, voice: MODELS.voice }),
+    tts: createConfiguredTTS(env, auth, MODELS.tts, MODELS.voice, { LiveKitTTS: adapters.TTS }),
     // Flux supplies endpointing. Avoid additional cloud turn/interruption models.
     // First prototype is half duplex; barge-in is intentionally disabled.
     turnHandling: {

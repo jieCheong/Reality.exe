@@ -9,7 +9,7 @@ import { RoomEvent as E, TrackKind, TrackSource, VideoBufferType, VideoFrame, di
 import { CallerVideoAdapter } from './caller-video.mjs';
 import { FrameSampler, encodeJpeg } from './frame-sampler.mjs';
 import { drawHud, publishHud } from './hud-video.mjs';
-import { WIDTH, HEIGHT } from './face.mjs';
+import { WIDTH, HEIGHT } from './spaceship-face.mjs';
 
 const flush = () => new Promise(resolve => setImmediate(resolve));
 after(() => dispose());

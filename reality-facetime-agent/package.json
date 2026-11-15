@@ -8,18 +8,23 @@
   },
   "scripts": {
     "start": "node --env-file=.env.local agent.mjs start",
-    "check": "node --check agent.mjs && node --check face.mjs && node --check greet.mjs && node --check voice-stack.mjs && node --check call-observer.mjs && node --check caller-video.mjs && node --check frame-sampler.mjs && node --check hud-video.mjs && node --check video-room-smoke.mjs",
+    "check": "node --check agent.mjs && node --check face.mjs && node --check greet.mjs && node --check voice-stack.mjs && node --check call-observer.mjs && node --check caller-video.mjs && node --check frame-sampler.mjs && node --check hud-video.mjs && node --check video-room-smoke.mjs && node --check spaceship-face.mjs && node --check hud-mock.mjs && node --check hud-demo.mjs && node --check mission-engine.mjs && node --check vision-client.mjs && node --check game-runtime.mjs && node --check tts-selection.mjs && node --check speech-coordinator.mjs && node --check themes.mjs && node --check theme-selection.mjs && node --check diagnostics.mjs && node --check game-test-config.mjs && node --check test-readiness.mjs && node --check hud-diagnostic.mjs && node --check hud-video-profile.mjs && node --check video-geometry.mjs && node --check spaceship-landscape.mjs",
     "help": "node agent.mjs --help",
-    "test": "node voice-stack.test.mjs && node video.test.mjs",
-    "check:types": "tsc --noEmit --strict --types node --skipLibCheck --allowJs --module NodeNext --moduleResolution NodeNext --target ES2022 part-a-types.ts part-a-contract-check.ts",
-    "test:video:room": "node --env-file=.env.local video-room-smoke.mjs"
+    "test": "node voice-stack.test.mjs && node video.test.mjs && node spaceship-hud.test.mjs && node game.test.mjs && node theme-voice.test.mjs && node tts-selection.test.mjs && node controlled-test.test.mjs && node hud-diagnostic.test.mjs && node hud-video-profile.test.mjs && node video-geometry.test.mjs && node landscape-hud.test.mjs",
+    "check:types": "tsc --noEmit --strict --types node --skipLibCheck --allowJs --module NodeNext --moduleResolution NodeNext --target ES2022 part-a-types.ts part-a-contract-check.ts game-contracts.ts theme-types.ts",
+    "test:video:room": "node --env-file=.env.local video-room-smoke.mjs",
+    "test:hud": "node spaceship-hud.test.mjs",
+    "demo:hud": "node hud-demo.mjs",
+    "test:game:e2e": "node game.e2e.test.mjs"
   },
   "dependencies": {
     "@livekit/agents": "1.8.0",
     "@livekit/agents-plugin-openai": "1.8.0",
     "@livekit/rtc-node": "0.13.35",
     "sharp": "0.35.3",
-    "livekit-server-sdk": "2.19.3"
+    "livekit-server-sdk": "2.19.3",
+    "@napi-rs/canvas": "1.1.1",
+    "@livekit/agents-plugin-elevenlabs": "1.8.0"
   },
   "devDependencies": {
     "typescript": "7.0.2",

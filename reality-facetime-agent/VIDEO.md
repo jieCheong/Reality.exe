@@ -1,3 +1,7 @@
+> HUD update: the outgoing renderer now uses Juan's Orbitron spaceship design.
+> See [PART-C-HUD.md](PART-C-HUD.md) for the state contract and local preview.
+> Historical transport results below remain unchanged.
+
 # Part A video adapter and minimal HUD
 
 ## Results from this session (2026-11-14)

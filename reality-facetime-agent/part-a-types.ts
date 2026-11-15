@@ -36,9 +36,23 @@ export interface CallerVideoPort {
 }
 
 /** Teammate C: supplies display state; this adapter makes no game decisions. */
+export type HudPhase = 'SCAN' | 'POWER' | 'SECURITY' | 'PORTAL';
+export type CheckpointStatus = 'pending' | 'active' | 'complete';
+
+/** Optional display snapshot from the game engine; never inferred by the renderer. */
+export interface GameHudState {
+  phase?: HudPhase;
+  objective?: string;
+  checkpoints?: Partial<Record<HudPhase, CheckpointStatus>>;
+  /** Fraction 0..1, clamped by the renderer. */
+  missionProgress?: number;
+}
+
 export interface HudState {
+  /** Legacy compatibility; explicit gameState takes precedence. */
   reactor: 'offline' | 'online';
   speaking: boolean;
+  gameState?: GameHudState;
 }
 
 export interface HudVideoPort {
