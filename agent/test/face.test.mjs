@@ -40,6 +40,55 @@ test('theme chooser cards use distinct image backgrounds', () => {
   assert.notDeepEqual(cardBackgrounds[1], cardBackgrounds[2]);
 });
 
+test('mission completion renders theme-specific summary pages and supplied stats', () => {
+  const result = { tasksCompleted: 3, elapsedSeconds: 3725 };
+  const pixelAt = (frame, x, y) => [...frame.slice((y * WIDTH + x) * 4, (y * WIDTH + x) * 4 + 4)];
+  for (const themeId of Object.keys(THEMES)) {
+    const activeFrame = drawFace(0, false, themeId);
+    const completedFrame = drawFace(0, false, themeId, result);
+    assert.notDeepEqual(
+      completedFrame,
+      activeFrame,
+    );
+    assert.deepEqual(pixelAt(completedFrame, 270, 250), pixelAt(activeFrame, 270, 250));
+  }
+  assert.notDeepEqual(
+    drawFace(0, false, 'odyssey', result),
+    drawFace(0, false, 'odyssey', { tasksCompleted: 4, elapsedSeconds: 3725 }),
+  );
+  assert.notDeepEqual(
+    drawFace(0, false, 'backrooms', result),
+    drawFace(0, false, 'backrooms', { tasksCompleted: 3, elapsedSeconds: 3726 }),
+  );
+});
+
+test('mission completion requires a theme and valid statistics', () => {
+  assert.throws(() => drawFace(0, false, null, { tasksCompleted: 3, elapsedSeconds: 60 }), RangeError);
+  assert.throws(() => drawFace(0, false, 'space', { tasksCompleted: -1, elapsedSeconds: 60 }), RangeError);
+  assert.throws(() => drawFace(0, false, 'space', { tasksCompleted: 3, elapsedSeconds: 1.5 }), RangeError);
+  assert.throws(() => drawFace(0, false, 'space', {
+    tasksCompleted: 3,
+    elapsedSeconds: 60,
+    timedOutTasks: -1,
+  }), RangeError);
+});
+
+test('loss triggers only after more than three timed-out tasks', () => {
+  for (const themeId of Object.keys(THEMES)) {
+    const result = { tasksCompleted: 2, elapsedSeconds: 180, timedOutTasks: 3 };
+    const defeat = { ...result, timedOutTasks: 4 };
+
+    assert.deepEqual(
+      drawFace(0, false, themeId, result),
+      drawFace(0, false, themeId, { tasksCompleted: 2, elapsedSeconds: 180 }),
+    );
+    assert.notDeepEqual(
+      drawFace(0, false, themeId, defeat),
+      drawFace(0, false, themeId, result),
+    );
+  }
+});
+
 test('Odyssey image sits behind opaque HUD panels', () => {
   const odyssey = drawFace(0, false, 'odyssey');
   const pixelAt = (x, y) => [...odyssey.slice((y * WIDTH + x) * 4, (y * WIDTH + x) * 4 + 4)];

@@ -22,6 +22,9 @@ does not connect FaceTime, the game engine, or the camera. Press Ctrl+C to stop.
 The default page shows the voice-first theme chooser. Preview a selected theme
 by adding `?theme=space`, `?theme=odyssey`, or `?theme=backrooms` to the URL.
 Each chooser card uses a blurred crop from its theme's background image.
+Preview a completion screen and its stats with, for example,
+`?theme=backrooms&complete=1&tasks=3&seconds=245`.
+To preview a loss after four timeouts, add `&timeouts=4`.
 
 ## Run it
 
@@ -83,7 +86,11 @@ wall photo behind opaque HUD panels. All bundled fonts are licensed under the SI
 `assets/OFL-Orbitron.txt`, and `assets/OFL-GFS-Didot.txt`.
 The renderer accepts `null` for the theme chooser or one of `space`, `odyssey`,
 and `backrooms` to display the corresponding theme. Theme changes affect labels
-and presentation only; game state remains outside this HUD.
+and presentation only; game state remains outside this HUD. To render an end
+screen, pass `{ tasksCompleted, elapsedSeconds, timedOutTasks }` as the fourth
+`drawFace` argument. More than three timeouts selects the loss screen. The
+gameplay engine does not yet supply these events; preview URLs can be used to
+review the screens with sample values.
 
 ## Use a realtime avatar instead
 
