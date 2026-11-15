@@ -2,24 +2,25 @@
   "id": "kids-morning",
   "name": "Morning Launch",
   "theme": "space",
+  "greeting": "morning",
+  "lives": 3,
+  "monsterSeconds": 25,
   "timer": {
-    "startSeconds": 90,
-    "stepDecreaseSeconds": 5,
-    "minSeconds": 45,
+    "startSeconds": 60,
+    "stepDecreaseSeconds": 0,
+    "minSeconds": 30,
     "fakeDonePenaltySeconds": 5,
-    "missPenaltySeconds": 15
+    "missPenaltySeconds": 0
   },
-  "objects": ["toothbrush", "hairbrush or comb", "folded pajamas", "socks", "cup of water",
-              "breakfast bowl or plate", "backpack", "lunchbox", "shoes"],
+  "objects": ["folded blanket", "lunchbox", "feet wearing shoes"],
   "steps": [
-    { "short": "TEETH", "label": "Brush your teeth, then show me your toothbrush", "check": "SHOW", "objects": ["toothbrush"] },
-    { "short": "HAIR", "label": "Brush your hair, then show me your hairbrush or comb", "check": "SHOW", "objects": ["hairbrush or comb"] },
-    { "short": "PJS", "label": "Fold your pajamas and hold them up", "check": "SHOW", "objects": ["folded pajamas"] },
-    { "short": "SOCKS", "label": "Put on your socks and show them to the camera", "check": "SHOW", "objects": ["socks"] },
-    { "short": "WATER", "label": "Get a cup of water and show it to me", "check": "SHOW", "objects": ["cup of water"] },
-    { "short": "FOOD", "label": "Breakfast time: show me your bowl or plate", "check": "SHOW", "objects": ["breakfast bowl or plate"] },
-    { "short": "BAG", "label": "Grab your backpack and show it to the camera", "check": "SHOW", "objects": ["backpack"] },
-    { "short": "LUNCH", "label": "Put your lunchbox on top of your backpack", "check": "ON_TOP_OF", "objects": ["lunchbox", "backpack"] },
-    { "short": "SHOES", "label": "Hold your shoes up to the camera", "check": "HELD_UP", "objects": ["shoes"] }
+    { "short": "BED", "label": "Fold your bedsheets and show me the folded blanket", "check": "SHOW", "objects": ["folded blanket"], "seconds": 60 },
+    { "short": "TEETH", "label": "Brush your teeth where I can see you", "check": "DOING", "objects": ["brushing their teeth"], "seconds": 90 },
+    { "short": "FACE", "label": "Wash your face", "check": "DOING", "objects": ["washing their face"], "seconds": 60 },
+    { "short": "HAIR", "label": "Brush or comb your hair", "check": "DOING", "objects": ["brushing their hair"], "seconds": 45 },
+    { "short": "WATER", "label": "Drink a glass of water", "check": "DOING", "objects": ["drinking water"], "seconds": 45 },
+    { "short": "FOOD", "label": "Eat your breakfast", "check": "DOING", "objects": ["eating breakfast"], "seconds": 90 },
+    { "short": "LUNCH", "label": "Pack your lunch and show me your lunchbox", "check": "SHOW", "objects": ["lunchbox"], "seconds": 60 },
+    { "short": "SHOES", "label": "Put on your shoes and show me your feet", "check": "SHOW", "objects": ["feet wearing shoes"], "seconds": 60 }
   ]
 }

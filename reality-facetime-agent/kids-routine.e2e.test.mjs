@@ -1,4 +1,4 @@
-// Kids' 9-step routine through the real loopback bridge: no opening scan, per-step objects, SHOW checks.
+// Kids' 8-step morning routine through the real loopback bridge: no opening scan, per-step objects, SHOW checks.
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { spawn } from 'node:child_process';
@@ -10,7 +10,7 @@ import { VisionClient } from './vision-client.mjs';
 import { SpeechCoordinator } from './speech-coordinator.mjs';
 const sleep = ms => new Promise(resolve => setTimeout(resolve,ms));
 
-test('MOCK kids routine end-to-end: no scan → fail/penalty → 9 steps → evidence report', {timeout:60000}, async()=>{
+test('MOCK kids routine end-to-end: no scan → fail/penalty → 8 steps → evidence report', {timeout:60000}, async()=>{
   const python=spawn(process.env.VISION_PYTHON||'python3',['vision-service/bridge.py','--provider','mock','--port','0'],{
     stdio:['ignore','pipe','pipe'],env:{...process.env,PYTHONDONTWRITEBYTECODE:'1'},
   });
@@ -46,9 +46,9 @@ test('MOCK kids routine end-to-end: no scan → fail/penalty → 9 steps → evi
       await round();await game.speech;
     }
     assert.equal(game.engine.escaped,true);assert.equal(reports.length,1);
-    assert.equal(reports[0].steps.length,9);assert.ok(reports[0].steps.every(s=>s.status==='done'));
+    assert.equal(reports[0].steps.length,8);assert.ok(reports[0].steps.every(s=>s.status==='done'));
     assert.ok(reports[0].steps.every(s=>s.evidenceFrame.dataUrl.startsWith('data:image/jpeg;base64,/9j/')));
-    assert.ok(states.some(s=>s.routineSteps?.[0]?.short==='TEETH'));assert.ok(spoken.some(t=>t.includes('Morning Launch has 9 steps')));
-    console.log(JSON.stringify({scope:'MOCK_KIDS_ROUTINE_LOCAL_HTTP',visionRounds:rounds,completedSteps:9,providerCalls:0,realWorldVerification:false}));
+    assert.ok(states.some(s=>s.routineSteps?.[0]?.short==='BED'));assert.ok(spoken.some(t=>t.includes('Morning Launch has 8 steps')));
+    console.log(JSON.stringify({scope:'MOCK_KIDS_ROUTINE_LOCAL_HTTP',visionRounds:rounds,completedSteps:8,providerCalls:0,realWorldVerification:false}));
   } finally { await game?.close(); lines.close(); python.kill('SIGTERM'); await exited; }
 });

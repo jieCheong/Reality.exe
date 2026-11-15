@@ -5,6 +5,7 @@ import { GlobalFonts, createCanvas } from '@napi-rs/canvas';
 import { fileURLToPath } from 'node:url';
 import { LANDSCAPE_LAYOUT, drawLandscape, landscapeObjectiveLines } from './spaceship-landscape.mjs';
 import { HUD_VIDEO_PROFILE } from './hud-video-profile.mjs';
+import { drawHearts, drawMonster, normalizeLives, normalizeMonster } from './monster.mjs';
 export const WIDTH = HUD_VIDEO_PROFILE.width, HEIGHT = HUD_VIDEO_PROFILE.height, FPS = HUD_VIDEO_PROFILE.fps;
 const extra = HEIGHT - 960, objectiveOffset = extra / 3, progressOffset = extra * 2 / 3, checkpointOffset = extra;
 const landscape = HUD_VIDEO_PROFILE.name === 'landscape-test';
@@ -44,7 +45,9 @@ function normalizeRoutine(input) {
   const t = input.timeLeftSeconds;
   const timeLeft = Number.isFinite(t) && t >= 0 ? Math.min(5999, Math.floor(t)) : null;
   const index = Number.isInteger(input.stepIndex) ? input.stepIndex : -1;
-  return { steps, timeLeft, label: index >= 0 && index < steps.length ? `STEP ${index + 1} / ${steps.length}` : null };
+  return { steps, timeLeft, label: input.outcome === 'failed' ? 'MISSION FAILED' : input.outcome === 'complete' ? 'COMPLETE'
+      : index >= 0 && index < steps.length ? `STEP ${index + 1} / ${steps.length}` : null,
+    lives: normalizeLives(input), monster: normalizeMonster(input) };
 }
 export const clock = seconds => `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
 const canvas = createCanvas(WIDTH, HEIGHT);
@@ -89,6 +92,7 @@ export function drawFace(tick, speaking = false, gameState = undefined) {
     }
 
     ctx.fillStyle = COLORS.cyan; ctx.font = '700 28px Orbitron'; ctx.fillText('REALITY.EXE', 24, 55);
+    if (state.routine?.lives) drawHearts(ctx, 516, 44, 26, state.routine.lives.lives, state.routine.lives.max, COLORS);
     drawBox(HUD_LAYOUT.status, true);
     ctx.fillStyle = state.phase === 'SCAN' ? COLORS.amber : COLORS.cyan;
     ctx.beginPath(); ctx.arc(44, 106, 4, 0, Math.PI * 2); ctx.fill();
@@ -132,6 +136,9 @@ export function drawFace(tick, speaking = false, gameState = undefined) {
       ctx.fillStyle = color; ctx.font = `700 ${tight ? 11 : 12}px Orbitron`; ctx.textAlign = 'right';
       ctx.fillText((status === 'complete' && state.routine ? 'done' : status).toUpperCase(), 496, y + 4); ctx.textAlign = 'left';
     });
+    // The time monster lives in the open middle of the checkpoint panel and grows as time runs out.
+    const monster = state.routine?.monster;
+    if (monster?.visible) drawMonster(ctx, 300, 780 + checkpointOffset, 45 + 70 * monster.closeness, monster.closeness, tick);
     return new Uint8Array(ctx.getImageData(0, 0, WIDTH, HEIGHT).data);
   } finally { ctx.restore(); }
 }

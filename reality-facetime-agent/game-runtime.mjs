@@ -47,6 +47,9 @@ export class GameRuntime {
     if (latest && this.isFreshCameraFrame(latest)) {
       this.cameraState = 'available'; this.setPauseReason('camera', false);
     }
+    this.attachEngine();
+  }
+  attachEngine() {
     this.engine.on('state', state => {
       if (this.lastLoggedRevision !== this.engine.revision) {
         this.lastLoggedRevision = this.engine.revision;
@@ -56,6 +59,13 @@ export class GameRuntime {
       if (this.routine && this.engine.escaped) void this.flushReport();
     });
     this.engine.on('message', text => this.announce(text));
+  }
+  /** Swap the parent routine before start (e.g. "good night" picks the night routine). */
+  setRoutine(routine) {
+    if (this.started || this.closed) throw new Error('Cannot change routine after game start');
+    if (!this.routine) throw new Error('Routine selection needs a routine-mode game');
+    this.engine.removeAllListeners(); this.routine = routine;
+    this.engine = new RoutineMissionEngine(routine, { now: this.now }); this.attachEngine();
   }
   isFreshCameraFrame(frame) {
     const now = this.now();

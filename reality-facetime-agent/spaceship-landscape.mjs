@@ -1,4 +1,5 @@
 // Optional native landscape reflow of the adapted HUD. No bitmap scaling or crop.
+import { drawHearts, drawMonster } from './monster.mjs';
 export const LANDSCAPE_LAYOUT = Object.freeze({
   header: Object.freeze({ x: 24, y: 13, width: 380, height: 36 }),
   status: Object.freeze({ x: 416, y: 13, width: 200, height: 28 }),
@@ -6,23 +7,23 @@ export const LANDSCAPE_LAYOUT = Object.freeze({
   progress: Object.freeze({ x: 24, y: 216, width: 592, height: 35 }),
   checkpoints: Object.freeze({ x: 24, y: 284, width: 592, height: 60 }),
 });
-export function landscapeObjectiveLines(ctx, text) {
+export function landscapeObjectiveLines(ctx, text, maxWidth = 550) {
   ctx.save(); ctx.font = '700 23px Orbitron';
   // Wrap between words; a single word wider than the line still breaks by character.
   const lines=[]; let line='';
   for(const word of text.replace(/\s+/g,' ').trim().split(' ')) {
     const candidate=line?`${line} ${word}`:word;
-    if(ctx.measureText(candidate).width<=550) {line=candidate;continue;}
+    if(ctx.measureText(candidate).width<=maxWidth) {line=candidate;continue;}
     if(line) lines.push(line);
     line='';
     for(const char of word) {
-      if(ctx.measureText(line+char).width>550) {lines.push(line);line=char;} else line+=char;
+      if(ctx.measureText(line+char).width>maxWidth) {lines.push(line);line=char;} else line+=char;
     }
   }
   if(line) lines.push(line);
   if(lines.length>2) {
     let last=lines[1];
-    while(ctx.measureText(last+'…').width>550) last=last.slice(0,-1);
+    while(ctx.measureText(last+'…').width>maxWidth) last=last.slice(0,-1);
     lines[1]=last+'…';
   }
   const result=lines.slice(0,2).map((text,i)=>({text,x:43,baseline:146+i*31,width:ctx.measureText(text).width}));
@@ -34,6 +35,8 @@ export function drawLandscape(ctx, tick, speaking, state, colors, phases) {
     ctx.beginPath();ctx.roundRect(box.x,box.y,box.width,box.height,10);ctx.fill();ctx.stroke();
   };
   ctx.fillStyle=colors.cyan;ctx.font='700 24px Orbitron';ctx.fillText('REALITY.EXE',24,35);
+  if(state.routine?.lives) drawHearts(ctx,400,30,18,state.routine.lives.lives,state.routine.lives.max,colors);
+  const monster=state.routine?.monster?.visible?state.routine.monster:null;
   panel(LANDSCAPE_LAYOUT.status,true);
   ctx.fillStyle=state.phase==='SCAN'?colors.amber:colors.cyan;
   ctx.beginPath();ctx.arc(431,27,3,0,Math.PI*2);ctx.fill();
@@ -51,7 +54,9 @@ export function drawLandscape(ctx, tick, speaking, state, colors, phases) {
     ctx.fillText(`${Math.floor(t/60)}:${String(t%60).padStart(2,'0')}`,600,108);ctx.textAlign='left';
   }
   ctx.fillStyle=colors.text;ctx.font='700 23px Orbitron';
-  for(const line of landscapeObjectiveLines(ctx,state.objective)) ctx.fillText(line.text,line.x,line.baseline);
+  // With the monster on screen the objective wraps narrower so the monster has its own corner.
+  for(const line of landscapeObjectiveLines(ctx,state.objective,monster?470:550)) ctx.fillText(line.text,line.x,line.baseline);
+  if(monster) drawMonster(ctx,566,172,16+18*monster.closeness,monster.closeness,tick);
   panel(LANDSCAPE_LAYOUT.progress);
   ctx.fillStyle=colors.muted;ctx.font='700 11px Orbitron';ctx.fillText('MISSION PROGRESS',40,238);
   ctx.fillStyle=colors.border;ctx.fillRect(225,229,310,7);

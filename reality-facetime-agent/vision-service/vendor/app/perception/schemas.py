@@ -22,6 +22,7 @@ class PredicateType(str, Enum):
     COVERED = "COVERED"                        # args: [X]     -> X covered by a hand
     HIDDEN = "HIDDEN"                          # args: [X]     -> X out of sight, rest of scene still visible
     SHOW = "SHOW"                              # args: [kind]  -> any object of that kind shown (need not be scanned)
+    DOING = "DOING"                            # args: [action] -> the child is visibly doing an action ("brushing their teeth")
 
 
 ARITY = {
@@ -32,6 +33,7 @@ ARITY = {
     PredicateType.COVERED: (1, 1),
     PredicateType.HIDDEN: (1, 1),
     PredicateType.SHOW: (1, 1),
+    PredicateType.DOING: (1, 1),
 }
 
 

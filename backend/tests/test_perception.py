@@ -249,6 +249,24 @@ def test_show_veto():
     assert geometry_veto(show, judgment(True, .9, {"marker": BOX_M})) is not None
 
 
+def test_doing_requires_child_visible_and_asks_about_the_action():
+    doing = Predicate.parse("DOING(brushing their teeth)")
+    assert doing.args == ["brushing their teeth"]
+    assert geometry_veto(doing, judgment(True, .9, {"child": BOX_M})) is None
+    assert geometry_veto(doing, judgment(True, .9, {"child": None})) is not None
+    assert geometry_veto(doing, judgment(True, .9, {"toothbrush": BOX_M})) is not None
+    model = FakeVision(lambda im, p, s: judgment(True, .9, {"child": BOX_M}))
+    svc = PerceptionService(model, PerceptionConfig(flip_left_right=False))
+    svc.set_catalog([])
+    r = run(svc.verify(doing, frames()))
+    assert r.satisfied
+    assert 'clearly brushing their teeth right now' in model.calls[0] and '- "child"' in model.calls[0]
+    # Model says yes but reports no child -> fail closed.
+    model = FakeVision(lambda im, p, s: judgment(True, .9, {"child": None}))
+    svc = PerceptionService(model, PerceptionConfig(flip_left_right=False)); svc.set_catalog([])
+    assert not run(svc.verify(doing, frames())).satisfied
+
+
 def test_hidden_prompt_lists_other_objects():
     model = FakeVision(lambda im, p, s: judgment(True, .9, {"keys": None, "wallet": BOX_L, "phone": BOX_R}))
     svc = PerceptionService(model, PerceptionConfig(flip_left_right=False))

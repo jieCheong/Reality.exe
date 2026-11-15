@@ -20,7 +20,11 @@ import { diagnostic } from './diagnostics.mjs';
 
 const gameEnabled = process.env.ENABLE_GAME === 'yes';
 // Validate parent input and installed verifier capabilities before worker registration.
-const routine = gameEnabled && process.env.ROUTINE_FILE ? await loadRoutine(process.env.ROUTINE_FILE) : null;
+// ROUTINE_MORNING_FILE + ROUTINE_NIGHT_FILE: the child's "good morning" / "good night" picks one.
+// ROUTINE_FILE alone keeps the single-routine flow.
+const load = file => gameEnabled && file ? loadRoutine(file) : null;
+const routines = { morning: await load(process.env.ROUTINE_MORNING_FILE), night: await load(process.env.ROUTINE_NIGHT_FILE) };
+const routine = routines.morning ?? routines.night ?? await load(process.env.ROUTINE_FILE);
 class OrbitAgent extends voice.Agent {
   // Game mode uses scripted TTS. Free-form LLM replies cannot announce an unverified win.
   async onUserTurnCompleted() { throw new voice.StopResponse(); }
@@ -100,7 +104,7 @@ export default defineAgent({
       say: (text, options) => speech.say(text, options),
       vision: new VisionClient({ url: process.env.VISION_SERVICE_URL || 'http://127.0.0.1:8765', allowMock: process.env.VISION_MODE === 'mock' }),
     }) : null;
-    const selection = game ? (routine ? new RoutineSession({ game, speech }) : new ThemeSelection({ themes: selectGameThemes(THEMES), speech, game })) : null;
+    const selection = game ? (routine ? new RoutineSession({ game, speech, routines }) : new ThemeSelection({ themes: selectGameThemes(THEMES), speech, game })) : null;
     if (game) {
       const onTranscript = event => {
         void selection.handleTranscript(event).catch(() => { game.pause(); });

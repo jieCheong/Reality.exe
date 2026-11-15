@@ -126,3 +126,18 @@ test('routine mode: step rail, missed status and countdown come from the engine 
   assert.throws(() => normalizeGameState({ ...base, routineSteps: [] }), /1 to 12/);
   assert.equal(normalizeGameState({ ...base, routineSteps: [{ status: 'pending', short: 'bad label!' }] }).routine.steps[0].short, '1');
 });
+
+test('routine mode: hearts and the time monster are drawn from engine state and clamped', () => {
+  const steps = [{ short: 'TEETH', status: 'active' }, { short: 'BOOK', status: 'pending' }];
+  const base = { phase: 'POWER', objective: 'Brush your teeth', mode: 'routine', stepIndex: 0, timeLeftSeconds: 20, routineSteps: steps, lives: 3, maxLives: 3 };
+  const s = normalizeGameState({ ...base, monster: { visible: true, closeness: 7 } });
+  assert.deepEqual(s.routine.monster, { visible: true, closeness: 1 }); assert.deepEqual(s.routine.lives, { lives: 3, max: 3 });
+  assert.deepEqual(normalizeGameState({ ...base, lives: -2 }).routine.lives, { lives: 0, max: 3 });
+  assert.equal(normalizeGameState({ ...base, maxLives: undefined }).routine.lives, null);
+  const calm = hash(drawFace(0, false, { ...base, monster: { visible: false, closeness: 0 } }));
+  const near = hash(drawFace(0, false, { ...base, monster: { visible: true, closeness: .2 } }));
+  const nearer = hash(drawFace(0, false, { ...base, monster: { visible: true, closeness: .9 } }));
+  const hurt = hash(drawFace(0, false, { ...base, lives: 1, monster: { visible: false, closeness: 0 } }));
+  assert.equal(new Set([calm, near, nearer, hurt]).size, 4);
+  assert.equal(normalizeGameState({ ...base, outcome: 'failed' }).routine.label, 'MISSION FAILED');
+});

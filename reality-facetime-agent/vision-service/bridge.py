@@ -149,9 +149,10 @@ class Bridge:
             from app.perception.schemas import DetectedObject
             service.set_catalog([DetectedObject.model_validate(obj) for obj in request.catalog])
             predicate = Predicate.parse(request.predicate or '')
-            if predicate.type.value == 'SHOW':
-                # FIND task: a generic kind of object ("pen") that need not be one of the scanned three.
-                if not re.fullmatch(r'[a-z][a-z -]{0,30}', predicate.args[0]): raise ValueError('Invalid object kind')
+            if predicate.type.value in ('SHOW', 'DOING'):
+                # SHOW: a generic kind of object ("pen"); DOING: an action ("brushing their teeth").
+                # Neither needs to be a scanned object, so the free text is tightly limited instead.
+                if not re.fullmatch(r'[a-z][a-z -]{0,30}', predicate.args[0]): raise ValueError('Invalid object kind or action')
             elif any(name not in service.catalog for name in predicate.args): raise ValueError('Object not in catalog')
             result = (await service.verify(predicate, frames)).model_dump()
             # Never expose raw provider exception bodies/credentials over the adapter.

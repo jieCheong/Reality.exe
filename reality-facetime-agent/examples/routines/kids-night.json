@@ -1,0 +1,25 @@
+{
+  "id": "kids-night",
+  "name": "Night Landing",
+  "theme": "space",
+  "greeting": "night",
+  "lives": 3,
+  "monsterSeconds": 25,
+  "timer": {
+    "startSeconds": 60,
+    "stepDecreaseSeconds": 0,
+    "minSeconds": 30,
+    "fakeDonePenaltySeconds": 5,
+    "missPenaltySeconds": 0
+  },
+  "objects": ["pajamas", "packed backpack", "folded clothes"],
+  "steps": [
+    { "short": "TOYS", "label": "Put your toys away", "check": "DOING", "objects": ["putting toys away"], "seconds": 90 },
+    { "short": "PJS", "label": "Put on your pajamas and show them to me", "check": "SHOW", "objects": ["pajamas"], "seconds": 90 },
+    { "short": "FACE", "label": "Wash your face and do your skin care", "check": "DOING", "objects": ["washing their face"], "seconds": 60 },
+    { "short": "TEETH", "label": "Brush your teeth where I can see you", "check": "DOING", "objects": ["brushing their teeth"], "seconds": 90 },
+    { "short": "BAG", "label": "Pack your school bag for tomorrow and show it to me", "check": "SHOW", "objects": ["packed backpack"], "seconds": 60 },
+    { "short": "OUTFIT", "label": "Lay out your clothes for tomorrow and show me", "check": "SHOW", "objects": ["folded clothes"], "seconds": 60 },
+    { "short": "BOOK", "label": "Read a book for a little bit", "check": "DOING", "objects": ["reading a book"], "seconds": 60 }
+  ]
+}

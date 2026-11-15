@@ -82,7 +82,15 @@ _QUESTIONS = {
         'plainly visible? Report it in `objects` under the exact name "{a}". A picture of a '
         "{a} on a screen, or a different kind of object, does not count."
     ),
+    PredicateType.DOING: (
+        'Is the child in this frame clearly {a} right now, as an action actually in progress '
+        '(not just holding the item, posing near it, or pretending with nothing in hand)? '
+        'Report the child in `objects` under the exact name "child". A picture or video of someone '
+        "else on a screen does not count."
+    ),
 }
+
+DOING_SUBJECT = "child"
 
 VERIFY_PROMPT = """You are a strict referee for a physical game played over a video call.
 Judge ONLY what is visible in this single frame. Do not assume anything that is not visible.
@@ -119,6 +127,8 @@ def build_verify_prompt(pred_img: Predicate, catalog: dict[str, DetectedObject])
     seq = " -> ".join(f'"{x}"' for x in pred_img.args)
     question = q.format(a=a, b=b, seq=seq)
     names = list(pred_img.args)
+    if pred_img.type == PredicateType.DOING:
+        names = [DOING_SUBJECT]  # the action is the question; the child is what must be seen
     if pred_img.type == PredicateType.HIDDEN:
         # List the other scanned objects too: they prove the camera can still see the desk.
         names += [n for n in catalog if n not in names]
@@ -222,7 +232,7 @@ def geometry_veto(pred_img: Predicate, j: FrameJudgment) -> Optional[str]:
         return None
 
     # Every named object must be visible (except the thing being covered).
-    must_see = args if t != PredicateType.COVERED else []
+    must_see = [DOING_SUBJECT] if t == PredicateType.DOING else (args if t != PredicateType.COVERED else [])
     for n in must_see:
         if not _visible(j, n):
             return f'"{n}" not visible'
