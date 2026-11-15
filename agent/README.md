@@ -19,6 +19,10 @@ then open `http://<your-computer-ip>:4173` on the phone. The preview fills the
 browser viewport with the portrait HUD and animates the voice indicator. It
 does not connect FaceTime, the game engine, or the camera. Press Ctrl+C to stop.
 
+The default page shows the voice-first theme chooser. Preview a selected theme
+by adding `?theme=space`, `?theme=odyssey`, or `?theme=backrooms` to the URL.
+Each chooser card uses a blurred crop from its theme's background image.
+
 ## Run it
 
 1. Install it:
@@ -69,8 +73,17 @@ publishes an audio track, and shows video **only from that same participant**.
 ## Change the picture
 
 Edit `drawFace` in `face.mjs`. It returns one RGBA frame, 540 by 1170 (9:19.5),
-15 times a second. `assets/Orbitron.ttf` is licensed under the SIL Open Font
-License; the accompanying license is in `assets/OFL-Orbitron.txt`.
+15 times a second. Space uses Michroma, Backrooms uses IBM Plex Sans Condensed,
+and Odyssey uses GFS Didot, a Greek typeface with a matching Latin design. The
+Space theme uses the bundled lunar photo, blurred by 2px, behind opaque HUD
+panels. Odyssey uses the bundled sea illustration as an unblurred background
+behind its parchment HUD panels. Backrooms uses the bundled, slightly blurred
+wall photo behind opaque HUD panels. All bundled fonts are licensed under the SIL Open Font License; see
+`assets/OFL-Michroma.txt`, `assets/OFL-IBM-Plex-Sans-Condensed.txt`,
+`assets/OFL-Orbitron.txt`, and `assets/OFL-GFS-Didot.txt`.
+The renderer accepts `null` for the theme chooser or one of `space`, `odyssey`,
+and `backrooms` to display the corresponding theme. Theme changes affect labels
+and presentation only; game state remains outside this HUD.
 
 ## Use a realtime avatar instead
 

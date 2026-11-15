@@ -1,6 +1,6 @@
 import { createServer } from 'node:http';
 import { createCanvas } from '@napi-rs/canvas';
-import { drawFace, HEIGHT, WIDTH } from './face.mjs';
+import { drawFace, HEIGHT, THEMES, WIDTH } from './face.mjs';
 
 const host = process.env.HUD_PREVIEW_HOST || '127.0.0.1';
 const port = Number(process.env.HUD_PREVIEW_PORT || 4173);
@@ -45,10 +45,12 @@ const page = `<!doctype html>
   </main>
   <script>
     const frame = document.querySelector('#frame');
+    const themeId = new URLSearchParams(location.search).get('theme');
     let tick = 0;
     function updateFrame() {
       const speaking = Math.floor(tick / 16) % 2;
-      frame.src = '/frame?tick=' + tick++ + '&speaking=' + speaking;
+      const theme = themeId ? '&theme=' + encodeURIComponent(themeId) : '';
+      frame.src = '/frame?tick=' + tick++ + '&speaking=' + speaking + theme;
     }
     updateFrame();
     window.setInterval(updateFrame, 250);
@@ -74,14 +76,20 @@ const server = createServer((request, response) => {
     const params = new URLSearchParams(query);
     const tick = Number(params.get('tick') || 0);
     const speaking = params.get('speaking') === '1';
+    const themeId = params.get('theme');
     if (!Number.isSafeInteger(tick) || tick < 0 || tick > 1000000) {
       response.writeHead(400);
       response.end('Invalid frame tick');
       return;
     }
+    if (themeId !== null && !Object.prototype.hasOwnProperty.call(THEMES, themeId)) {
+      response.writeHead(400);
+      response.end('Invalid HUD theme');
+      return;
+    }
 
     const image = context.createImageData(WIDTH, HEIGHT);
-    image.data.set(drawFace(tick, speaking));
+    image.data.set(drawFace(tick, speaking, themeId));
     context.putImageData(image, 0, 0);
     response.writeHead(200, { 'Content-Type': 'image/png', 'Cache-Control': 'no-store' });
     response.end(canvas.toBuffer('image/png'));
