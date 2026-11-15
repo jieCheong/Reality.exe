@@ -87,6 +87,25 @@ async def run_cases(rows: list[dict], data_dir: Path, svc_factory, concurrency: 
 
 
 # --------------------------------------------------------------------------- #
+def regeometry(cases: list[dict]) -> int:
+    """Re-apply the CURRENT geometry rules to cached frames (needs runs saved with boxes).
+    Lets you tune predicates.py and re-score with no API calls. Returns frames updated."""
+    from app.perception.predicates import geometry_veto, to_image_space
+    from app.perception.schemas import ObjectLocation
+    n = 0
+    for c in cases:
+        pred = to_image_space(Predicate.parse(c["predicate"]), False)
+        for v in c["frame_verdicts"]:
+            if v.get("error") or v.get("model_satisfied") is None:
+                continue
+            j = FrameJudgment(satisfied=v["model_satisfied"], confidence=v["confidence"], evidence=v["evidence"],
+                              objects=[ObjectLocation(name=k, visible=True, box_2d=b) for k, b in v.get("boxes", {}).items()])
+            veto = geometry_veto(pred, j) if j.satisfied else None
+            v["geometry_override"], v["satisfied"] = veto, bool(j.satisfied and veto is None)
+            n += 1
+    return n
+
+
 def decide(case: dict, threshold: float, votes_needed: int) -> bool:
     """Re-run the (pure) vote on cached per-frame verdicts at a given threshold."""
     if case["status"] != "checked" and not case["frame_verdicts"]:
@@ -206,6 +225,8 @@ def main() -> None:
                     help="apply motion/blur/dark gating (off by default: handheld bursts move)")
     ap.add_argument("--from-cache", type=Path, help="re-score a previous run JSON, no API calls")
     ap.add_argument("--dry-run", action="store_true", help="fake model; tests the plumbing only")
+    ap.add_argument("--regeometry", action="store_true",
+                    help="with --from-cache: re-apply the current geometry rules to the saved boxes")
     ap.add_argument("--only", help="substring filter on case id")
     args = ap.parse_args()
     args.out.mkdir(parents=True, exist_ok=True)
@@ -213,6 +234,8 @@ def main() -> None:
     if args.from_cache:
         blob = json.loads(args.from_cache.read_text())
         cases, model_name = blob["cases"], blob.get("model", "?")
+        if args.regeometry:
+            print(f"re-applied current geometry to {regeometry(cases)} cached frames")
     else:
         rows = load_labels(args.labels)
         if args.only:

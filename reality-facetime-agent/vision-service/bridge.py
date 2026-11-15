@@ -96,7 +96,7 @@ def fixture_model(scenario):
             ]}
         names = re.findall(r'^- "([^"]+)"', prompt, re.M)
         boxes = [[100, 100 + 250*i, 300, 200 + 250*i] for i in range(len(names))]
-        if 'ON TOP OF' in prompt: boxes = [[50, 120, 150, 180], [150, 100, 350, 300]]
+        if 'must be ON TOP' in prompt: boxes = [[50, 120, 160, 180], [150, 100, 350, 300]]
         if scenario == 'geometry_veto': boxes.reverse()
         hidden = re.search(r'The object "([^"]+)" must be HIDDEN', prompt)
         # geometry_veto for a hide task = the "hidden" object is still in view.

@@ -106,6 +106,8 @@ class FrameVerdict(BaseModel):
     correction_hint: Optional[str] = None
     objects_seen: list[str] = Field(default_factory=list)
     geometry_override: Optional[str] = None  # set when code-side geometry overruled the model
+    model_satisfied: Optional[bool] = None   # the model's own answer, before geometry
+    boxes: dict[str, list[int]] = Field(default_factory=dict)  # visible objects' boxes, for offline re-scoring
     error: Optional[str] = None
     latency_ms: float = 0.0
 

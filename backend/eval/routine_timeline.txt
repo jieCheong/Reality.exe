@@ -1,0 +1,16 @@
+# B2 routine-object clip. Follow eval/ROUTINE_SHOTS.md, then FIX EVERY TIME RANGE to your video
+# (the still part of each setup). Left/right = as the camera sees it.
+objects: toothbrush = toothbrush; backpack = backpack; shoes = pair of shoes; lunchbox = lunchbox
+
+0:02-0:06  HELD toothbrush                       # 1  toothbrush held
+0:08-0:12  NEAR toothbrush lunchbox              # 2  toothbrush down, next to lunchbox
+0:14-0:18  ON lunchbox backpack                  # 3  lunchbox on backpack
+0:20-0:24  NEAR lunchbox backpack                # 4  lunchbox in front of backpack (hard negative)
+0:26-0:30  ABOVE lunchbox backpack               # 5  held above, no contact (hard negative)
+0:32-0:36  ON toothbrush lunchbox                # 6  flat on flat
+0:38-0:42  ROW backpack lunchbox shoes           # 7  row one
+0:44-0:48  ROW shoes backpack lunchbox           # 8  row two
+0:50-0:54  HELD lunchbox                         # 9  lunchbox held
+0:56-1:00  COVER toothbrush                      # 10 hand over toothbrush
+1:02-1:06  HAND_NEAR toothbrush                  # 11 hand next to toothbrush
+1:08-1:12  NEAR shoes backpack                   # 12 shoes beside backpack
